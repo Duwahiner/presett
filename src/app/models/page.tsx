@@ -1,7 +1,7 @@
 "use client";
 
 import { Cpu } from "lucide-react";
-import { Card } from "@/components/atoms/Card/Card";
+import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/atoms/Badge/Badge";
 import { ModelsClient } from "@/components/organisms/ModelsClient/ModelsClient";
 import { t } from "@/resources/resources";
@@ -10,32 +10,33 @@ export const dynamic = "force-dynamic";
 
 export default function ModelsPage() {
   return (
-    <div>
-      <div className="border-b border-white/5 bg-zinc-900/30 px-8 py-8 backdrop-blur-sm">
-        <div className="mx-auto max-w-6xl">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-rose-500/20 to-orange-500/10">
-              <Cpu className="h-5 w-5 text-rose-400" aria-hidden="true" />
+    <div className="flex h-full flex-col">
+      <div className="border-b border-border bg-card px-8 py-6">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
+            <Cpu className="h-5 w-5 text-primary" aria-hidden="true" />
+          </div>
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="text-2xl font-semibold tracking-tight text-card-foreground">
+                {t("models_title")}
+              </h1>
+              <Badge variant="success" pulsing>
+                {t("models_status_badge")}
+              </Badge>
             </div>
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="text-3xl font-bold tracking-tight text-zinc-100 sm:text-4xl">
-                  {t("models_title")}
-                </h1>
-                <Badge variant="success" pulsing>
-                  {t("models_status_badge")}
-                </Badge>
-              </div>
-              <p className="mt-1 max-w-2xl text-zinc-400">
-                {t("models_header_description")}
-              </p>
-            </div>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              {t("models_header_description")}
+            </p>
           </div>
         </div>
       </div>
 
-      <div className="mx-auto max-w-6xl px-8 py-8">
-        <Card title={t("models_cardTitle")}>
+      <div className="flex-1 overflow-y-auto p-6">
+        <Card className="p-6">
+          <h2 className="mb-4 text-lg font-semibold text-card-foreground">
+            {t("models_cardTitle")}
+          </h2>
           <ModelsClient />
         </Card>
       </div>

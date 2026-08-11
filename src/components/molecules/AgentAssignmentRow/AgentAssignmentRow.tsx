@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Bot, Pencil } from "lucide-react";
-import { Button } from "@/components/atoms/Button/Button";
+import { Button } from "@/components/ui/button";
 import { ModelPicker } from "@/components/molecules/ModelPicker/ModelPicker";
 import { t } from "@/resources/resources";
 import type { ModelCatalog } from "@/components/molecules/ModelPicker/ModelPicker";
@@ -22,10 +22,10 @@ export interface AgentAssignmentRowProps {
 }
 
 function getAgentPrefixColor(agentKey: string): string {
-  if (agentKey.startsWith("gentle-")) return "text-rose-400";
-  if (agentKey.startsWith("sdd-")) return "text-sky-400";
-  if (agentKey.startsWith("jd-")) return "text-amber-400";
-  return "text-zinc-400";
+  if (agentKey.startsWith("gentle-")) return "text-chart-1";
+  if (agentKey.startsWith("sdd-")) return "text-chart-4";
+  if (agentKey.startsWith("jd-")) return "text-chart-5";
+  return "text-muted-foreground";
 }
 
 function formatAgentName(agentKey: string): { prefix: string; suffix: string } {
@@ -51,27 +51,27 @@ export function AgentAssignmentRow({
   const prefixColor = useMemo(() => getAgentPrefixColor(agentKey), [agentKey]);
 
   return (
-    <div className="rounded-xl border border-white/[0.08] bg-zinc-900/40 p-4 backdrop-blur-sm transition-colors hover:border-white/15 hover:bg-zinc-900/80">
+    <div className="rounded-xl border border-border bg-card p-4 backdrop-blur-sm transition-colors hover:border-border/80 hover:bg-accent/40">
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-rose-500/20 to-orange-500/10">
-            <Bot className="h-4 w-4 text-rose-400" aria-hidden="true" />
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <Bot className="h-4 w-4 text-primary" aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <h4 className="truncate font-semibold text-zinc-100" aria-label={agentKey}>
+            <h4 className="truncate font-semibold text-card-foreground" aria-label={agentKey}>
               {prefix && <span className={prefixColor}>{prefix}</span>}
               <span>{suffix}</span>
             </h4>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex rounded-full bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-300">
+              <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                 {provider}
               </span>
-              <span className="text-zinc-600">/</span>
-              <span className="inline-flex rounded-full bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-300">
+              <span className="text-muted-foreground/50">/</span>
+              <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                 {model || t("agentAssignment_unset")}
               </span>
-              <span className="text-zinc-600">/</span>
-              <span className="inline-flex rounded-full bg-zinc-800 px-2 py-0.5 text-xs font-medium text-zinc-300">
+              <span className="text-muted-foreground/50">/</span>
+              <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
                 {variant || t("agentAssignment_unset")}
               </span>
             </div>
@@ -91,7 +91,7 @@ export function AgentAssignmentRow({
       </div>
 
       {isEditing && (
-        <div className="mt-4 border-t border-white/5 pt-4">
+        <div className="mt-4 border-t border-border pt-4">
           <ModelPicker
             catalog={catalog}
             initialProvider={provider}

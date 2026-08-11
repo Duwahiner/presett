@@ -17,9 +17,15 @@ describe("ModelPicker", () => {
     const onConfirm = vi.fn();
     render(<ModelPicker catalog={catalog} onConfirm={onConfirm} />);
 
-    await userEvent.selectOptions(screen.getByLabelText("Provider"), "openai");
-    await userEvent.selectOptions(screen.getByLabelText("Model"), "gpt-4");
-    await userEvent.selectOptions(screen.getByLabelText("Variant"), "high");
+    await userEvent.click(screen.getByRole("combobox", { name: /provider/i }));
+    await userEvent.click(screen.getByRole("option", { name: "openai" }));
+
+    await userEvent.click(screen.getByRole("combobox", { name: /model/i }));
+    await userEvent.click(screen.getByRole("option", { name: "gpt-4" }));
+
+    await userEvent.click(screen.getByRole("combobox", { name: /variant/i }));
+    await userEvent.click(screen.getByRole("option", { name: "high" }));
+
     await userEvent.click(screen.getByRole("button", { name: /save/i }));
 
     await waitFor(() => {
@@ -31,26 +37,36 @@ describe("ModelPicker", () => {
     });
   });
 
-  it("renders Spanish labels when locale is es", async () => {
-    setLocale("es");
+  it("resets model and variant when provider changes", async () => {
     const onConfirm = vi.fn();
     render(<ModelPicker catalog={catalog} onConfirm={onConfirm} />);
 
-    expect(screen.getByLabelText("Proveedor")).toBeDefined();
-    expect(screen.getByLabelText("Modelo")).toBeDefined();
-    expect(screen.getByLabelText("Variante")).toBeDefined();
+    await userEvent.click(screen.getByRole("combobox", { name: /provider/i }));
+    await userEvent.click(screen.getByRole("option", { name: "openai" }));
 
-    await userEvent.selectOptions(screen.getByLabelText("Proveedor"), "openai");
-    await userEvent.selectOptions(screen.getByLabelText("Modelo"), "gpt-4");
-    await userEvent.selectOptions(screen.getByLabelText("Variante"), "high");
-    await userEvent.click(screen.getByRole("button", { name: /guardar/i }));
+    await userEvent.click(screen.getByRole("combobox", { name: /model/i }));
+    await userEvent.click(screen.getByRole("option", { name: "gpt-4" }));
 
-    await waitFor(() => {
-      expect(onConfirm).toHaveBeenCalledWith({
-        provider: "openai",
-        model: "gpt-4",
-        variant: "high",
-      });
-    });
+    await userEvent.click(screen.getByRole("combobox", { name: /variant/i }));
+    await userEvent.click(screen.getByRole("option", { name: "high" }));
+
+    await userEvent.click(screen.getByRole("combobox", { name: /provider/i }));
+    await userEvent.click(screen.getByRole("option", { name: "openai" }));
+
+    expect(screen.getByRole("combobox", { name: /model/i }).textContent).toContain(
+      t("modelPicker_model"),
+    );
+    expect(
+      screen.getByRole("combobox", { name: /variant/i }).textContent,
+    ).toContain(t("modelPicker_variant"));
+  });
+
+  it("renders Spanish labels when locale is es", async () => {
+    setLocale("es");
+    render(<ModelPicker catalog={catalog} onConfirm={vi.fn()} />);
+
+    expect(screen.getByRole("combobox", { name: /proveedor/i })).toBeDefined();
+    expect(screen.getByRole("combobox", { name: /modelo/i })).toBeDefined();
+    expect(screen.getByRole("combobox", { name: /variante/i })).toBeDefined();
   });
 });

@@ -1,7 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Button } from "@/components/atoms/Button/Button";
+import { Check, ChevronDown } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Select } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
 import { t } from "@/resources/resources";
 
 export type ModelCatalog = Record<string, Record<string, string[]>>;
@@ -17,6 +20,73 @@ export interface ModelPickerProps {
     model: string;
     variant: string;
   }) => void;
+}
+
+interface PickerFieldProps {
+  label: string;
+  value: string;
+  options: string[];
+  placeholder: string;
+  disabled?: boolean;
+  onChange: (value: string) => void;
+}
+
+function PickerField({
+  label,
+  value,
+  options,
+  placeholder,
+  disabled,
+  onChange,
+}: PickerFieldProps) {
+  return (
+    <div className="space-y-1.5">
+      <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+        {label}
+      </label>
+      <Select.Root value={value} onValueChange={onChange} disabled={disabled}>
+        <Select.Trigger
+          aria-label={label}
+          className={cn(
+            "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
+            "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+            "disabled:cursor-not-allowed disabled:opacity-50",
+          )}
+        >
+          <Select.Value placeholder={placeholder} />
+          <ChevronDown className="size-4 text-muted-foreground" />
+        </Select.Trigger>
+        <Select.Portal>
+          <Select.Positioner className="z-50">
+            <Select.Popup
+              className={cn(
+                "max-h-60 min-w-[var(--anchor-width)] overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md",
+                "focus-visible:outline-none",
+              )}
+            >
+              {options.map((option) => (
+                <Select.Item
+                  key={option}
+                  value={option}
+                  className={cn(
+                    "relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none",
+                    "focus:bg-accent focus:text-accent-foreground",
+                  )}
+                >
+                  <span className="absolute left-2 flex size-3.5 items-center justify-center">
+                    <Select.ItemIndicator>
+                      <Check className="size-3" />
+                    </Select.ItemIndicator>
+                  </span>
+                  <Select.ItemText className="pl-6">{option}</Select.ItemText>
+                </Select.Item>
+              ))}
+            </Select.Popup>
+          </Select.Positioner>
+        </Select.Portal>
+      </Select.Root>
+    </div>
+  );
 }
 
 export function ModelPicker({
@@ -46,84 +116,37 @@ export function ModelPicker({
   return (
     <div className="space-y-3">
       <div className="grid gap-3 sm:grid-cols-3">
-        <div className="space-y-1.5">
-          <label
-            htmlFor="model-picker-provider"
-            className="text-xs font-medium uppercase tracking-wider text-zinc-400"
-          >
-            {t("modelPicker_provider")}
-          </label>
-          <select
-            id="model-picker-provider"
-            aria-label={t("modelPicker_provider")}
-            className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-rose-500/50 focus:outline-none focus:ring-1 focus:ring-rose-500/30 disabled:opacity-50"
-            value={provider}
-            disabled={disabled}
-            onChange={(e) => {
-              setProvider(e.target.value);
-              setModel("");
-              setVariant("");
-            }}
-          >
-            <option value="">{t("modelPicker_provider")}</option>
-            {providers.map((p) => (
-              <option key={p} value={p}>
-                {p}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-1.5">
-          <label
-            htmlFor="model-picker-model"
-            className="text-xs font-medium uppercase tracking-wider text-zinc-400"
-          >
-            {t("modelPicker_model")}
-          </label>
-          <select
-            id="model-picker-model"
-            aria-label={t("modelPicker_model")}
-            className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-rose-500/50 focus:outline-none focus:ring-1 focus:ring-rose-500/30 disabled:opacity-50"
-            value={model}
-            disabled={disabled || !provider}
-            onChange={(e) => {
-              setModel(e.target.value);
-              setVariant("");
-            }}
-          >
-            <option value="">{t("modelPicker_model")}</option>
-            {models.map((m) => (
-              <option key={m} value={m}>
-                {m}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        <div className="space-y-1.5">
-          <label
-            htmlFor="model-picker-variant"
-            className="text-xs font-medium uppercase tracking-wider text-zinc-400"
-          >
-            {t("modelPicker_variant")}
-          </label>
-          <select
-            id="model-picker-variant"
-            aria-label={t("modelPicker_variant")}
-            className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 focus:border-rose-500/50 focus:outline-none focus:ring-1 focus:ring-rose-500/30 disabled:opacity-50"
-            value={variant}
-            disabled={disabled || !model}
-            onChange={(e) => setVariant(e.target.value)}
-          >
-            <option value="">{t("modelPicker_variant")}</option>
-            {variants.map((v) => (
-              <option key={v} value={v}>
-                {v}
-              </option>
-            ))}
-          </select>
-        </div>
+        <PickerField
+          label={t("modelPicker_provider")}
+          value={provider}
+          options={providers}
+          placeholder={t("modelPicker_provider")}
+          disabled={disabled}
+          onChange={(value) => {
+            setProvider(value);
+            setModel("");
+            setVariant("");
+          }}
+        />
+        <PickerField
+          label={t("modelPicker_model")}
+          value={model}
+          options={models}
+          placeholder={t("modelPicker_model")}
+          disabled={disabled || !provider}
+          onChange={(value) => {
+            setModel(value);
+            setVariant("");
+          }}
+        />
+        <PickerField
+          label={t("modelPicker_variant")}
+          value={variant}
+          options={variants}
+          placeholder={t("modelPicker_variant")}
+          disabled={disabled || !model}
+          onChange={setVariant}
+        />
       </div>
 
       <Button

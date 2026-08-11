@@ -16,8 +16,8 @@ export function ModelsClientView({
 }: ModelsClientViewProps) {
   if (loading) {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-zinc-900/60 p-8 text-zinc-400 shadow-xl backdrop-blur-sm">
-        <Loader2 className="h-5 w-5 animate-spin text-rose-400" aria-hidden="true" />
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-8 text-muted-foreground shadow-sm">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
         <span>{t("models_loading")}</span>
       </div>
     );

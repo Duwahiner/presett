@@ -1,7 +1,8 @@
 "use client";
 
 import { Loader2, Plus, Trash2, UserCircle } from "lucide-react";
-import { Button } from "@/components/atoms/Button/Button";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/atoms/Badge/Badge";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
 import { ModelPicker } from "@/components/molecules/ModelPicker/ModelPicker";
@@ -23,8 +24,8 @@ export function ProfilesClientView({
 }: ProfilesClientViewProps) {
   if (loading) {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-white/[0.08] bg-zinc-900/60 p-8 text-zinc-400 shadow-xl backdrop-blur-sm">
-        <Loader2 className="h-5 w-5 animate-spin text-rose-400" aria-hidden="true" />
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-8 text-muted-foreground shadow-sm">
+        <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
         <span>{t("profiles_loading")}</span>
       </div>
     );
@@ -36,28 +37,27 @@ export function ProfilesClientView({
     <div className="space-y-6">
       <form
         onSubmit={onCreate}
-        className="rounded-xl border border-white/[0.08] bg-zinc-900/60 p-6 shadow-xl shadow-black/20 backdrop-blur-sm transition-colors hover:border-white/15"
+        className="rounded-xl border border-border bg-card p-6 shadow-sm transition-colors hover:border-border/80"
       >
         <div className="mb-4 flex items-center gap-2">
-          <Plus className="h-4 w-4 text-rose-400" aria-hidden="true" />
-          <h4 className="font-semibold text-zinc-100">{t("profiles_create_title")}</h4>
+          <Plus className="h-4 w-4 text-primary" aria-hidden="true" />
+          <h4 className="font-semibold text-card-foreground">{t("profiles_create_title")}</h4>
         </div>
 
         <div className="space-y-4">
           <div className="space-y-1.5">
             <label
               htmlFor="profile-name"
-              className="text-xs font-medium uppercase tracking-wider text-zinc-400"
+              className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
             >
               {t("profiles_create_placeholder")}
             </label>
-            <input
+            <Input
               id="profile-name"
               type="text"
               placeholder={t("profiles_create_placeholder")}
               value={newName}
               onChange={(e) => onNewNameChange(e.target.value)}
-              className="w-full rounded-lg border border-white/10 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600 focus:border-rose-500/50 focus:outline-none focus:ring-1 focus:ring-rose-500/30"
             />
           </div>
 
@@ -67,7 +67,7 @@ export function ProfilesClientView({
               onConfirm={(a) => onAssignmentChange("orchestrator", a)}
               disabled={false}
             />
-            <p className="text-xs text-zinc-500">{t("profiles_create_required")}</p>
+            <p className="text-xs text-muted-foreground">{t("profiles_create_required")}</p>
           </div>
 
           <Button
@@ -84,17 +84,17 @@ export function ProfilesClientView({
         {profiles.map((profile) => (
           <div
             key={profile.name}
-            className={`relative flex items-center justify-between gap-4 rounded-xl border border-white/[0.08] bg-zinc-900/60 p-4 shadow-xl shadow-black/20 backdrop-blur-sm transition-colors hover:border-white/15 hover:bg-zinc-900/80 ${
-              profile.active ? "border-l-4 border-l-rose-500 pl-3" : ""
+            className={`relative flex items-center justify-between gap-4 rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-border/80 hover:bg-accent/40 ${
+              profile.active ? "border-l-4 border-l-primary pl-3" : ""
             }`}
           >
             <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-gradient-to-br from-rose-500/20 to-orange-500/10">
-                <UserCircle className="h-4 w-4 text-rose-400" aria-hidden="true" />
+              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                <UserCircle className="h-4 w-4 text-primary" aria-hidden="true" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
-                  <h4 className="truncate font-semibold text-zinc-100">
+                  <h4 className="truncate font-semibold text-card-foreground">
                     {profile.displayName}
                   </h4>
                   {profile.active && (
@@ -103,7 +103,7 @@ export function ProfilesClientView({
                     </Badge>
                   )}
                 </div>
-                <p className="text-sm text-zinc-500">
+                <p className="text-sm text-muted-foreground">
                   {profile.modelCount}{" "}
                   {profile.modelCount === 1
                     ? t("profiles_modelAssignments")
@@ -120,7 +120,7 @@ export function ProfilesClientView({
               )}
               {profile.name && (
                 <Button
-                  variant="danger"
+                  variant="destructive"
                   size="sm"
                   onClick={() => onDelete(profile.name)}
                   aria-label={t("profiles_delete")}

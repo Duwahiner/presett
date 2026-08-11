@@ -40,27 +40,36 @@ export function buildDashboardData(
   };
 }
 
+async function fetchDashboardData() {
+  const [config, profiles, backups] = await Promise.all([
+    getConfig(),
+    listProfiles(),
+    listBackups(),
+  ]);
+
+  return buildDashboardData(config, profiles, backups);
+}
+
+function ErrorFallback({ message }: { message: string }) {
+  return (
+    <div className="flex h-full items-center justify-center p-6">
+      <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-6 text-destructive">
+        <h2 className="text-lg font-semibold">{t("errors_generic")}</h2>
+        <p className="mt-1 text-sm">{message}</p>
+      </div>
+    </div>
+  );
+}
+
 export default async function HomePage() {
+  let data: { stats: DashboardStats; agents: DashboardAgent[] };
+
   try {
-    const [config, profiles, backups] = await Promise.all([
-      getConfig(),
-      listProfiles(),
-      listBackups(),
-    ]);
-
-    const { stats, agents } = buildDashboardData(config, profiles, backups);
-
-    return <Dashboard stats={stats} agents={agents} />;
+    data = await fetchDashboardData();
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-
-    return (
-      <div className="flex h-full items-center justify-center p-6">
-        <div className="rounded-2xl border border-destructive/20 bg-destructive/10 p-6 text-destructive">
-          <h2 className="text-lg font-semibold">{t("errors_generic")}</h2>
-          <p className="mt-1 text-sm">{message}</p>
-        </div>
-      </div>
-    );
+    return <ErrorFallback message={message} />;
   }
+
+  return <Dashboard stats={data.stats} agents={data.agents} />;
 }
