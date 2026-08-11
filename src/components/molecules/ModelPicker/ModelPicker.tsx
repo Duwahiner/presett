@@ -28,7 +28,7 @@ interface PickerFieldProps {
   options: string[];
   placeholder: string;
   disabled?: boolean;
-  onChange: (value: string) => void;
+        onChange: (value: string | null) => void;
 }
 
 function PickerField({
@@ -123,7 +123,7 @@ export function ModelPicker({
           placeholder={t("modelPicker_provider")}
           disabled={disabled}
           onChange={(value) => {
-            setProvider(value);
+            setProvider(value ?? "");
             setModel("");
             setVariant("");
           }}
@@ -135,7 +135,7 @@ export function ModelPicker({
           placeholder={t("modelPicker_model")}
           disabled={disabled || !provider}
           onChange={(value) => {
-            setModel(value);
+            setModel(value ?? "");
             setVariant("");
           }}
         />
@@ -145,7 +145,7 @@ export function ModelPicker({
           options={variants}
           placeholder={t("modelPicker_variant")}
           disabled={disabled || !model}
-          onChange={setVariant}
+          onChange={(value) => setVariant(value ?? "")}
         />
       </div>
 
