@@ -36,17 +36,17 @@ Chain strategy: stacked-to-main
 
 ## Phase 2: Models + Write Path (Slice 2)
 
-- [ ] 2.1 Create `src/lib/types.ts` with `Result<T, ConfigError>` and error codes
-- [ ] 2.2 Create `src/lib/paths.ts` with injectable baseDir resolvers
-- [ ] 2.3 Create `src/lib/validators.ts` with Zod schemas and model/variant validation
-- [ ] 2.4 Add `writeOpenCodeConfig`, `listModelAssignments`, and atomic-write helpers to `src/lib/adapters/opencode.ts`
-- [ ] 2.5 Create `src/lib/pre-write-backup.ts` with PreSett-owned backup + retention
-- [ ] 2.6 Create `src/app/api/status/route.ts` (dashboard state)
-- [ ] 2.7 Create `src/app/api/models/route.ts` (model catalog)
-- [ ] 2.8 Create `src/app/api/config/route.ts` (GET assignments / PUT change)
-- [ ] 2.9 Create `ModelPicker`, `AgentAssignmentRow`, `ErrorBanner` components
-- [ ] 2.10 Implement `src/app/models/page.tsx` with read/write UI
-- [ ] 2.11 Write unit + integration tests for validators, adapter write path, and API routes
+- [x] 2.1 Create `src/lib/types.ts` with `Result<T, ConfigError>` and error codes
+- [x] 2.2 Create `src/lib/paths.ts` with injectable baseDir resolvers
+- [x] 2.3 Create `src/lib/validators.ts` with Zod schemas and model/variant validation
+- [x] 2.4 Add `writeOpenCodeConfig`, `listModelAssignments`, and atomic-write helpers to `src/adapters/opencode.ts`
+- [x] 2.5 Create `src/lib/preWriteBackup.ts` with PreSett-owned backup + retention
+- [x] 2.6 Create `src/app/api/status/route.ts` (dashboard state)
+- [x] 2.7 Create `src/app/api/models/route.ts` (model catalog)
+- [x] 2.8 Create `src/app/api/config/route.ts` (GET assignments / PUT change)
+- [x] 2.9 Create `ModelPicker`, `AgentAssignmentRow`, `ErrorBanner` components
+- [x] 2.10 Implement `src/app/models/page.tsx` with read/write UI
+- [x] 2.11 Write unit + integration tests for validators, adapter write path, and API routes
 
 ## Phase 3: Profiles (Slice 3)
 

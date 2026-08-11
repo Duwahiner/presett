@@ -34,14 +34,16 @@ presett/
 │   │       ├── backups/route.ts           # GET read-only list
 │   │       └── sync/route.ts              # POST run `gentle-ai sync`
 │   ├── components/ (atoms/, molecules/, organisms/)
-│   ├── lib/
-│   │   ├── adapters/opencode.ts           # read/write opencode.json
-│   │   ├── state.ts                       # read state.json
-│   │   ├── model-cache.ts                 # read model-variants.json
-│   │   ├── backups.ts                     # read gentle-ai backup manifests
-│   │   ├── pre-write-backup.ts            # PreSett-owned backup copies
+│   ├── adapters/                          # external config adapters
+│   │   └── opencode.ts                    # read/write opencode.json
+│   ├── services/                          # file/cache readers and process runners
+│   │   ├── stateService.ts                # read state.json
+│   │   ├── modelCacheService.ts           # read model-variants.json
+│   │   ├── backupsService.ts              # read gentle-ai backup manifests
+│   │   └── processService.ts              # spawn gentle-ai sync
+│   ├── lib/                               # shared domain logic
+│   │   ├── preWriteBackup.ts              # PreSett-owned backup copies
 │   │   ├── validators.ts                  # Zod schemas + model/variant validation
-│   │   ├── process.ts                     # spawn gentle-ai sync
 │   │   ├── paths.ts                       # baseDir-injectable path resolvers
 │   │   └── types.ts                       # shared Result<T,E> and domain types
 │   └── types/                             # public type modules (agent, opencode, state)
