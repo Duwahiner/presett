@@ -34,6 +34,14 @@ export interface Resources {
   "dashboard_stat_backups_label": string;
   "dashboard_stat_system_label": string;
   "dashboard_quick_access_title": string;
+  "dashboard_agents_title": string;
+  "dashboard_agents_manage": string;
+  "dashboard_agent_configured": string;
+  "dashboard_agent_partial": string;
+  "dashboard_agent_add": string;
+  "dashboard_agent_models": string;
+  "dashboard_agent_model_label": string;
+  "dashboard_last_sync_never": string;
   "dashboard_status_badge": string;
   "quick_action_models_title": string;
   "quick_action_models_desc": string;
