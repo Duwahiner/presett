@@ -9,4 +9,12 @@ describe("ErrorBanner", () => {
     expect(screen.getByText("Oops")).toBeDefined();
     expect(screen.getByText("Something went wrong")).toBeDefined();
   });
+
+  it("renders as an alert with an icon", () => {
+    render(<ErrorBanner title="Oops" message="Something went wrong" />);
+
+    const alert = screen.getByRole("alert");
+    expect(alert).toBeDefined();
+    expect(alert.querySelector("svg")).toBeDefined();
+  });
 });
