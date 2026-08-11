@@ -186,3 +186,195 @@ export async function updateModelAssignment(
 
   return writeOpenCodeConfig(configDir, config, backupDir);
 }
+
+export interface Profile {
+  name: string;
+  displayName: string;
+  active: boolean;
+  modelCount: number;
+}
+
+const SDD_ORCHESTRATOR_PREFIX = "sdd-orchestrator-";
+const SDD_PHASE_PREFIX = "sdd-";
+
+function isProfileAgent(agentKey: string): { profile: string; isOrchestrator: boolean } | null {
+  if (agentKey.startsWith(SDD_ORCHESTRATOR_PREFIX)) {
+    return {
+      profile: agentKey.slice(SDD_ORCHESTRATOR_PREFIX.length),
+      isOrchestrator: true,
+    };
+  }
+  if (agentKey.startsWith(SDD_PHASE_PREFIX)) {
+    const rest = agentKey.slice(SDD_PHASE_PREFIX.length);
+    const dashIndex = rest.indexOf("-");
+    if (dashIndex > 0) {
+      return { profile: rest.slice(dashIndex + 1), isOrchestrator: false };
+    }
+  }
+  return null;
+}
+
+export function listProfiles(config: OpenCodeConfig): Profile[] {
+  const profiles = new Map<
+    string,
+    { name: string; displayName: string; modelCount: number }
+  >();
+
+  profiles.set("", { name: "", displayName: "Base", modelCount: 0 });
+
+  for (const [agentKey, entry] of Object.entries(config.agent)) {
+    const profileInfo = isProfileAgent(agentKey);
+    if (profileInfo) {
+      const existing = profiles.get(profileInfo.profile);
+      if (existing) {
+        existing.modelCount += entry.model ? 1 : 0;
+      } else {
+        profiles.set(profileInfo.profile, {
+          name: profileInfo.profile,
+          displayName: profileInfo.profile,
+          modelCount: entry.model ? 1 : 0,
+        });
+      }
+    } else {
+      profiles.get("")!.modelCount += entry.model ? 1 : 0;
+    }
+  }
+
+  return Array.from(profiles.values()).map((p) => ({
+    ...p,
+    active:
+      p.name === ""
+        ? config.default_agent === undefined ||
+          config.default_agent === "gentle-orchestrator"
+        : config.default_agent === `${SDD_ORCHESTRATOR_PREFIX}${p.name}`,
+  }));
+}
+
+export async function createProfile(
+  configDir: string,
+  name: string,
+  assignments: Record<string, { provider: string; model: string; variant: string }>,
+  backupDir: string,
+  cacheRaw: ModelCache,
+): Promise<Result<void>> {
+  if (!name || !/^[a-z0-9_-]+$/.test(name)) {
+    return err({
+      code: "SCHEMA_INVALID",
+      message: "Profile name must contain only lowercase letters, numbers, underscores, and hyphens",
+    });
+  }
+
+  const cache = buildModelCache(cacheRaw);
+
+  const readResult = await readOpenCodeConfigSafe(configDir);
+  if (!readResult.ok) return readResult;
+
+  const config = readResult.value;
+  const orchestratorKey = `${SDD_ORCHESTRATOR_PREFIX}${name}`;
+
+  if (config.agent[orchestratorKey]) {
+    return err({
+      code: "SCHEMA_INVALID",
+      message: `Profile "${name}" already exists`,
+    });
+  }
+
+  for (const [agentKey, assignment] of Object.entries(assignments)) {
+    const validation = validateModelAssignment(cache, assignment);
+    if (!validation.ok) return validation;
+
+    config.agent[agentKey] = {
+      ...(config.agent[agentKey] ?? {}),
+      model: joinModelRef(assignment.provider, assignment.model),
+      variant: assignment.variant,
+    };
+  }
+
+  return writeOpenCodeConfig(configDir, config, backupDir);
+}
+
+export async function updateProfile(
+  configDir: string,
+  name: string,
+  assignments: Record<string, { provider: string; model: string; variant: string }>,
+  backupDir: string,
+  cacheRaw: ModelCache,
+): Promise<Result<void>> {
+  if (!name || !/^[a-z0-9_-]+$/.test(name)) {
+    return err({
+      code: "SCHEMA_INVALID",
+      message: "Profile name must contain only lowercase letters, numbers, underscores, and hyphens",
+    });
+  }
+
+  const cache = buildModelCache(cacheRaw);
+
+  const readResult = await readOpenCodeConfigSafe(configDir);
+  if (!readResult.ok) return readResult;
+
+  const config = readResult.value;
+  const orchestratorKey = `${SDD_ORCHESTRATOR_PREFIX}${name}`;
+
+  if (!config.agent[orchestratorKey]) {
+    return err({
+      code: "SCHEMA_INVALID",
+      message: `Profile "${name}" does not exist`,
+    });
+  }
+
+  for (const [agentKey, assignment] of Object.entries(assignments)) {
+    const validation = validateModelAssignment(cache, assignment);
+    if (!validation.ok) return validation;
+
+    config.agent[agentKey] = {
+      ...(config.agent[agentKey] ?? {}),
+      model: joinModelRef(assignment.provider, assignment.model),
+      variant: assignment.variant,
+    };
+  }
+
+  return writeOpenCodeConfig(configDir, config, backupDir);
+}
+
+export async function deleteProfile(
+  configDir: string,
+  name: string,
+  backupDir: string,
+): Promise<Result<void>> {
+  if (!name) {
+    return err({
+      code: "SCHEMA_INVALID",
+      message: "The base profile cannot be deleted",
+    });
+  }
+
+  const readResult = await readOpenCodeConfigSafe(configDir);
+  if (!readResult.ok) return readResult;
+
+  const config = readResult.value;
+  const prefix = `${SDD_ORCHESTRATOR_PREFIX}${name}`;
+
+  for (const agentKey of Object.keys(config.agent)) {
+    if (agentKey === prefix || isProfileAgent(agentKey)?.profile === name) {
+      delete config.agent[agentKey];
+    }
+  }
+
+  return writeOpenCodeConfig(configDir, config, backupDir);
+}
+
+export async function switchProfile(
+  configDir: string,
+  name: string,
+  backupDir: string,
+): Promise<Result<void>> {
+  const readResult = await readOpenCodeConfigSafe(configDir);
+  if (!readResult.ok) return readResult;
+
+  const config = readResult.value;
+  config.default_agent = name
+    ? `${SDD_ORCHESTRATOR_PREFIX}${name}`
+    : "gentle-orchestrator";
+
+  return writeOpenCodeConfig(configDir, config, backupDir);
+}

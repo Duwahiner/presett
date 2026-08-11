@@ -50,13 +50,13 @@ Chain strategy: stacked-to-main
 
 ## Phase 3: Profiles (Slice 3)
 
-- [ ] 3.1 Add profile CRUD helpers to `src/lib/adapters/opencode.ts`
-- [ ] 3.2 Create `src/app/api/profiles/route.ts` (GET list / POST create)
-- [ ] 3.3 Create `src/app/api/profiles/[name]/route.ts` (PUT edit / DELETE)
-- [ ] 3.4 Create `src/app/api/profiles/[name]/switch/route.ts` (POST activate)
-- [ ] 3.5 Create profile form and list components
-- [ ] 3.6 Implement `src/app/profiles/page.tsx`
-- [ ] 3.7 Write tests for profile validation, CRUD, and switch behavior
+- [x] 3.1 Add profile CRUD helpers to `src/adapters/opencode.ts`
+- [x] 3.2 Create `src/app/api/profiles/route.ts` (GET list / POST create)
+- [x] 3.3 Create `src/app/api/profiles/[name]/route.ts` (PUT edit / DELETE)
+- [x] 3.4 Create `src/app/api/profiles/[name]/switch/route.ts` (POST activate)
+- [x] 3.5 Create profile form and list components
+- [x] 3.6 Implement `src/app/profiles/page.tsx`
+- [x] 3.7 Write tests for profile validation, CRUD, and switch behavior
 
 ## Phase 4: Backups + Sync (Slice 4)
 
