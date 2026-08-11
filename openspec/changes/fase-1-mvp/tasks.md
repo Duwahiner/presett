@@ -60,13 +60,13 @@ Chain strategy: stacked-to-main
 
 ## Phase 4: Backups + Sync (Slice 4)
 
-- [ ] 4.1 Create `src/lib/backups.ts` to read manifests and derive metadata
-- [ ] 4.2 Create `src/lib/process.ts` to spawn `gentle-ai sync`
-- [ ] 4.3 Create `src/app/api/backups/route.ts` (read-only list)
-- [ ] 4.4 Create `src/app/api/sync/route.ts` (POST wrapper)
-- [ ] 4.5 Create `BackupList`, `SyncPanel` components
-- [ ] 4.6 Implement `src/app/backups/page.tsx`
-- [ ] 4.7 Write tests for backup manifest parsing and sync result handling
+- [x] 4.1 Create `src/services/backupsService.ts` to read manifests and derive metadata
+- [x] 4.2 Create `src/services/processService.ts` to spawn `gentle-ai sync`
+- [x] 4.3 Create `src/app/api/backups/route.ts` (read-only list)
+- [x] 4.4 Create `src/app/api/sync/route.ts` (POST wrapper)
+- [x] 4.5 Create `BackupsClient` component
+- [x] 4.6 Implement `src/app/backups/page.tsx`
+- [x] 4.7 Write tests for backup manifest parsing and sync result handling
 
 ## Phase 5: Verification & Docs
 
