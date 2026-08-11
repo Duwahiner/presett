@@ -3,6 +3,7 @@
 import { Children, cloneElement, isValidElement } from "react";
 import { cn } from "@/lib/utils";
 import type { ButtonProps } from "./Button.types";
+import type { ReactElement } from "react";
 
 export function Button({
   className,
@@ -18,7 +19,9 @@ export function Button({
   );
 
   if (asChild && isValidElement(children)) {
-    const child = Children.only(children);
+    const child = Children.only(children) as ReactElement<{
+      className?: string;
+    }>;
     return cloneElement(child, {
       className: cn(child.props.className, classes),
       ...props,
