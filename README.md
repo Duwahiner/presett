@@ -1,109 +1,74 @@
 # PreSett
 
-**Gestor visual de configuración para Gentle-AI**
+Local web GUI for managing Gentle-AI / OpenCode configuration without hand-editing JSON.
 
-PreSett es una aplicación web local que proporciona una interfaz gráfica para gestionar la configuración de Gentle-AI sin necesidad de editar archivos JSON/TOML manualmente.
+## What it does
 
-## ¿Qué hace PreSett?
+- **Dashboard**: shows Gentle-AI install state, OpenCode config status, backup count, and last sync info.
+- **Models**: view and edit `model` + `variant` assignments for `gentle-orchestrator`, SDD phase agents, and Judgment Day agents, validated against the `model-variants` cache.
+- **Profiles**: create, edit, switch, and delete SDD profiles following gentle-ai naming conventions (`sdd-orchestrator-{name}`, `sdd-{phase}-{name}`). The base profile is protected.
+- **Backups**: read-only viewer for `~/.gentle-ai/backups/` with derived metadata (`file_count`, `size`, `pinned`). No restore/pin/delete actions.
+- **Sync**: thin wrapper around `gentle-ai sync` that surfaces stdout/stderr/exit code.
 
-✅ **Gestiona configuración existente:**
-- Cambiar modelos asignados a agentes SDD/JD
-- Crear/editar/switch entre perfiles SDD
-- Toggle de componentes (engram, sdd, skills, etc.)
-- Cambiar persona (gentleman/neutral/custom)
-- Cambiar SDD mode (single/multi)
-- Ver/gestionar backups (read-only)
-- Ejecutar sync configs
+## What it does NOT do
 
-❌ **NO instala nada:**
-- No instala Gentle-AI
-- No instala agentes (OpenCode, Claude Code, Codex)
-- No instala componentes o plugins
+- Install Gentle-AI, agents, components, or plugins.
+- Modify `state.json` (toggles, persona, SDD mode).
+- Write into `~/.gentle-ai/backups/`.
+- Run as a public service or provide authentication.
 
-## Stack Tecnológico
+## Stack
 
-- **Frontend:** Next.js + React
-- **Backend:** Node.js (API routes de Next.js)
-- **Deploy:** PM2 + IIS (reverse proxy)
-- **Ejecución:** localhost (browser)
+- Next.js 16 (App Router)
+- React 19 + TypeScript strict
+- Tailwind CSS v4
+- Radix UI primitives
+- Vitest + @testing-library/react
 
-## Estructura del Proyecto
+## Project structure
 
 ```
 presett/
-├── README.md                    # Este archivo
-├── docs/                        # Documentación
-│   ├── analysis-exhaustivo.md   # Análisis completo de Gentle-AI
-│   ── ...
-├── design/                      # Diseños UI/UX
-│   └── ...
-├── specs/                       # Especificaciones técnicas
-│   └── ...
-└── src/                         # Código fuente (futuro)
-    ├── app/
-    ├── components/
-    └── lib/
+├── src/
+│   ├── app/              # Next.js pages and API routes
+│   ├── components/       # React components (atomic design)
+│   ├── adapters/         # OpenCode config read/write adapter
+│   ├── services/         # File/cache readers and process runners
+│   ├── lib/              # Shared domain logic (validators, backup, paths)
+│   └── types/            # Public TypeScript types
+├── openspec/changes/fase-1-mvp/  # SDD artifacts
+└── README.md
 ```
 
-## Requisitos Previos
+## Prerequisites
 
-1. **Gentle-AI instalado** (`gentle-ai --version`)
-2. **Al menos un agente configurado** (OpenCode, Claude Code, o Codex)
-3. **Node.js 18+** y npm
-4. **PM2** (para deploy): `npm install -g pm2`
+- Node.js 22+
+- Gentle-AI CLI installed (`gentle-ai --version`)
+- OpenCode config present at `~/.config/opencode/opencode.json`
 
-## Comandos Útiles de Gentle-AI
-
-```bash
-# Ver estado actual
-gentle-ai doctor
-
-# Sincronizar configs
-gentle-ai sync
-
-# Actualizar Gentle-AI
-gentle-ai upgrade
-
-# Ver modelos disponibles
-opencode models
-```
-
-## Desarrollo
+## Development
 
 ```bash
-# Instalar dependencias
 npm install
-
-# Desarrollo
-npm run dev
-
-# Build
-npm run build
-
-# Producción (con PM2)
-pm2 start ecosystem.config.js
+npm run dev      # http://localhost:3000
+npm test         # run Vitest suite
+npm run build    # production build
 ```
 
-## Deploy (PM2 + IIS)
+## Security
 
-```bash
-# Iniciar con PM2
-pm2 start ecosystem.config.js
+PreSett is designed to run on localhost only. API routes bind to the loopback interface via Next.js defaults. No authentication is implemented.
 
-# Guardar para auto-start
-pm2 save
+## Rollback
 
-# IIS como reverse proxy
-# Configurar URL Rewrite en IIS para localhost:3000
-```
+Every write to `opencode.json`:
 
-## Documentación Relacionada
+1. Is validated against the Zod schema and the `model-variants` cache.
+2. Creates a timestamped PreSett-owned backup in `~/.presett/backups/`.
+3. Is written atomically via same-directory rename.
 
-- [Análisis Exhaustivo de Gentle-AI](./docs/analysis-exhaustivo.md)
-- [Documentación oficial de Gentle-AI](https://github.com/Gentleman-Programming/gentle-ai)
+If a write corrupts the config, restore by copying the latest backup back to `~/.config/opencode/opencode.json`.
 
----
+## Status
 
-**Estado:** Planning  
-**Versión:** 0.1.0  
-**Última actualización:** 2026-08-02
+Fase 1 MVP — Slices 1-4 implemented.

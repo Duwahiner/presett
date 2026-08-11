@@ -70,6 +70,6 @@ Chain strategy: stacked-to-main
 
 ## Phase 5: Verification & Docs
 
-- [ ] 5.1 Run full test suite and fix failures
-- [ ] 5.2 Run build (`npm run build`) and fix errors
-- [ ] 5.3 Update README with setup, security, and rollback instructions
+- [x] 5.1 Run full test suite and fix failures
+- [x] 5.2 Run build (`npm run build`) and fix errors
+- [x] 5.3 Update README with setup, security, and rollback instructions
