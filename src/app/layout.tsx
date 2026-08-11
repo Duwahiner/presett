@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
+import { ThemeProvider } from "@/lib/theme-provider";
 import { DashboardLayout } from "@/components/organisms/DashboardLayout/DashboardLayout";
 import "./globals.css";
 
@@ -28,7 +29,9 @@ export default function RootLayout({
   return (
     <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`}>
       <body className="font-sans antialiased">
-        <DashboardLayout>{children}</DashboardLayout>
+        <ThemeProvider>
+          <DashboardLayout>{children}</DashboardLayout>
+        </ThemeProvider>
       </body>
     </html>
   );

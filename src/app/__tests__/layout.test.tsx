@@ -7,6 +7,12 @@ vi.mock("next/font/google", () => ({
   JetBrains_Mono: () => ({ variable: "--font-mono-jb" }),
 }));
 
+vi.mock("@/lib/theme-provider", () => ({
+  ThemeProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="theme-provider">{children}</div>
+  ),
+}));
+
 describe("RootLayout", () => {
   it("applies font CSS variable classes to html and body", () => {
     render(
@@ -21,5 +27,16 @@ describe("RootLayout", () => {
     expect(html.className).toContain("--font-inter");
     expect(html.className).toContain("--font-mono-jb");
     expect(body.className).toContain("font-sans");
+  });
+
+  it("wraps children in ThemeProvider", () => {
+    render(
+      <RootLayout>
+        <main data-testid="child">Content</main>
+      </RootLayout>,
+    );
+
+    expect(document.querySelector("[data-testid='theme-provider']")).not.toBeNull();
+    expect(document.querySelector("[data-testid='child']")).not.toBeNull();
   });
 });
