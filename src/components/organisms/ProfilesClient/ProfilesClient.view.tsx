@@ -177,14 +177,19 @@ export function ProfilesClientView({
     <div className="space-y-6">
       {/* Create Profile Form */}
       {!showForm ? (
-        <Button
-          variant="outline"
-          className="w-full justify-start gap-2"
+        <button
+          type="button"
           onClick={() => setShowForm(true)}
+          className="group flex w-full items-center justify-center gap-3 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-6 transition-all hover:border-primary/60 hover:bg-primary/10"
         >
-          <Plus className="h-4 w-4 text-primary" aria-hidden="true" />
-          {t("profiles_create_title")}
-        </Button>
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-primary transition-transform group-hover:scale-110 group-hover:bg-primary/20">
+            <Plus className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div className="text-left">
+            <span className="block text-sm font-semibold text-primary">{t("profiles_create_title")}</span>
+            <span className="block text-xs text-muted-foreground">{t("profiles_create_description")}</span>
+          </div>
+        </button>
       ) : (
         <form
           onSubmit={onCreate}
