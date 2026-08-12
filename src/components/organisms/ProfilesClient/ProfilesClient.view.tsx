@@ -219,7 +219,7 @@ export function ProfilesClientView({
               type="text"
               placeholder={t("profiles_create_placeholder")}
               value={newName}
-              onChange={(e) => onNewNameChange(e.target.value)}
+              onChange={(e) => onNewNameChange(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
             />
           </div>
 
