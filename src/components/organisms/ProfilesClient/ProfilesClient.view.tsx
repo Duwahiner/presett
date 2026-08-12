@@ -147,12 +147,13 @@ export function ProfilesClientView({
                 <div className="flex shrink-0 gap-2">
                   {profile.name && (
                     <Button
-                      variant="ghost"
+                      variant="outline"
                       size="sm"
                       onClick={() => onEditStart(profile.name)}
                       aria-label={t("profiles_edit")}
                     >
                       <Pencil className="h-4 w-4" aria-hidden="true" />
+                      {t("profiles_edit")}
                     </Button>
                   )}
                   {!profile.active && profile.name && (
