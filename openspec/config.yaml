@@ -1,0 +1,11 @@
+project: presett
+stack:
+  framework: nextjs
+  version: 16
+  language: typescript
+testing:
+  runner: vitest
+  strict_tdd: true
+proxy:
+  enabled: true
+  path: proxy.ts

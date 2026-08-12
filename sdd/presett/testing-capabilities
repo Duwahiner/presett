@@ -1,0 +1,16 @@
+# Testing Capabilities
+
+## Runner
+- Name: Vitest
+- Config: vitest.config.ts (detected)
+
+## Coverage
+- Engine: @vitest/coverage-v8
+- Threshold: TBD
+
+## Layers
+- Unit: @testing-library/react
+- E2E: (Not yet configured)
+
+## Strict TDD
+- Enabled: true
