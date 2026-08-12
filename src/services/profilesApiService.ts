@@ -1,4 +1,4 @@
-import { get, post, del } from "./api";
+import { get, post, put, del } from "./api";
 
 export interface Profile {
   name: string;
@@ -34,4 +34,11 @@ export async function switchProfile(name: string): Promise<unknown> {
 
 export async function deleteProfile(name: string): Promise<unknown> {
   return del(`/profiles/${encodeURIComponent(name)}`);
+}
+
+export async function updateProfile(
+  name: string,
+  assignments: Record<string, { provider: string; model: string; variant: string }>,
+): Promise<unknown> {
+  return put(`/profiles/${encodeURIComponent(name)}`, { assignments });
 }
