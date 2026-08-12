@@ -39,8 +39,16 @@ describe("ProfilesClientView", () => {
     );
   }
 
-  it("renders the create profile input", () => {
+  it("renders the create profile button", () => {
     render(<ProfilesClientView {...defaultProps} />);
+
+    expect(screen.getByText("Create Profile")).not.toBeNull();
+  });
+
+  it("shows form and input when clicking create button", async () => {
+    render(<StatefulView />);
+
+    await userEvent.click(screen.getByText("Create Profile"));
 
     expect(screen.queryByPlaceholderText("Profile name")).not.toBeNull();
   });
@@ -48,6 +56,7 @@ describe("ProfilesClientView", () => {
   it("updates the input value when typing", async () => {
     render(<StatefulView />);
 
+    await userEvent.click(screen.getByText("Create Profile"));
     await userEvent.type(screen.getByPlaceholderText("Profile name"), "work");
 
     const input = screen.getByPlaceholderText("Profile name") as HTMLInputElement;

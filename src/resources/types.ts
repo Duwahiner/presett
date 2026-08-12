@@ -67,9 +67,15 @@ export interface Resources {
   "profiles_loading": string;
   "profiles_loadError": string;
   "profiles_create_title": string;
+  "profiles_create_description": string;
   "profiles_create_placeholder": string;
   "profiles_create_required": string;
   "profiles_create_action": string;
+  "profiles_orchestrator_assignment": string;
+  "profiles_assigned": string;
+  "profiles_saveAssignment": string;
+  "profiles_clear": string;
+  "profiles_discard": string;
   "profiles_active": string;
   "profiles_modelAssignments": string;
   "profiles_modelAssignments_plural": string;
