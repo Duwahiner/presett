@@ -36,7 +36,7 @@ export function BackupsClientView({
 }: BackupsClientViewProps) {
   if (loading) {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-8 text-muted-foreground shadow-sm">
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-8 text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
         <span>{t("backups_loading")}</span>
       </div>
@@ -47,7 +47,7 @@ export function BackupsClientView({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-border bg-card p-6 shadow-sm transition-colors hover:border-border/80">
+      <div className="rounded-xl border border-border bg-card p-6 transition-colors hover:border-border/80">
         <div className="mb-4 flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
             <RefreshCw className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -83,7 +83,7 @@ export function BackupsClientView({
             {backups.map((backup) => (
               <div
                 key={backup.id}
-                className="relative flex items-start gap-4 rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-border/80 hover:bg-accent/40"
+                className="relative flex items-start gap-4 rounded-xl border border-border bg-card p-4 transition-colors hover:border-border/80 hover:bg-accent/40"
               >
                 <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted ring-4 ring-card">
                   <HardDrive className="h-4 w-4 text-muted-foreground" aria-hidden="true" />

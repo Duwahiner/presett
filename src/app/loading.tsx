@@ -18,7 +18,7 @@ export default function DashboardLoading() {
         {Array.from({ length: 4 }).map((_, i) => (
           <div
             key={i}
-            className="relative overflow-hidden rounded-xl border border-border bg-card p-6 shadow-sm"
+            className="relative overflow-hidden rounded-xl border border-border bg-card p-6"
           >
             <div className="flex items-start justify-between">
               <div className="space-y-2">

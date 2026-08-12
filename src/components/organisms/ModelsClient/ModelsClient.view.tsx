@@ -30,7 +30,7 @@ export function ModelsClientView({
 
   if (loading) {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-8 text-muted-foreground shadow-sm">
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-8 text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
         <span>{t("models_loading")}</span>
       </div>
@@ -42,7 +42,7 @@ export function ModelsClientView({
   return (
     <div className="space-y-4">
       {/* Profile Selector */}
-      <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
           <UserCircle className="h-4 w-4 text-primary" />
         </div>
@@ -56,7 +56,7 @@ export function ModelsClientView({
           <Select.Trigger
             aria-label={t("models_activeProfile")}
             className={cn(
-              "flex h-9 w-full max-w-[200px] items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
+              "flex h-9 w-full max-w-[200px] items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm transition-colors",
               "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
               "disabled:cursor-not-allowed disabled:opacity-50",
             )}

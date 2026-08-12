@@ -30,7 +30,7 @@ export function ProfilesClientView({
 }: ProfilesClientViewProps) {
   if (loading) {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-8 text-muted-foreground shadow-sm">
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-8 text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
         <span>{t("profiles_loading")}</span>
       </div>
@@ -43,7 +43,7 @@ export function ProfilesClientView({
     <div className="space-y-6">
       <form
         onSubmit={onCreate}
-        className="rounded-xl border border-border bg-card p-6 shadow-sm transition-colors hover:border-border/80"
+        className="rounded-xl border border-border bg-card p-6 transition-colors hover:border-border/80"
       >
         <div className="mb-4 flex items-center gap-2">
           <Plus className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -90,7 +90,7 @@ export function ProfilesClientView({
         {profiles.map((profile) => (
           <div
             key={profile.name}
-            className={`relative rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-border/80 hover:bg-accent/40 ${
+            className={`relative rounded-xl border border-border bg-card p-4 transition-colors hover:border-border/80 hover:bg-accent/40 ${
               profile.active ? "border-l-4 border-l-primary pl-3" : ""
             }`}
           >
