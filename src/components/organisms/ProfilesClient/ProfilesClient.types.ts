@@ -19,4 +19,10 @@ export interface ProfilesClientViewProps {
   onCreate: (e: React.FormEvent) => void;
   onSwitch: (name: string) => void;
   onDelete: (name: string) => void;
+  editingProfile: string | null;
+  editAssignments: Record<string, { provider: string; model: string; variant: string }>;
+  onEditStart: (name: string) => void;
+  onEditSave: () => void;
+  onEditCancel: () => void;
+  onEditAssignmentChange: (key: string, assignment: { provider: string; model: string; variant: string }) => void;
 }

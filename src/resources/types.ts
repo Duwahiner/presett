@@ -80,6 +80,9 @@ export interface Resources {
   "profiles_switch": string;
   "profiles_delete": string;
   "profiles_deleteConfirm": string;
+  "profiles_edit": string;
+  "profiles_editTitle": string;
+  "profiles_save": string;
   "backups_title": string;
   "backups_status_badge": string;
   "backups_header_description": string;
