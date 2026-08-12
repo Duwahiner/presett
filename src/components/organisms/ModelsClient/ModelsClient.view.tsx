@@ -1,10 +1,16 @@
 "use client";
 
-import { Loader2 } from "lucide-react";
+import { useState } from "react";
+import { Check, ChevronDown, RefreshCw, RotateCcw, UserCircle } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Select } from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AgentAssignmentRow } from "@/components/molecules/AgentAssignmentRow/AgentAssignmentRow";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
 import { t } from "@/resources/resources";
 import type { ModelsClientViewProps } from "./ModelsClient.types";
+import { Loader2 } from "lucide-react";
 
 export function ModelsClientView({
   assignments,
@@ -12,8 +18,16 @@ export function ModelsClientView({
   loading,
   error,
   saving,
+  profiles,
+  activeProfile,
+  syncing,
   onSave,
+  onSwitchProfile,
+  onSync,
+  onReset,
 }: ModelsClientViewProps) {
+  const [resetDialogOpen, setResetDialogOpen] = useState(false);
+
   if (loading) {
     return (
       <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-8 text-muted-foreground shadow-sm">
@@ -27,6 +41,60 @@ export function ModelsClientView({
 
   return (
     <div className="space-y-4">
+      {/* Profile Selector */}
+      <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
+        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+          <UserCircle className="h-4 w-4 text-primary" />
+        </div>
+        <div className="flex-1">
+          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+            {t("models_activeProfile")}
+          </p>
+          <p className="text-sm font-medium text-card-foreground">{activeProfile}</p>
+        </div>
+        <Select.Root value={activeProfile} onValueChange={(v) => { if (v) onSwitchProfile(v); }}>
+          <Select.Trigger
+            aria-label={t("models_activeProfile")}
+            className={cn(
+              "flex h-9 w-full max-w-[200px] items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
+              "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+              "disabled:cursor-not-allowed disabled:opacity-50",
+            )}
+          >
+            <Select.Value />
+            <ChevronDown className="size-4 text-muted-foreground" />
+          </Select.Trigger>
+          <Select.Portal>
+            <Select.Positioner className="z-50">
+              <Select.Popup
+                className={cn(
+                  "max-h-60 min-w-[var(--anchor-width)] overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md",
+                  "focus-visible:outline-none",
+                )}
+              >
+                {profiles.map((p) => (
+                  <Select.Item
+                    key={p.name}
+                    value={p.name}
+                    className={cn(
+                      "relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none",
+                      "focus:bg-accent focus:text-accent-foreground",
+                    )}
+                  >
+                    <span className="absolute left-2 flex size-3.5 items-center justify-center">
+                      <Select.ItemIndicator>
+                        <Check className="size-3" />
+                      </Select.ItemIndicator>
+                    </span>
+                    <Select.ItemText className="pl-6">{p.displayName}</Select.ItemText>
+                  </Select.Item>
+                ))}
+              </Select.Popup>
+            </Select.Positioner>
+          </Select.Portal>
+        </Select.Root>
+      </div>
+
       {Object.keys(catalog).length === 0 && (
         <ErrorBanner
           variant="warning"
@@ -35,6 +103,7 @@ export function ModelsClientView({
         />
       )}
 
+      {/* Agent Assignments */}
       <div className="space-y-3">
         {assignments.map((assignment) => (
           <AgentAssignmentRow
@@ -49,6 +118,37 @@ export function ModelsClientView({
           />
         ))}
       </div>
+
+      {/* Action Buttons */}
+      <div className="flex items-center gap-2 pt-4">
+        <Button variant="outline" onClick={onSync} disabled={syncing}>
+          {syncing ? (
+            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+          ) : (
+            <RefreshCw className="mr-1.5 h-4 w-4" />
+          )}
+          {t("models_syncNow")}
+        </Button>
+        <Button variant="ghost" onClick={() => setResetDialogOpen(true)}>
+          <RotateCcw className="mr-1.5 h-4 w-4" />
+          {t("models_resetAll")}
+        </Button>
+      </div>
+
+      {/* Reset Confirmation Dialog */}
+      <ConfirmDialog
+        open={resetDialogOpen}
+        onOpenChange={setResetDialogOpen}
+        title={t("models_resetConfirmTitle")}
+        description={t("models_resetConfirmDesc")}
+        confirmLabel={t("models_resetAll")}
+        cancelLabel={t("backups_cancel")}
+        variant="warning"
+        onConfirm={() => {
+          setResetDialogOpen(false);
+          onReset();
+        }}
+      />
     </div>
   );
 }

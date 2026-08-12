@@ -111,4 +111,10 @@ export const es: Resources = {
   "agentAssignment_edit": "Editar asignación",
   "errors_generic": "Error",
   "dashboard_partial_error": "Algunos servicios no pudieron cargarse. Mostrando datos disponibles.",
+  "models_activeProfile": "Perfil Activo",
+  "models_syncNow": "Sincronizar Ahora",
+  "models_resetAll": "Restablecer Todo",
+  "models_resetConfirmTitle": "Restablecer Todas las Asignaciones",
+  "models_resetConfirmDesc": "Esto restablecerá todas las asignaciones de modelos a sus valores originales. ¿Continuar?",
+  "models_syncSuccess": "Sincronización completada exitosamente",
 };

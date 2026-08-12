@@ -111,4 +111,10 @@ export interface Resources {
   "agentAssignment_edit": string;
   "errors_generic": string;
   "dashboard_partial_error": string;
+  "models_activeProfile": string;
+  "models_syncNow": string;
+  "models_resetAll": string;
+  "models_resetConfirmTitle": string;
+  "models_resetConfirmDesc": string;
+  "models_syncSuccess": string;
 }

@@ -111,4 +111,10 @@ export const en: Resources = {
   "agentAssignment_edit": "Edit assignment",
   "errors_generic": "Error",
   "dashboard_partial_error": "Some services could not be loaded. Showing available data.",
+  "models_activeProfile": "Active Profile",
+  "models_syncNow": "Sync Now",
+  "models_resetAll": "Reset All",
+  "models_resetConfirmTitle": "Reset All Assignments",
+  "models_resetConfirmDesc": "This will reset all model assignments to their original values. Continue?",
+  "models_syncSuccess": "Sync completed successfully",
 };

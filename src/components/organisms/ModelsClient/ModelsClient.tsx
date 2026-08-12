@@ -1,32 +1,47 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getConfig, getCatalog, saveAssignment } from "@/services/modelsApiService";
+import { listProfiles, switchProfile } from "@/services/profilesApiService";
+import { runSync } from "@/services/backupsApiService";
 import type { ModelCatalog } from "@/components/molecules/ModelPicker/ModelPicker";
+import type { Profile } from "@/services/profilesApiService";
 import { ModelsClientView } from "./ModelsClient.view";
 import type { Assignment } from "./ModelsClient.types";
 
 export function ModelsClient() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
+  const [originalAssignments, setOriginalAssignments] = useState<Assignment[]>([]);
   const [catalog, setCatalog] = useState<ModelCatalog>({});
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [activeProfile, setActiveProfile] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
+  const [syncing, setSyncing] = useState(false);
+
+  const loadData = useCallback(async () => {
+    try {
+      const [config, catalogData, profilesData] = await Promise.all([
+        getConfig(),
+        getCatalog(),
+        listProfiles(),
+      ]);
+      setAssignments(config.assignments);
+      setOriginalAssignments(config.assignments);
+      setCatalog(catalogData.catalog);
+      setProfiles(profilesData.profiles);
+      setActiveProfile(config.defaultAgent ?? "");
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    async function load() {
-      try {
-        const [config, catalogData] = await Promise.all([getConfig(), getCatalog()]);
-        setAssignments(config.assignments);
-        setCatalog(catalogData.catalog);
-      } catch (cause) {
-        setError(cause instanceof Error ? cause.message : String(cause));
-      } finally {
-        setLoading(false);
-      }
-    }
-    load();
-  }, []);
+    loadData();
+  }, [loadData]);
 
   async function handleSave(
     agentKey: string,
@@ -45,6 +60,44 @@ export function ModelsClient() {
     }
   }
 
+  async function handleSwitchProfile(name: string) {
+    try {
+      await switchProfile(name);
+      setActiveProfile(name);
+      // Reload config to reflect the new profile's assignments
+      const config = await getConfig();
+      setAssignments(config.assignments);
+      setOriginalAssignments(config.assignments);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  }
+
+  async function handleSync() {
+    setSyncing(true);
+    try {
+      await runSync();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setSyncing(false);
+    }
+  }
+
+  async function handleReset() {
+    try {
+      // Restore each assignment to its original value
+      await Promise.all(
+        originalAssignments.map((a) =>
+          saveAssignment({ agentKey: a.agentKey, provider: a.provider, model: a.model, variant: a.variant }),
+        ),
+      );
+      setAssignments([...originalAssignments]);
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  }
+
   return (
     <ModelsClientView
       assignments={assignments}
@@ -52,7 +105,13 @@ export function ModelsClient() {
       loading={loading}
       error={error}
       saving={saving}
+      profiles={profiles}
+      activeProfile={activeProfile}
+      syncing={syncing}
       onSave={handleSave}
+      onSwitchProfile={handleSwitchProfile}
+      onSync={handleSync}
+      onReset={handleReset}
     />
   );
 }
