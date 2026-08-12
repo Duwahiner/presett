@@ -78,7 +78,7 @@ export function ProfilesClientView({
 
           <Button
             type="submit"
-            className="w-full"
+            className="w-full rounded-[3px]"
             disabled={!newName || !newAssignments["orchestrator"]?.provider}
           >
             {t("profiles_create_action")}
