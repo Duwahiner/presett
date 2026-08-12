@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
@@ -12,7 +13,10 @@ import {
   Search,
   RefreshCw,
   Sparkles,
+  Loader2,
 } from "lucide-react";
+import { runSync } from "@/services/backupsApiService";
+import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { t } from "@/resources/resources";
 import { Button } from "@/components/ui/button";
@@ -30,10 +34,23 @@ const navItems: { key: keyof Resources; href: string; icon: React.ComponentType<
 
 export function DashboardLayoutView({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const [syncing, setSyncing] = useState(false);
+  const [search, setSearch] = useState("");
+
+  async function handleSync() {
+    if (syncing) return;
+    setSyncing(true);
+    try {
+      await runSync();
+    } finally {
+      setSyncing(false);
+    }
+  }
 
   return (
-    <div className="flex h-screen w-full items-stretch overflow-hidden bg-background p-2 sm:p-3">
-      <div className="flex h-full w-full overflow-hidden rounded-3xl border border-border bg-card shadow-xl shadow-foreground/5">
+    <div className="flex h-screen w-full items-stretch overflow-hidden bg-background">
+      <div className="flex h-full w-full overflow-hidden bg-card">
         <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-sidebar md:flex">
           <div className="flex h-16 items-center gap-2.5 px-5">
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -76,8 +93,10 @@ export function DashboardLayoutView({ children }: DashboardLayoutProps) {
           </nav>
 
           <div className="p-3">
-            <Button className="w-full gap-2">
-              <RefreshCw className="size-4" />
+            <Button className="w-full gap-2" onClick={handleSync} disabled={syncing}>
+              {syncing
+                ? <Loader2 className="size-4 animate-spin" />
+                : <RefreshCw className="size-4" />}
               {t("sidebar_sync_cta")}
             </Button>
           </div>
@@ -94,14 +113,28 @@ export function DashboardLayoutView({ children }: DashboardLayoutProps) {
               <Menu className="size-5" />
             </Button>
 
-            <label className="relative flex w-full max-w-md items-center">
+            <form
+              className="relative flex w-full max-w-md items-center"
+              onSubmit={(e) => {
+                e.preventDefault();
+                const q = search.trim();
+                if (!q) return;
+                const page = pathname?.startsWith("/models") ? "/models"
+                  : pathname?.startsWith("/profiles") ? "/profiles"
+                  : pathname?.startsWith("/backups") ? "/backups"
+                  : "/models";
+                router.push(`${page}?q=${encodeURIComponent(q)}`);
+              }}
+            >
               <Search className="pointer-events-none absolute left-3.5 size-4 text-muted-foreground" />
               <Input
                 type="search"
                 placeholder={t("topbar_search_placeholder")}
                 className="h-10 rounded-full border-border bg-muted/60 pl-10 pr-4 text-sm placeholder:text-muted-foreground"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
               />
-            </label>
+            </form>
 
             <div className="ml-auto flex items-center gap-1.5">
               <Button

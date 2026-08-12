@@ -65,7 +65,7 @@ function AgentTile({ agent }: { agent: DashboardAgent }) {
         </span>
       </div>
 
-      <p className="mt-3 text-sm font-semibold text-foreground" aria-label={agent.agentKey}>
+      <p className="mt-3 text-base font-medium text-foreground" aria-label={agent.agentKey}>
         {prefix && <span className={prefixColor}>{prefix}</span>}
         <span>{suffix}</span>
       </p>
@@ -89,15 +89,14 @@ function AgentTile({ agent }: { agent: DashboardAgent }) {
 
 function AddAgentTile() {
   return (
-    <Button
-      variant="outline"
-      className="flex min-h-[148px] flex-col items-center justify-center gap-2 rounded-2xl border-dashed text-muted-foreground hover:text-foreground"
-    >
-      <span className="flex size-10 items-center justify-center rounded-xl bg-muted">
-        <Plus className="size-5" />
-      </span>
-      <span className="text-sm font-medium">{t("dashboard_agent_add")}</span>
-    </Button>
+    <Link href="/models" className="block">
+      <div className="flex min-h-[148px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
+        <span className="flex size-10 items-center justify-center rounded-xl bg-muted">
+          <Plus className="size-5" />
+        </span>
+        <span className="text-sm font-medium">{t("dashboard_agent_add")}</span>
+      </div>
+    </Link>
   );
 }
 
@@ -136,7 +135,7 @@ export function DashboardView({ className, stats, agents }: DashboardProps) {
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             {t("workspace_overview")}
           </p>
-          <h1 className="mt-1 text-2xl font-semibold tracking-tight text-foreground text-balance">
+          <h1 className="mt-1 text-3xl font-semibold tracking-tight text-foreground text-balance">
             {t("dashboard_title")}
           </h1>
         </div>
@@ -178,7 +177,7 @@ export function DashboardView({ className, stats, agents }: DashboardProps) {
       <div className="grid flex-1 grid-cols-1 gap-6 xl:grid-cols-3">
         <section className="flex flex-col xl:col-span-2">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-sm font-semibold text-foreground">{t("dashboard_agents_title")}</h2>
+            <h2 className="text-base font-medium text-foreground">{t("dashboard_agents_title")}</h2>
             <Button variant="ghost" size="sm" className="h-auto gap-1 px-0 py-0 text-xs font-medium text-primary hover:text-primary/80">
               {t("dashboard_agents_manage")}
               <ArrowRight className="size-3.5" />
@@ -193,8 +192,8 @@ export function DashboardView({ className, stats, agents }: DashboardProps) {
         </section>
 
         <section className="flex flex-col">
-          <h2 className="mb-3 text-sm font-semibold text-foreground">{t("dashboard_quick_access_title")}</h2>
-          <Card className="flex flex-1 flex-col gap-2.5 p-3">
+          <h2 className="mb-3 text-base font-medium text-foreground">{t("dashboard_quick_access_title")}</h2>
+          <Card className="flex flex-col gap-2.5 p-3">
             <QuickAction
               icon={Cpu}
               title={t("quick_action_models_title")}
@@ -214,7 +213,7 @@ export function DashboardView({ className, stats, agents }: DashboardProps) {
               href="/backups"
             />
 
-            <div className="mt-auto rounded-xl bg-accent p-4">
+            <div className="mt-4 rounded-xl bg-accent p-4">
               <p className="text-sm font-medium text-accent-foreground">{t("tdd_strict_mode_title")}</p>
               <p className="mt-1 text-xs text-accent-foreground/80 text-pretty">
                 {t("tdd_strict_mode_desc")}

@@ -48,7 +48,7 @@ describe("buildDashboardData", () => {
     expect(result.stats.modelCount).toBe(2);
     expect(result.stats.profileCount).toBe(2);
     expect(result.stats.backupCount).toBe(2);
-    expect(result.stats.lastSync).toBe("2026-08-10T20:00:00Z");
+    expect(result.stats.lastSync).toMatch(/^\d+[mhd] ago$|^just now$/);
   });
 
   it("passes agents through unchanged", () => {

@@ -98,4 +98,5 @@ export interface Resources {
   "agentAssignment_unset": string;
   "agentAssignment_edit": string;
   "errors_generic": string;
+  "dashboard_partial_error": string;
 }

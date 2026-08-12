@@ -12,8 +12,8 @@ export function Stat({ label, value, icon: Icon, trend, className }: StatProps) 
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-sm font-medium text-muted-foreground">{label}</p>
-          <p className="mt-2 text-3xl font-bold tracking-tight text-card-foreground">
+          <p className="text-xs font-medium text-muted-foreground">{label}</p>
+          <p className="mt-1.5 truncate text-2xl font-semibold tracking-tight text-card-foreground">
             {value}
           </p>
           {trend && (

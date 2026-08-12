@@ -98,4 +98,5 @@ export const en: Resources = {
   "agentAssignment_unset": "unset",
   "agentAssignment_edit": "Edit assignment",
   "errors_generic": "Error",
+  "dashboard_partial_error": "Some services could not be loaded. Showing available data.",
 };

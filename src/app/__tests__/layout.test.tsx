@@ -7,6 +7,11 @@ vi.mock("next/font/google", () => ({
   JetBrains_Mono: () => ({ variable: "--font-mono-jb" }),
 }));
 
+vi.mock("next/navigation", () => ({
+  usePathname: () => "/",
+  useRouter: () => ({ push: vi.fn() }),
+}));
+
 vi.mock("@/lib/theme-provider", () => ({
   ThemeProvider: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="theme-provider">{children}</div>

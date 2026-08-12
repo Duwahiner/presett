@@ -44,7 +44,7 @@ function PickerField({
       <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
         {label}
       </label>
-      <Select.Root value={value} onValueChange={onChange} disabled={disabled}>
+      <Select.Root value={value || null} onValueChange={onChange} disabled={disabled}>
         <Select.Trigger
           aria-label={label}
           className={cn(

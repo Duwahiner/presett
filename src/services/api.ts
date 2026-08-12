@@ -32,9 +32,18 @@ export function extractApiError(error: unknown): ApiError {
   return { message: String(error) };
 }
 
+function getBaseUrl(): string {
+  if (typeof window === "undefined") {
+    // Server-side: need absolute URL
+    const port = process.env.PORT ?? "3000";
+    return `http://localhost:${port}/api`;
+  }
+  return "/api";
+}
+
 export function createApi(): AxiosInstance {
   const instance = axios.create({
-    baseURL: "/api",
+    baseURL: getBaseUrl(),
     headers: {
       "Content-Type": "application/json",
     },
