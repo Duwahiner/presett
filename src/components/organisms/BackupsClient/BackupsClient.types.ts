@@ -17,4 +17,10 @@ export interface BackupsClientViewProps {
   onPin: (id: string) => void;
   onUnpin: (id: string) => void;
   onDelete: (id: string) => void;
+  deleteConfirmId: string | null;
+  restoreConfirmId: string | null;
+  onDeleteConfirm: () => void;
+  onDeleteCancel: () => void;
+  onRestoreConfirm: () => void;
+  onRestoreCancel: () => void;
 }

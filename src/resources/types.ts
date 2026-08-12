@@ -95,7 +95,11 @@ export interface Resources {
   "backups_pin": string;
   "backups_unpin": string;
   "backups_delete": string;
-  "backups_deleteConfirm": string;
+  "backups_cancel": string;
+  "backups_deleteConfirmTitle": string;
+  "backups_deleteConfirmDesc": string;
+  "backups_restoreConfirmTitle": string;
+  "backups_restoreConfirmDesc": string;
   "backups_restore_success": string;
   "backups_delete_success": string;
   "backups_pinned_cannotDelete": string;

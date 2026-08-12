@@ -18,6 +18,8 @@ export function BackupsClient() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [syncOutput, setSyncOutput] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [restoreConfirmId, setRestoreConfirmId] = useState<string | null>(null);
 
   const refresh = useCallback(async () => {
     try {
@@ -54,15 +56,6 @@ export function BackupsClient() {
     }
   }
 
-  async function handleRestore(id: string) {
-    try {
-      await restoreBackup(id);
-      await refresh();
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : String(cause));
-    }
-  }
-
   async function handlePin(id: string) {
     try {
       await pinBackup(id);
@@ -81,18 +74,44 @@ export function BackupsClient() {
     }
   }
 
-  async function handleDelete(id: string) {
-    const confirmed = window.confirm(
-      t("backups_deleteConfirm").replace("{{id}}", id),
-    );
-    if (!confirmed) return;
+  function handleDelete(id: string) {
+    setDeleteConfirmId(id);
+  }
 
+  async function handleDeleteConfirm() {
+    if (!deleteConfirmId) return;
     try {
-      await deleteBackup(id);
+      await deleteBackup(deleteConfirmId);
       await refresh();
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setDeleteConfirmId(null);
     }
+  }
+
+  function handleDeleteCancel() {
+    setDeleteConfirmId(null);
+  }
+
+  function handleRestore(id: string) {
+    setRestoreConfirmId(id);
+  }
+
+  async function handleRestoreConfirm() {
+    if (!restoreConfirmId) return;
+    try {
+      await restoreBackup(restoreConfirmId);
+      await refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setRestoreConfirmId(null);
+    }
+  }
+
+  function handleRestoreCancel() {
+    setRestoreConfirmId(null);
   }
 
   return (
@@ -106,6 +125,12 @@ export function BackupsClient() {
       onPin={handlePin}
       onUnpin={handleUnpin}
       onDelete={handleDelete}
+      deleteConfirmId={deleteConfirmId}
+      restoreConfirmId={restoreConfirmId}
+      onDeleteConfirm={handleDeleteConfirm}
+      onDeleteCancel={handleDeleteCancel}
+      onRestoreConfirm={handleRestoreConfirm}
+      onRestoreCancel={handleRestoreCancel}
     />
   );
 }

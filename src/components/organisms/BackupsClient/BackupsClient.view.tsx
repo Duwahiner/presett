@@ -11,6 +11,7 @@ import {
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge } from "@/components/atoms/Badge/Badge";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
 import { t } from "@/resources/resources";
@@ -26,6 +27,12 @@ export function BackupsClientView({
   onPin,
   onUnpin,
   onDelete,
+  deleteConfirmId,
+  restoreConfirmId,
+  onDeleteConfirm,
+  onDeleteCancel,
+  onRestoreConfirm,
+  onRestoreCancel,
 }: BackupsClientViewProps) {
   if (loading) {
     return (
@@ -139,6 +146,32 @@ export function BackupsClientView({
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteConfirmId !== null}
+        onOpenChange={(open) => {
+          if (!open) onDeleteCancel();
+        }}
+        title={t("backups_deleteConfirmTitle")}
+        description={t("backups_deleteConfirmDesc").replace("{{id}}", deleteConfirmId ?? "")}
+        confirmLabel={t("backups_delete")}
+        cancelLabel={t("backups_cancel")}
+        variant="destructive"
+        onConfirm={onDeleteConfirm}
+      />
+
+      <ConfirmDialog
+        open={restoreConfirmId !== null}
+        onOpenChange={(open) => {
+          if (!open) onRestoreCancel();
+        }}
+        title={t("backups_restoreConfirmTitle")}
+        description={t("backups_restoreConfirmDesc").replace("{{id}}", restoreConfirmId ?? "")}
+        confirmLabel={t("backups_restore")}
+        cancelLabel={t("backups_cancel")}
+        variant="warning"
+        onConfirm={onRestoreConfirm}
+      />
     </div>
   );
 }
