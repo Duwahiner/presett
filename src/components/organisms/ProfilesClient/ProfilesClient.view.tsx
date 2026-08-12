@@ -145,23 +145,21 @@ export function ProfilesClientView({
                 </div>
 
                 <div className="flex shrink-0 gap-2">
-                  {profile.name && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => onEditStart(profile.name)}
-                      aria-label={t("profiles_edit")}
-                    >
-                      <Pencil className="h-4 w-4" aria-hidden="true" />
-                      {t("profiles_edit")}
-                    </Button>
-                  )}
-                  {!profile.active && profile.name && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => onEditStart(profile.name)}
+                    aria-label={t("profiles_edit")}
+                  >
+                    <Pencil className="h-4 w-4" aria-hidden="true" />
+                    {t("profiles_edit")}
+                  </Button>
+                  {!profile.active && (
                     <Button variant="ghost" size="sm" onClick={() => onSwitch(profile.name)}>
                       {t("profiles_switch")}
                     </Button>
                   )}
-                  {profile.name && (
+                  {profile.name ? (
                     <Button
                       variant="destructive"
                       size="sm"
@@ -170,7 +168,7 @@ export function ProfilesClientView({
                     >
                       <Trash2 className="h-4 w-4" aria-hidden="true" />
                     </Button>
-                  )}
+                  ) : null}
                 </div>
               </div>
             )}
