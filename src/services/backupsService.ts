@@ -1,8 +1,12 @@
-import { readdir, readFile, stat } from "node:fs/promises";
+import { readdir, readFile, stat, writeFile, unlink, rm } from "node:fs/promises";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
 import type { Result } from "@/lib/types";
 import { err, ok } from "@/lib/types";
+
+const execFileAsync = promisify(execFile);
 
 export const DEFAULT_GENTLE_AI_BACKUPS_DIR = join(
   homedir(),
@@ -77,15 +81,120 @@ export async function listBackups(
       size = 0;
     }
 
+    let pinned = false;
+    try {
+      await stat(join(backupsDir, id, ".pinned"));
+      pinned = true;
+    } catch {
+      pinned = false;
+    }
+
     results.push({
       id,
       source: manifest.root_dir,
       timestamp: manifest.created_at,
       fileCount: manifest.entries.length,
       size,
-      pinned: id.startsWith("upgrade-"),
+      pinned,
     });
   }
 
   return results.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+}
+
+function isPinned(backupsDir: string, id: string): Promise<boolean> {
+  return stat(join(backupsDir, id, ".pinned"))
+    .then(() => true)
+    .catch(() => false);
+}
+
+export async function restoreBackup(
+  backupsDir: string,
+  id: string,
+): Promise<Result<void>> {
+  const manifestResult = await readBackupManifest(backupsDir, id);
+  if (!manifestResult.ok) {
+    return err(manifestResult.error);
+  }
+
+  const tarPath = join(backupsDir, id, "snapshot.tar.gz");
+  const rootDir = manifestResult.value.root_dir;
+
+  try {
+    await stat(tarPath);
+  } catch {
+    return err({
+      code: "FILE_MISSING",
+      message: `Snapshot file not found: ${tarPath}`,
+    });
+  }
+
+  try {
+    await execFileAsync("tar", ["-xzf", tarPath, "-C", rootDir]);
+    return ok(undefined);
+  } catch (cause) {
+    return err({
+      code: "RESTORE_FAILED",
+      message: `Failed to restore backup ${id} to ${rootDir}`,
+      cause,
+    });
+  }
+}
+
+export async function pinBackup(
+  backupsDir: string,
+  id: string,
+): Promise<Result<void>> {
+  const markerPath = join(backupsDir, id, ".pinned");
+  try {
+    await writeFile(markerPath, "");
+    return ok(undefined);
+  } catch (cause) {
+    return err({
+      code: "WRITE_BLOCKED",
+      message: `Failed to pin backup ${id}`,
+      cause,
+    });
+  }
+}
+
+export async function unpinBackup(
+  backupsDir: string,
+  id: string,
+): Promise<Result<void>> {
+  const markerPath = join(backupsDir, id, ".pinned");
+  try {
+    await unlink(markerPath);
+    return ok(undefined);
+  } catch (cause) {
+    return err({
+      code: "FILE_MISSING",
+      message: `Failed to unpin backup ${id} (not pinned)`,
+      cause,
+    });
+  }
+}
+
+export async function deleteBackup(
+  backupsDir: string,
+  id: string,
+): Promise<Result<void>> {
+  if (await isPinned(backupsDir, id)) {
+    return err({
+      code: "PINNED_CANNOT_DELETE",
+      message: `Cannot delete pinned backup ${id}`,
+    });
+  }
+
+  const backupDir = join(backupsDir, id);
+  try {
+    await rm(backupDir, { recursive: true, force: true });
+    return ok(undefined);
+  } catch (cause) {
+    return err({
+      code: "FILE_MISSING",
+      message: `Failed to delete backup ${id}`,
+      cause,
+    });
+  }
 }

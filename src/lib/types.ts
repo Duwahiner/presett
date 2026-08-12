@@ -4,7 +4,9 @@ export type ConfigErrorCode =
   | "SCHEMA_INVALID"
   | "WRITE_BLOCKED"
   | "ATOMIC_WRITE_FAILED"
-  | "JSONC_NOT_SUPPORTED";
+  | "JSONC_NOT_SUPPORTED"
+  | "PINNED_CANNOT_DELETE"
+  | "RESTORE_FAILED";
 
 export interface ConfigError {
   code: ConfigErrorCode;

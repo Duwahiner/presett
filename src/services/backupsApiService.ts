@@ -22,3 +22,19 @@ export async function listBackups(): Promise<{ backups: BackupInfo[] }> {
 export async function runSync(): Promise<SyncResult> {
   return post("/sync");
 }
+
+export async function restoreBackup(id: string): Promise<void> {
+  return post(`/backups/${id}`, { action: "restore" });
+}
+
+export async function pinBackup(id: string): Promise<void> {
+  return post(`/backups/${id}`, { action: "pin" });
+}
+
+export async function unpinBackup(id: string): Promise<void> {
+  return post(`/backups/${id}`, { action: "unpin" });
+}
+
+export async function deleteBackup(id: string): Promise<void> {
+  return post(`/backups/${id}`, { action: "delete" });
+}

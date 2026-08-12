@@ -13,4 +13,8 @@ export interface BackupsClientViewProps {
   error: string | null;
   syncOutput: string | null;
   onSync: () => void;
+  onRestore: (id: string) => void;
+  onPin: (id: string) => void;
+  onUnpin: (id: string) => void;
+  onDelete: (id: string) => void;
 }

@@ -1,6 +1,15 @@
 "use client";
 
-import { RefreshCw, HardDrive, Pin, AlertCircle, Loader2 } from "lucide-react";
+import {
+  RefreshCw,
+  HardDrive,
+  Pin,
+  PinOff,
+  RotateCcw,
+  Trash2,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/atoms/Badge/Badge";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
@@ -13,6 +22,10 @@ export function BackupsClientView({
   error,
   syncOutput,
   onSync,
+  onRestore,
+  onPin,
+  onUnpin,
+  onDelete,
 }: BackupsClientViewProps) {
   if (loading) {
     return (
@@ -72,7 +85,7 @@ export function BackupsClientView({
                   <div className="flex flex-wrap items-center gap-2">
                     <h4 className="font-semibold text-card-foreground">{backup.id}</h4>
                     {backup.pinned && (
-                      <Badge variant="error" pulsing className="gap-1">
+                      <Badge variant="warning" pulsing className="gap-1">
                         <Pin className="h-3 w-3" aria-hidden="true" />
                         {t("backups_pinned")}
                       </Badge>
@@ -88,6 +101,38 @@ export function BackupsClientView({
                     <span>{backup.size} bytes</span>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground/70">{backup.timestamp}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onRestore(backup.id)}
+                    >
+                      <RotateCcw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                      {t("backups_restore")}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        backup.pinned ? onUnpin(backup.id) : onPin(backup.id)
+                      }
+                    >
+                      {backup.pinned ? (
+                        <PinOff className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                      ) : (
+                        <Pin className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                      )}
+                      {backup.pinned ? t("backups_unpin") : t("backups_pin")}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => onDelete(backup.id)}
+                    >
+                      <Trash2 className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                      {t("backups_delete")}
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
