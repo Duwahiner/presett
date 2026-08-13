@@ -7,14 +7,14 @@ Local web GUI for managing Gentle-AI / OpenCode configuration without hand-editi
 - **Dashboard**: shows Gentle-AI install state, OpenCode config status, backup count, and last sync info.
 - **Models**: view and edit `model` + `variant` assignments for `gentle-orchestrator`, SDD phase agents, and Judgment Day agents, validated against the `model-variants` cache.
 - **Profiles**: create, edit, switch, and delete SDD profiles following gentle-ai naming conventions (`sdd-orchestrator-{name}`, `sdd-{phase}-{name}`). The base profile is protected.
-- **Backups**: read-only viewer for `~/.gentle-ai/backups/` with derived metadata (`file_count`, `size`, `pinned`). No restore/pin/delete actions.
+- **Backups**: viewer for `~/.gentle-ai/backups/` with derived metadata (`file_count`, `size`, `pinned`) and confirmed restore, pin/unpin, and delete actions.
 - **Sync**: thin wrapper around `gentle-ai sync` that surfaces stdout/stderr/exit code.
 
 ## What it does NOT do
 
 - Install Gentle-AI, agents, components, or plugins.
 - Modify `state.json` (toggles, persona, SDD mode).
-- Write into `~/.gentle-ai/backups/`.
+- Modify Gentle-AI backups without explicit local UI intent and server-side validation.
 - Run as a public service or provide authentication.
 
 ## Stack
@@ -58,6 +58,18 @@ npm run build    # production build
 ## Security
 
 PreSett is designed to run on localhost only. API routes bind to the loopback interface via Next.js defaults. No authentication is implemented.
+
+State-changing API routes require a valid loopback `Origin` header. Backup mutations also validate the backup id, require the target backup to exist beneath the configured backup root, and return safe errors without exposing filesystem paths or process details.
+
+## Backup operations
+
+The Backups page lists Gentle-AI backups from `~/.gentle-ai/backups/` and shows the backup id, source directory, timestamp, file count, size, and pinned state.
+
+- **Restore**: opens a confirmation dialog first. Only after confirmation does the UI send `confirmed: true` to the restore endpoint. Existing files may be overwritten by the underlying restore operation.
+- **Pin / Unpin**: toggles the backup's pinned marker and refreshes the list. Pin and unpin do not use the destructive confirmation flag.
+- **Delete**: opens a confirmation dialog first. Only after confirmation does the UI send `confirmed: true` to the delete endpoint.
+
+Pinned backups are protected server-side. Unpin a backup before deleting it intentionally.
 
 ## Rollback
 

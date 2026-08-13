@@ -1,9 +1,20 @@
 "use client";
 
-import { RefreshCw, HardDrive, Pin, AlertCircle, Loader2 } from "lucide-react";
+import {
+  RefreshCw,
+  HardDrive,
+  Pin,
+  PinOff,
+  RotateCcw,
+  Trash2,
+  AlertCircle,
+  Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge } from "@/components/atoms/Badge/Badge";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
+import { cn } from "@/lib/utils";
 import { t } from "@/resources/resources";
 import type { BackupsClientViewProps } from "./BackupsClient.types";
 
@@ -12,7 +23,20 @@ export function BackupsClientView({
   loading,
   error,
   syncOutput,
+  syncing,
+  feedback,
+  pendingAction,
   onSync,
+  onRestore,
+  onPin,
+  onUnpin,
+  onDelete,
+  deleteConfirmId,
+  restoreConfirmId,
+  onDeleteConfirm,
+  onDeleteCancel,
+  onRestoreConfirm,
+  onRestoreCancel,
 }: BackupsClientViewProps) {
   if (loading) {
     return (
@@ -35,12 +59,35 @@ export function BackupsClientView({
           <h4 className="font-semibold text-card-foreground">{t("backups_sync_title")}</h4>
         </div>
         <p className="mb-4 text-sm text-muted-foreground">{t("backups_sync_description")}</p>
-        <Button onClick={onSync} className="w-full sm:w-auto">
-          <RefreshCw className="mr-1.5 h-4 w-4" aria-hidden="true" />
+        <Button onClick={onSync} className="w-full sm:w-auto" disabled={syncing}>
+          {syncing ? (
+            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <RefreshCw className="mr-1.5 h-4 w-4" aria-hidden="true" />
+          )}
           {t("backups_sync_action")}
         </Button>
+        {feedback && (
+          <div
+            role={feedback.type === "error" ? "alert" : "status"}
+            className={cn(
+              "mt-4 rounded-xl border px-4 py-3 text-sm",
+              feedback.type === "error"
+                ? "border-destructive/20 bg-destructive/10 text-destructive"
+                : "border-success/20 bg-success/10 text-success",
+            )}
+          >
+            {feedback.message}
+          </div>
+        )}
         {syncOutput && (
-          <pre className="mt-4 max-h-48 overflow-auto rounded-lg border border-border bg-muted p-4 font-mono text-xs text-success">
+          <pre
+            role="status"
+            className={cn(
+              "mt-4 max-h-48 overflow-auto rounded-lg border border-border bg-muted p-4 font-mono text-xs",
+              feedback?.type === "error" ? "text-destructive" : "text-success",
+            )}
+          >
             {syncOutput}
           </pre>
         )}
@@ -88,12 +135,81 @@ export function BackupsClientView({
                     <span>{backup.size} bytes</span>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground/70">{backup.timestamp}</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => onRestore(backup.id)}
+                      disabled={pendingAction === `restore:${backup.id}`}
+                    >
+                      {pendingAction === `restore:${backup.id}` ? (
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                      ) : (
+                        <RotateCcw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                      )}
+                      {t("backups_restore")}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => (backup.pinned ? onUnpin(backup.id) : onPin(backup.id))}
+                      disabled={pendingAction === `pin:${backup.id}` || pendingAction === `unpin:${backup.id}`}
+                    >
+                      {pendingAction === `pin:${backup.id}` || pendingAction === `unpin:${backup.id}` ? (
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                      ) : backup.pinned ? (
+                        <PinOff className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                      ) : (
+                        <Pin className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                      )}
+                      {backup.pinned ? t("backups_unpin") : t("backups_pin")}
+                    </Button>
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => onDelete(backup.id)}
+                      disabled={pendingAction === `delete:${backup.id}`}
+                    >
+                      {pendingAction === `delete:${backup.id}` ? (
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                      ) : (
+                        <Trash2 className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                      )}
+                      {t("backups_delete")}
+                    </Button>
+                  </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
       )}
+
+      <ConfirmDialog
+        open={deleteConfirmId !== null}
+        onOpenChange={(open) => {
+          if (!open) onDeleteCancel();
+        }}
+        title={t("backups_deleteConfirmTitle")}
+        description={t("backups_deleteConfirmDesc", { id: deleteConfirmId ?? "" })}
+        confirmLabel={t("backups_delete")}
+        cancelLabel={t("backups_cancel")}
+        variant="destructive"
+        onConfirm={onDeleteConfirm}
+      />
+
+      <ConfirmDialog
+        open={restoreConfirmId !== null}
+        onOpenChange={(open) => {
+          if (!open) onRestoreCancel();
+        }}
+        title={t("backups_restoreConfirmTitle")}
+        description={t("backups_restoreConfirmDesc", { id: restoreConfirmId ?? "" })}
+        confirmLabel={t("backups_restore")}
+        cancelLabel={t("backups_cancel")}
+        variant="warning"
+        onConfirm={onRestoreConfirm}
+      />
     </div>
   );
 }

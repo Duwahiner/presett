@@ -1,91 +1,203 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { describe, expect, it, vi } from "vitest";
+import { AxiosError, AxiosHeaders, type AxiosResponse, type InternalAxiosRequestConfig } from "axios";
+import { createApi, del, extractApiError, get, post, put, api } from "@/services/api";
+import { setLocale } from "@/resources/resources";
 
-const mocks = vi.hoisted(() => {
-  const requestUse = vi.fn();
-  const responseUse = vi.fn();
-  const instance = {
-    get: vi.fn(),
-    post: vi.fn(),
-    put: vi.fn(),
-    delete: vi.fn(),
-    interceptors: {
-      request: { use: requestUse },
-      response: { use: responseUse },
-    },
+const GENERIC_REQUEST_ERROR = "Request failed. Please try again.";
+const NETWORK_ERROR =
+  "Network request failed. Please check the local service and try again.";
+const TIMEOUT_ERROR = "Request timed out. Please try again.";
+
+function responseError(data: unknown, status: number): AxiosError {
+  return new AxiosError("Request failed", "ERR_BAD_RESPONSE", undefined, undefined, {
+    data,
+    status,
+    statusText: "Error",
+    headers: {},
+    config: { headers: new AxiosHeaders() },
+  });
+}
+
+function interceptorHandlers(instance: ReturnType<typeof createApi>) {
+  return instance.interceptors as unknown as {
+    request: {
+      handlers: Array<{
+        fulfilled: (config: InternalAxiosRequestConfig) => InternalAxiosRequestConfig;
+        rejected: (error: unknown) => Promise<never>;
+      }>;
+    };
+    response: {
+      handlers: Array<{
+        fulfilled: (response: AxiosResponse) => unknown;
+        rejected: (error: unknown) => Promise<never>;
+      }>;
+    };
   };
-  return { create: vi.fn(() => instance), instance, requestUse, responseUse };
-});
-
-vi.mock("axios", () => ({ default: { create: mocks.create } }));
-vi.mock("@/resources/resources", () => ({ getLocale: () => "es", t: vi.fn() }));
-
-import { createApi, del, extractApiError, get, post, put } from "@/services/api";
+}
 
 describe("extractApiError", () => {
-  it("preserves nested API messages and status", () => {
-    expect(
-      extractApiError({
-        isAxiosError: true,
-        response: { status: 422, statusText: "Unprocessable", data: { error: { message: "Invalid profile" } } },
-      }),
-    ).toEqual({ message: "Invalid profile", status: 422 });
+  it("extracts a safe message and status from a JSON error response", () => {
+    const error = responseError({ error: { message: "Backup not found" } }, 404);
+
+    expect(extractApiError(error)).toEqual({
+      message: "Backup not found",
+      status: 404,
+    });
   });
 
-  it("falls back through axios, Error, and unknown messages", () => {
-    expect(extractApiError({ isAxiosError: true, response: { status: 500, statusText: "Server error" } })).toEqual({ message: "Server error", status: 500 });
-    expect(extractApiError({ isAxiosError: true, message: "Network down" })).toEqual({ message: "Network down" });
-    expect(extractApiError(new Error("Unexpected"))).toEqual({ message: "Unexpected" });
-    expect(extractApiError(42)).toEqual({ message: "42" });
+  it("uses a generic safe fallback for non-JSON failure responses", () => {
+    const error = responseError(
+      "Error: /Users/me/.gentle-ai/backups/backup-1 stack trace",
+      500,
+    );
+
+    expect(extractApiError(error)).toEqual({
+      message: GENERIC_REQUEST_ERROR,
+      status: 500,
+    });
+  });
+
+  it.each([
+    ["empty response", undefined],
+    ["string nested error", { error: "Backup failed with /Users/me/.config" }],
+    ["missing nested message", { error: { detail: "internal path leak" } }],
+    ["non-string nested message", { error: { message: { text: "private" } } }],
+  ])("uses a generic safe fallback for malformed JSON bodies: %s", (_case, data) => {
+    const error = responseError(data, 502);
+
+    expect(extractApiError(error)).toEqual({
+      message: GENERIC_REQUEST_ERROR,
+      status: 502,
+    });
+  });
+
+  it("uses a neutral transport error for network failures", () => {
+    const error = new AxiosError("connect ECONNREFUSED 127.0.0.1:3000", "ERR_NETWORK");
+
+    expect(extractApiError(error)).toEqual({
+      message: NETWORK_ERROR,
+      status: 0,
+    });
+  });
+
+  it.each([
+    ["ECONNABORTED", new AxiosError("timeout of 1000ms exceeded", "ECONNABORTED")],
+    ["ETIMEDOUT", new AxiosError("request timed out", "ETIMEDOUT")],
+    ["Axios AbortError", new AxiosError("canceled", undefined, undefined, undefined, undefined)],
+  ])("uses a timeout-safe message and actionable status for %s", (_case, error) => {
+    if (_case === "Axios AbortError") {
+      error.name = "AbortError";
+    }
+
+    expect(extractApiError(error)).toEqual({
+      message: TIMEOUT_ERROR,
+      status: 408,
+    });
+  });
+
+  it("classifies native AbortError DOMExceptions without leaking the native type", () => {
+    const error = new DOMException("The operation was aborted.", "AbortError");
+
+    expect(extractApiError(error)).toEqual({
+      message: TIMEOUT_ERROR,
+      status: 408,
+    });
+  });
+
+  it("uses an unknown-safe message and neutral status for generic non-Axios failures", () => {
+    const error = new Error("Unexpected /Users/me/.config/presett failure");
+
+    expect(extractApiError(error)).toEqual({
+      message: GENERIC_REQUEST_ERROR,
+      status: 0,
+    });
   });
 });
 
-describe("createApi", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
+describe("createApi interceptors", () => {
+  it("sets Accept-Language from the current locale on requests", () => {
+    setLocale("es");
+    const instance = createApi();
+    const config = { headers: new AxiosHeaders() } as InternalAxiosRequestConfig;
+
+    const result = interceptorHandlers(instance).request.handlers[0].fulfilled(config);
+
+    expect(result.headers.get("Accept-Language")).toBe("es");
+    setLocale("en");
   });
 
-  it("uses the browser base URL and configures request and response interceptors", async () => {
-    createApi();
+  it("returns response data from fulfilled responses", () => {
+    const instance = createApi();
+    const response = {
+      data: { ok: true, source: "api" },
+      status: 200,
+      statusText: "OK",
+      headers: {},
+      config: { headers: new AxiosHeaders() },
+    } as AxiosResponse;
 
-    expect(mocks.create).toHaveBeenCalledWith(expect.objectContaining({ baseURL: "/api" }));
-    const requestHandler = mocks.requestUse.mock.calls[0][0];
-    const responseHandler = mocks.responseUse.mock.calls[0][0];
-    const errorHandler = mocks.responseUse.mock.calls[0][1];
-    const config = { headers: { set: vi.fn() } };
+    const result = interceptorHandlers(instance).response.handlers[0].fulfilled(response);
 
-    expect(requestHandler(config)).toBe(config);
-    expect(config.headers.set).toHaveBeenCalledWith("Accept-Language", "es");
-    expect(responseHandler({ data: { ok: true } })).toEqual({ ok: true });
-    await expect(errorHandler(new Error("Nope"))).rejects.toEqual({ message: "Nope" });
+    expect(result).toEqual({ ok: true, source: "api" });
   });
 
-  it("uses an absolute server base URL", () => {
-    const originalWindow = globalThis.window;
-    Object.defineProperty(globalThis, "window", { configurable: true, value: undefined });
-    process.env.PORT = "4567";
+  it("rejects response failures as classified safe API errors", async () => {
+    const instance = createApi();
+    const error = responseError({ error: { detail: "private" } }, 503);
 
-    createApi();
+    await expect(
+      interceptorHandlers(instance).response.handlers[0].rejected(error),
+    ).rejects.toEqual({
+      message: GENERIC_REQUEST_ERROR,
+      status: 503,
+    });
+  });
 
-    expect(mocks.create).toHaveBeenCalledWith(expect.objectContaining({ baseURL: "http://localhost:4567/api" }));
-    Object.defineProperty(globalThis, "window", { configurable: true, value: originalWindow });
+  it("rejects request interceptor failures as classified safe API errors", async () => {
+    const instance = createApi();
+    const error = new Error("Locale lookup failed at C:/Users/me/.config/presett");
+
+    await expect(
+      interceptorHandlers(instance).request.handlers[0].rejected(error),
+    ).rejects.toEqual({
+      message: GENERIC_REQUEST_ERROR,
+      status: 0,
+    });
   });
 });
 
-describe("API methods", () => {
-  it("delegates all HTTP methods to the shared instance", async () => {
-    mocks.instance.get.mockResolvedValue({ id: "get" });
-    mocks.instance.post.mockResolvedValue({ id: "post" });
-    mocks.instance.put.mockResolvedValue({ id: "put" });
-    mocks.instance.delete.mockResolvedValue({ id: "delete" });
+describe("HTTP helper delegates", () => {
+  it("delegates GET requests to the shared API instance", async () => {
+    const spy = vi.spyOn(api, "get").mockResolvedValueOnce({ ok: true });
 
-    await expect(get("/get")).resolves.toEqual({ id: "get" });
-    await expect(post("/post", { value: 1 })).resolves.toEqual({ id: "post" });
-    await expect(put("/put", { value: 2 })).resolves.toEqual({ id: "put" });
-    await expect(del("/delete")).resolves.toEqual({ id: "delete" });
+    await expect(get("/status")).resolves.toEqual({ ok: true });
 
-    expect(mocks.instance.get).toHaveBeenCalledWith("/get");
-    expect(mocks.instance.post).toHaveBeenCalledWith("/post", { value: 1 });
-    expect(mocks.instance.put).toHaveBeenCalledWith("/put", { value: 2 });
-    expect(mocks.instance.delete).toHaveBeenCalledWith("/delete");
+    expect(spy).toHaveBeenCalledWith("/status");
+  });
+
+  it("delegates POST requests to the shared API instance with data", async () => {
+    const payload = { name: "profile-a" };
+    const spy = vi.spyOn(api, "post").mockResolvedValueOnce({ ok: true });
+
+    await expect(post("/profiles", payload)).resolves.toEqual({ ok: true });
+
+    expect(spy).toHaveBeenCalledWith("/profiles", payload);
+  });
+
+  it("delegates PUT requests to the shared API instance with data", async () => {
+    const payload = { provider: "google" };
+    const spy = vi.spyOn(api, "put").mockResolvedValueOnce({ ok: true });
+
+    await expect(put("/config", payload)).resolves.toEqual({ ok: true });
+
+    expect(spy).toHaveBeenCalledWith("/config", payload);
+  });
+
+  it("delegates DELETE requests to the shared API instance", async () => {
+    const spy = vi.spyOn(api, "delete").mockResolvedValueOnce({ ok: true });
+
+    await expect(del("/profiles/profile-a")).resolves.toEqual({ ok: true });
+
+    expect(spy).toHaveBeenCalledWith("/profiles/profile-a");
   });
 });

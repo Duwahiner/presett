@@ -12,5 +12,18 @@ export interface BackupsClientViewProps {
   loading: boolean;
   error: string | null;
   syncOutput: string | null;
+  syncing: boolean;
+  feedback: { type: "success" | "error"; message: string } | null;
+  pendingAction: string | null;
   onSync: () => void;
+  onRestore: (id: string) => void;
+  onPin: (id: string) => void;
+  onUnpin: (id: string) => void;
+  onDelete: (id: string) => void;
+  deleteConfirmId: string | null;
+  restoreConfirmId: string | null;
+  onDeleteConfirm: () => void;
+  onDeleteCancel: () => void;
+  onRestoreConfirm: () => void;
+  onRestoreCancel: () => void;
 }
