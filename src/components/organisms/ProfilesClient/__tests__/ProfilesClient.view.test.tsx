@@ -23,6 +23,12 @@ describe("ProfilesClientView", () => {
     onCreate: vi.fn(),
     onSwitch: vi.fn(),
     onDelete: vi.fn(),
+    editingProfile: null,
+    editAssignments: {},
+    onEditStart: vi.fn(),
+    onEditSave: vi.fn(),
+    onEditCancel: vi.fn(),
+    onEditAssignmentChange: vi.fn(),
   };
 
   function StatefulView(
