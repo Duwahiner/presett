@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Check, ChevronDown, RefreshCw, RotateCcw, UserCircle } from "lucide-react";
+import { AlertCircle, Check, ChevronDown, RefreshCw, RotateCcw, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -18,9 +18,12 @@ export function ModelsClientView({
   loading,
   error,
   saving,
+  feedback,
   profiles,
   activeProfile,
   syncing,
+  switchingProfile,
+  resetting,
   onSave,
   onSwitchProfile,
   onSync,
@@ -52,7 +55,7 @@ export function ModelsClientView({
           </p>
           <p className="text-sm font-medium text-card-foreground">{activeProfile}</p>
         </div>
-        <Select.Root value={activeProfile} onValueChange={(v) => { if (v) onSwitchProfile(v); }}>
+        <Select.Root value={activeProfile} onValueChange={(v) => { if (v) onSwitchProfile(v); }} disabled={switchingProfile}>
           <Select.Trigger
             aria-label={t("models_activeProfile")}
             className={cn(
@@ -103,21 +106,47 @@ export function ModelsClientView({
         />
       )}
 
+      {feedback && (
+        <div
+          role={feedback.type === "error" ? "alert" : "status"}
+          className={cn(
+            "rounded-xl border px-4 py-3 text-sm",
+            feedback.type === "error"
+              ? "border-destructive/20 bg-destructive/10 text-destructive"
+              : "border-success/20 bg-success/10 text-success",
+          )}
+        >
+          {feedback.message}
+        </div>
+      )}
+
       {/* Agent Assignments */}
-      <div className="space-y-3">
-        {assignments.map((assignment) => (
-          <AgentAssignmentRow
-            key={assignment.agentKey}
-            agentKey={assignment.agentKey}
-            provider={assignment.provider}
-            model={assignment.model}
-            variant={assignment.variant}
-            catalog={catalog}
-            disabled={saving === assignment.agentKey || Object.keys(catalog).length === 0}
-            onSave={(a) => onSave(assignment.agentKey, a)}
-          />
-        ))}
-      </div>
+      {assignments.length === 0 ? (
+        <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card/40 p-12 text-center">
+          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+            <AlertCircle className="h-7 w-7 text-primary" aria-hidden="true" />
+          </div>
+          <h4 className="mt-4 font-semibold text-card-foreground">{t("models_emptyAssignmentsTitle")}</h4>
+          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+            {t("models_emptyAssignmentsDesc")}
+          </p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {assignments.map((assignment) => (
+            <AgentAssignmentRow
+              key={assignment.agentKey}
+              agentKey={assignment.agentKey}
+              provider={assignment.provider}
+              model={assignment.model}
+              variant={assignment.variant}
+              catalog={catalog}
+              disabled={saving === assignment.agentKey || Object.keys(catalog).length === 0}
+              onSave={(a) => onSave(assignment.agentKey, a)}
+            />
+          ))}
+        </div>
+      )}
 
       {/* Action Buttons */}
       <div className="flex items-center gap-2 pt-4">
@@ -129,8 +158,12 @@ export function ModelsClientView({
           )}
           {t("models_syncNow")}
         </Button>
-        <Button variant="ghost" onClick={() => setResetDialogOpen(true)}>
-          <RotateCcw className="mr-1.5 h-4 w-4" />
+        <Button variant="ghost" onClick={() => setResetDialogOpen(true)} disabled={resetting || assignments.length === 0}>
+          {resetting ? (
+            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+          ) : (
+            <RotateCcw className="mr-1.5 h-4 w-4" />
+          )}
           {t("models_resetAll")}
         </Button>
       </div>
