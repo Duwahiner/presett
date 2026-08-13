@@ -19,6 +19,9 @@ function renderView(overrides: Partial<ComponentProps<typeof BackupsClientView>>
     loading: false,
     error: null,
     syncOutput: null,
+    syncing: false,
+    feedback: null,
+    pendingAction: null,
     onSync: vi.fn(),
     onRestore: vi.fn(),
     onPin: vi.fn(),
@@ -59,5 +62,17 @@ describe("BackupsClientView", () => {
     await user.click(screen.getByRole("button", { name: "Delete" }));
 
     expect(onDeleteConfirm).toHaveBeenCalledOnce();
+  });
+
+  it("disables an action while its mutation is pending", () => {
+    renderView({ pendingAction: "pin:backup-1" });
+
+    expect(screen.getByRole("button", { name: "Pin" }).hasAttribute("disabled")).toBe(true);
+  });
+
+  it("announces mutation feedback", () => {
+    renderView({ feedback: { type: "success", message: "Backup pinned." } });
+
+    expect(screen.getByRole("status").textContent).toContain("Backup pinned.");
   });
 });
