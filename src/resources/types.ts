@@ -100,6 +100,12 @@ export interface Resources {
   "backups_deleteConfirmDesc": string;
   "backups_restoreConfirmTitle": string;
   "backups_restoreConfirmDesc": string;
+  "backups_restore_success": string;
+  "backups_delete_success": string;
+  "backups_sync_success": string;
+  "backups_sync_failed": string;
+  "backups_pin_success": string;
+  "backups_unpin_success": string;
   "modelPicker_provider": string;
   "modelPicker_model": string;
   "modelPicker_variant": string;
