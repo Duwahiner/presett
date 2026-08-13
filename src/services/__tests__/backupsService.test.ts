@@ -45,6 +45,40 @@ describe("listBackups", () => {
     const backups = await listBackups(join(tempDir, "missing"));
     expect(backups).toEqual([]);
   });
+
+  it("skips unreadable manifests, defaults missing snapshots, and sorts newest first", async () => {
+    const olderDir = join(tempDir, "manual-older");
+    const newerDir = join(tempDir, "manual-newer");
+    await mkdir(olderDir, { recursive: true });
+    await mkdir(newerDir, { recursive: true });
+    await writeFile(
+      join(olderDir, "manifest.json"),
+      JSON.stringify({
+        id: "manual-older",
+        created_at: "2026-08-10T12:00:00Z",
+        root_dir: "/older",
+        entries: [],
+      }),
+    );
+    await writeFile(
+      join(newerDir, "manifest.json"),
+      JSON.stringify({
+        id: "manual-newer",
+        created_at: "2026-08-11T12:00:00Z",
+        root_dir: "/newer",
+        entries: [{ original_path: "/a" }],
+      }),
+    );
+    await mkdir(join(tempDir, "invalid"));
+    await writeFile(join(tempDir, "invalid", "manifest.json"), "not json");
+
+    const backups = await listBackups(tempDir);
+
+    expect(backups).toEqual([
+      expect.objectContaining({ id: "manual-newer", size: 0, pinned: false }),
+      expect.objectContaining({ id: "manual-older", size: 0, pinned: false }),
+    ]);
+  });
 });
 
 describe("readBackupManifest", () => {
@@ -61,5 +95,15 @@ describe("readBackupManifest", () => {
   it("returns error for missing manifest", async () => {
     const result = await readBackupManifest(tempDir, "missing");
     expect(result.ok).toBe(false);
+  });
+
+  it("returns parse failure for invalid JSON", async () => {
+    const backupDir = join(tempDir, "invalid");
+    await mkdir(backupDir);
+    await writeFile(join(backupDir, "manifest.json"), "not json");
+
+    const result = await readBackupManifest(tempDir, "invalid");
+
+    expect(result).toMatchObject({ ok: false, error: { code: "PARSE_FAILED" } });
   });
 });
