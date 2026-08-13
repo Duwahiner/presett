@@ -91,6 +91,15 @@ export interface Resources {
   "backups_pinned": string;
   "backups_source": string;
   "backups_files": string;
+  "backups_restore": string;
+  "backups_pin": string;
+  "backups_unpin": string;
+  "backups_delete": string;
+  "backups_cancel": string;
+  "backups_deleteConfirmTitle": string;
+  "backups_deleteConfirmDesc": string;
+  "backups_restoreConfirmTitle": string;
+  "backups_restoreConfirmDesc": string;
   "modelPicker_provider": string;
   "modelPicker_model": string;
   "modelPicker_variant": string;
