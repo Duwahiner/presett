@@ -30,7 +30,13 @@ describe("POST /api/diagnostics/check", () => {
   it("does not start a concurrent release check", async () => {
     const { POST } = await import("../route");
     checkGentleAiReleases.mockImplementationOnce(() => new Promise((resolve) => {
-      setTimeout(() => resolve({ status: { phase: "success" }, settings: { frequencyMinutes: 60 } }), 20);
+      setTimeout(() => resolve({
+        status: { phase: "success", checkedAt: "2026-08-13T10:00:00.000Z" },
+        settings: { frequencyMinutes: 60 },
+        installedVersion: "1.2.0",
+        channels: { stable: { latestVersion: "1.2.0", updateAvailable: false }, rc: { latestVersion: "1.2.0-rc.1", updateAvailable: false } },
+        notice: { channel: "stable", version: "1.2.0", pending: false },
+      }), 20);
     }));
 
     const [first, second] = await Promise.all([POST(), POST()]);

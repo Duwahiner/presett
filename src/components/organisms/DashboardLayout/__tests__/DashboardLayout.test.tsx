@@ -55,6 +55,7 @@ describe("DashboardLayout", () => {
     expect(screen.queryByRole("link", { name: "Models" })).not.toBeNull();
     expect(screen.queryByRole("link", { name: "Profiles" })).not.toBeNull();
     expect(screen.queryByRole("link", { name: "Backups" })).not.toBeNull();
+    expect(screen.queryByRole("link", { name: "Diagnostics" })).not.toBeNull();
     expect(screen.queryByText("Dashboard content")).not.toBeNull();
   });
 
@@ -81,6 +82,18 @@ describe("DashboardLayout", () => {
 
     const modelsLink = screen.getByRole("link", { name: "Models" });
     expect(modelsLink.getAttribute("aria-current")).toBe("page");
+  });
+
+  it("highlights the diagnostics route in the sidebar", () => {
+    mockPathname.mockReturnValue("/diagnostics");
+    render(
+      <DashboardLayout>
+        <main>Child</main>
+      </DashboardLayout>,
+    );
+
+    const diagnosticsLink = screen.getByRole("link", { name: "Diagnostics" });
+    expect(diagnosticsLink.getAttribute("aria-current")).toBe("page");
   });
 
   it("renders Spanish navigation when locale is es", () => {
@@ -143,5 +156,14 @@ describe("DashboardLayout", () => {
     expect((await screen.findByRole("alert")).textContent).toContain("Gentle-AI 1.3.0 is available on stable.");
     await user.click(screen.getByRole("button", { name: "Check Gentle-AI releases now" }));
     expect(screen.getByRole("button", { name: "Check Gentle-AI releases now" })).not.toBeNull();
+  });
+
+  it("keeps the layout stable when the active update check fails", async () => {
+    vi.mocked(checkDiagnosticsUpdates).mockRejectedValue(new Error("local service unavailable"));
+
+    render(<DashboardLayout><main>Child</main></DashboardLayout>);
+
+    expect(await screen.findByText("Child")).not.toBeNull();
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 });
