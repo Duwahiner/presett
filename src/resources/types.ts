@@ -133,4 +133,6 @@ export interface Resources {
   "models_resetConfirmTitle": string;
   "models_resetConfirmDesc": string;
   "models_syncSuccess": string;
+  "models_emptyAssignmentsTitle": string;
+  "models_emptyAssignmentsDesc": string;
 }

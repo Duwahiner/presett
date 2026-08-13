@@ -133,4 +133,6 @@ export const en: Resources = {
   "models_resetConfirmTitle": "Reset All Assignments",
   "models_resetConfirmDesc": "This will reset all model assignments to their original values. Continue?",
   "models_syncSuccess": "Sync completed successfully",
+  "models_emptyAssignmentsTitle": "No agent assignments found",
+  "models_emptyAssignmentsDesc": "Sync configs or create an assignment source so models can appear here.",
 };

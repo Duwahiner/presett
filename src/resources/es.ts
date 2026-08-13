@@ -133,4 +133,6 @@ export const es: Resources = {
   "models_resetConfirmTitle": "Restablecer Todas las Asignaciones",
   "models_resetConfirmDesc": "Esto restablecerá todas las asignaciones de modelos a sus valores originales. ¿Continuar?",
   "models_syncSuccess": "Sincronización completada exitosamente",
+  "models_emptyAssignmentsTitle": "No hay asignaciones de agentes",
+  "models_emptyAssignmentsDesc": "Sincroniza la configuración o crea una fuente de asignaciones para que los modelos aparezcan aquí.",
 };
