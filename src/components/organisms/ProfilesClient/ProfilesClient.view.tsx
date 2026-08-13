@@ -1,6 +1,6 @@
 "use client";
 
-import { Loader2, Plus, Trash2, UserCircle } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2, UserCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/atoms/Badge/Badge";
@@ -21,6 +21,12 @@ export function ProfilesClientView({
   onCreate,
   onSwitch,
   onDelete,
+  editingProfile,
+  editAssignments,
+  onEditStart,
+  onEditSave,
+  onEditCancel,
+  onEditAssignmentChange,
 }: ProfilesClientViewProps) {
   if (loading) {
     return (
@@ -84,51 +90,89 @@ export function ProfilesClientView({
         {profiles.map((profile) => (
           <div
             key={profile.name}
-            className={`relative flex items-center justify-between gap-4 rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-border/80 hover:bg-accent/40 ${
+            className={`relative rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-border/80 hover:bg-accent/40 ${
               profile.active ? "border-l-4 border-l-primary pl-3" : ""
             }`}
           >
-            <div className="flex min-w-0 items-center gap-3">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
-                <UserCircle className="h-4 w-4 text-primary" aria-hidden="true" />
-              </div>
-              <div className="min-w-0">
+            {editingProfile === profile.name ? (
+              <div className="w-full space-y-4">
                 <div className="flex items-center gap-2">
-                  <h4 className="truncate font-semibold text-card-foreground">
-                    {profile.displayName}
+                  <Pencil className="h-4 w-4 text-primary" />
+                  <h4 className="font-semibold text-card-foreground">
+                    {t("profiles_editTitle")} {profile.displayName}
                   </h4>
-                  {profile.active && (
-                    <Badge variant="success" pulsing>
-                      {t("profiles_active")}
-                    </Badge>
+                </div>
+                <ModelPicker
+                  catalog={catalog}
+                  initialProvider={editAssignments["orchestrator"]?.provider ?? ""}
+                  initialModel={editAssignments["orchestrator"]?.model ?? ""}
+                  initialVariant={editAssignments["orchestrator"]?.variant ?? ""}
+                  onConfirm={(a) => onEditAssignmentChange("orchestrator", a)}
+                />
+                <div className="flex gap-2">
+                  <Button onClick={onEditSave} disabled={!editAssignments["orchestrator"]?.provider}>
+                    {t("profiles_save")}
+                  </Button>
+                  <Button variant="outline" onClick={onEditCancel}>
+                    {t("backups_cancel")}
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                    <UserCircle className="h-4 w-4 text-primary" aria-hidden="true" />
+                  </div>
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h4 className="truncate font-semibold text-card-foreground">
+                        {profile.displayName}
+                      </h4>
+                      {profile.active && (
+                        <Badge variant="success" pulsing>
+                          {t("profiles_active")}
+                        </Badge>
+                      )}
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {profile.modelCount}{" "}
+                      {profile.modelCount === 1
+                        ? t("profiles_modelAssignments")
+                        : t("profiles_modelAssignments_plural")}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex shrink-0 gap-2">
+                  {profile.name && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onEditStart(profile.name)}
+                      aria-label={t("profiles_edit")}
+                    >
+                      <Pencil className="h-4 w-4" aria-hidden="true" />
+                    </Button>
+                  )}
+                  {!profile.active && profile.name && (
+                    <Button variant="ghost" size="sm" onClick={() => onSwitch(profile.name)}>
+                      {t("profiles_switch")}
+                    </Button>
+                  )}
+                  {profile.name && (
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => onDelete(profile.name)}
+                      aria-label={t("profiles_delete")}
+                    >
+                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                    </Button>
                   )}
                 </div>
-                <p className="text-sm text-muted-foreground">
-                  {profile.modelCount}{" "}
-                  {profile.modelCount === 1
-                    ? t("profiles_modelAssignments")
-                    : t("profiles_modelAssignments_plural")}
-                </p>
               </div>
-            </div>
-
-            <div className="flex shrink-0 gap-2">
-              {!profile.active && profile.name && (
-                <Button variant="ghost" size="sm" onClick={() => onSwitch(profile.name)}>
-                  {t("profiles_switch")}
-                </Button>
-              )}
-              {profile.name && (
-                <Button
-                  variant="destructive"
-                  size="sm"
-                  onClick={() => onDelete(profile.name)}
-                  aria-label={t("profiles_delete")}
-                >
-                  <Trash2 className="h-4 w-4" aria-hidden="true" />
-                </Button>
-              )}
-            </div>
+            )}
           </div>
         ))}
       </div>

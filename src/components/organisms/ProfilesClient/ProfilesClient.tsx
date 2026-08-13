@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { listProfiles, createProfile, switchProfile, deleteProfile } from "@/services/profilesApiService";
+import { listProfiles, createProfile, switchProfile, deleteProfile, updateProfile } from "@/services/profilesApiService";
 import { getCatalog } from "@/services/modelsApiService";
 import { t } from "@/resources/resources";
 import type { ModelCatalog } from "@/components/molecules/ModelPicker/ModelPicker";
@@ -20,6 +20,10 @@ export function ProfilesClient() {
   const [error, setError] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
   const [newAssignments, setNewAssignments] = useState<
+    Record<string, { provider: string; model: string; variant: string }>
+  >({});
+  const [editingProfile, setEditingProfile] = useState<string | null>(null);
+  const [editAssignments, setEditAssignments] = useState<
     Record<string, { provider: string; model: string; variant: string }>
   >({});
 
@@ -89,6 +93,28 @@ export function ProfilesClient() {
     }
   }
 
+  function handleEditStart(name: string) {
+    setEditingProfile(name);
+    setEditAssignments({});
+  }
+
+  async function handleEditSave() {
+    if (!editingProfile) return;
+    try {
+      await updateProfile(editingProfile, editAssignments);
+      setEditingProfile(null);
+      setEditAssignments({});
+      await refresh();
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : String(cause));
+    }
+  }
+
+  function handleEditCancel() {
+    setEditingProfile(null);
+    setEditAssignments({});
+  }
+
   return (
     <ProfilesClientView
       profiles={profiles}
@@ -104,6 +130,14 @@ export function ProfilesClient() {
       onCreate={handleCreate}
       onSwitch={handleSwitch}
       onDelete={handleDelete}
+      editingProfile={editingProfile}
+      editAssignments={editAssignments}
+      onEditStart={handleEditStart}
+      onEditSave={handleEditSave}
+      onEditCancel={handleEditCancel}
+      onEditAssignmentChange={(key, assignment) =>
+        setEditAssignments((prev) => ({ ...prev, [key]: assignment }))
+      }
     />
   );
 }
