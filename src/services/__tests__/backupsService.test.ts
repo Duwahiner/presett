@@ -18,11 +18,7 @@ vi.mock("node:child_process", () => ({
   execFile: execFileMock,
 }));
 
-async function createBackup(
-  backupsDir: string,
-  id: string,
-  options: { pinned?: boolean; rootDir?: string } = {},
-) {
+async function createBackup(backupsDir: string, id: string, pinned = false) {
   const backupDir = join(backupsDir, id);
   await mkdir(backupDir, { recursive: true });
   await writeFile(
@@ -30,12 +26,12 @@ async function createBackup(
     JSON.stringify({
       id,
       created_at: "2026-08-10T12:00:00Z",
-      root_dir: options.rootDir ?? backupsDir,
+      root_dir: backupsDir,
       entries: [{ original_path: "/a" }],
     }),
   );
   await writeFile(join(backupDir, "snapshot.tar.gz"), "gzdata");
-  if (options.pinned) await writeFile(join(backupDir, ".pinned"), "");
+  if (pinned) await writeFile(join(backupDir, ".pinned"), "");
   return backupDir;
 }
 
@@ -52,15 +48,27 @@ describe("listBackups", () => {
   });
 
   it("returns derived metadata for each backup", async () => {
-    await createBackup(tempDir, "upgrade-20260810T120000Z", { pinned: true });
+    const backupDir = join(tempDir, "upgrade-20260810T120000Z");
+    await mkdir(backupDir, { recursive: true });
+    await writeFile(
+      join(backupDir, "manifest.json"),
+      JSON.stringify({
+        id: "upgrade-20260810T120000Z",
+        created_at: "2026-08-10T12:00:00Z",
+        root_dir: "~/.config/opencode",
+        entries: [{ original_path: "/a" }, { original_path: "/b" }],
+      }),
+    );
+    await writeFile(join(backupDir, "snapshot.tar.gz"), "gzdata");
+    await writeFile(join(backupDir, ".pinned"), "");
 
     const backups = await listBackups(tempDir);
 
     expect(backups).toHaveLength(1);
     expect(backups[0]).toMatchObject({
       id: "upgrade-20260810T120000Z",
-      source: tempDir,
-      fileCount: 1,
+      source: "~/.config/opencode",
+      fileCount: 2,
       size: 6,
       pinned: true,
     });
@@ -143,7 +151,7 @@ describe("backup operations", () => {
   });
 
   it("does not delete pinned backups", async () => {
-    const backupDir = await createBackup(tempDir, "backup-pinned", { pinned: true });
+    const backupDir = await createBackup(tempDir, "backup-pinned", true);
 
     const result = await deleteBackup(tempDir, "backup-pinned");
 
