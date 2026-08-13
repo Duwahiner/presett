@@ -71,8 +71,8 @@ describe("Gentle-AI release checks", () => {
       writeState: async () => undefined,
     });
 
-    expect(state.channels.stable).toEqual({ latestVersion: "1.3.0", updateAvailable: true });
-    expect(state.channels.rc).toEqual({ latestVersion: "1.4.0-rc.1", updateAvailable: true });
+    expect(state.channels?.stable).toEqual({ latestVersion: "1.3.0", updateAvailable: true });
+    expect(state.channels?.rc).toEqual({ latestVersion: "1.4.0-rc.1", updateAvailable: true });
     expect(state.notice).toEqual({ channel: "stable", version: "1.3.0", pending: true });
   });
 
@@ -87,8 +87,8 @@ describe("Gentle-AI release checks", () => {
       writeState: async () => undefined,
     });
 
-    expect(state.channels.stable).toEqual({ latestVersion: "1.3.0", updateAvailable: false });
-    expect(state.channels.rc).toEqual({ latestVersion: "1.4.0-rc.1", updateAvailable: true });
+    expect(state.channels?.stable).toEqual({ latestVersion: "1.3.0", updateAvailable: false });
+    expect(state.channels?.rc).toEqual({ latestVersion: "1.4.0-rc.1", updateAvailable: true });
     expect(state.notice).toEqual({ channel: "rc", version: "1.4.0-rc.1", pending: true });
   });
 

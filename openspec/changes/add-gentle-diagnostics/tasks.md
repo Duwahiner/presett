@@ -38,9 +38,9 @@ Chain strategy: pending
 
 ## Fase 3: Actualización y pantalla
 
-- [ ] 3.1 RED: probar que `src/app/api/diagnostics/update/route.ts` solo invoca el comando oficial, aplica timeout y conserva el aviso ante fallo.
-- [ ] 3.2 Implementar actualización controlada y verificación de versión posterior antes de limpiar el aviso.
-- [ ] 3.3 Crear `src/app/diagnostics/`, agregar navegación en `DashboardLayout`, recursos tipados en `src/resources/` y pruebas de integración de UI.
+- [ ] 3.1 RED: probar que `src/app/api/diagnostics/update/route.ts` solo invoca el comando oficial, aplica timeout y conserva el aviso ante fallo. **No aplicado en slice 3 por alcance explícito: sin instalación/actualización ejecutada desde PreSett.**
+- [ ] 3.2 Implementar actualización controlada y verificación de versión posterior antes de limpiar el aviso. **No aplicado en slice 3 por alcance explícito: sin instalación/actualización ejecutada desde PreSett.**
+- [x] 3.3 Crear `src/app/diagnostics/`, agregar navegación en `DashboardLayout`, recursos tipados en `src/resources/` y pruebas de integración de UI.
 
 ## Fase 4: Verificación
 

@@ -5,6 +5,7 @@ export interface Resources {
   "nav_models": string;
   "nav_profiles": string;
   "nav_backups": string;
+  "nav_diagnostics": string;
   "footer_brand": string;
   "topbar_search_placeholder": string;
   "topbar_search_aria": string;
@@ -147,4 +148,29 @@ export interface Resources {
   "diagnostics_update_notice": string;
   "diagnostics_check_now": string;
   "diagnostics_checking": string;
+  "diagnostics_title": string;
+  "diagnostics_status_badge": string;
+  "diagnostics_header_description": string;
+  "diagnostics_loading": string;
+  "diagnostics_load_error": string;
+  "diagnostics_cli_title": string;
+  "diagnostics_config_title": string;
+  "diagnostics_state_title": string;
+  "diagnostics_routes_title": string;
+  "diagnostics_installed": string;
+  "diagnostics_unavailable": string;
+  "diagnostics_available": string;
+  "diagnostics_route_config": string;
+  "diagnostics_route_state": string;
+  "diagnostics_route_backups": string;
+  "diagnostics_exists": string;
+  "diagnostics_readable": string;
+  "diagnostics_writable": string;
+  "diagnostics_yes": string;
+  "diagnostics_no": string;
+  "diagnostics_releases_title": string;
+  "diagnostics_stable": string;
+  "diagnostics_rc": string;
+  "diagnostics_no_update": string;
+  "diagnostics_check_error": string;
 }

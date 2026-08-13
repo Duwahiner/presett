@@ -8,6 +8,7 @@ import {
   Cpu,
   Layers,
   Archive,
+  Activity,
   Menu,
   Bell,
   Search,
@@ -32,6 +33,7 @@ const navItems: { key: keyof Resources; href: string; icon: React.ComponentType<
   { key: "nav_models", href: "/models", icon: Cpu },
   { key: "nav_profiles", href: "/profiles", icon: Layers },
   { key: "nav_backups", href: "/backups", icon: Archive },
+  { key: "nav_diagnostics", href: "/diagnostics", icon: Activity },
 ];
 
 export function DashboardLayoutView({ children }: DashboardLayoutProps) {
@@ -74,6 +76,8 @@ export function DashboardLayoutView({ children }: DashboardLayoutProps) {
         if (cancelled) return;
         setUpdateState(next);
         timer = setTimeout(checkUpdates, next.settings.frequencyMinutes * 60_000);
+      } catch {
+        if (!cancelled) timer = setTimeout(checkUpdates, 60 * 60_000);
       } finally {
         if (!cancelled) setCheckingUpdates(false);
       }
@@ -91,6 +95,8 @@ export function DashboardLayoutView({ children }: DashboardLayoutProps) {
     setCheckingUpdates(true);
     try {
       setUpdateState(await checkDiagnosticsUpdates());
+    } catch {
+      // Keep the persisted notice visible when a manual check fails.
     } finally {
       setCheckingUpdates(false);
     }
