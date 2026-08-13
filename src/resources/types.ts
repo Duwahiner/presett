@@ -133,6 +133,9 @@ export interface Resources {
   "models_resetConfirmTitle": string;
   "models_resetConfirmDesc": string;
   "models_syncSuccess": string;
+  "models_assignmentSaved": string;
+  "models_profileSwitched": string;
+  "models_resetSuccess": string;
   "models_emptyAssignmentsTitle": string;
   "models_emptyAssignmentsDesc": string;
 }
