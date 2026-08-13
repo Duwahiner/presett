@@ -3,7 +3,27 @@ import { t, getLocale } from "@/resources/resources";
 
 export interface ApiError {
   message: string;
-  status?: number;
+  status: number;
+}
+
+const GENERIC_REQUEST_ERROR = "Request failed. Please try again.";
+const NETWORK_ERROR =
+  "Network request failed. Please check the local service and try again.";
+const TIMEOUT_ERROR = "Request timed out. Please try again.";
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
+}
+
+function extractSafeResponseMessage(data: unknown): string | null {
+  if (!isRecord(data)) return null;
+
+  const nested = data.error;
+  if (isRecord(nested) && typeof nested.message === "string") {
+    return nested.message;
+  }
+
+  return null;
 }
 
 export function extractApiError(error: unknown): ApiError {
@@ -12,24 +32,26 @@ export function extractApiError(error: unknown): ApiError {
   if (axiosError?.isAxiosError) {
     const response = axiosError.response;
     if (response) {
-      const data = response.data as Record<string, unknown> | undefined;
-      const nested = data?.error as Record<string, unknown> | undefined;
-      const message =
-        typeof nested?.message === "string"
-          ? nested.message
-          : response.statusText;
-
+      const message = extractSafeResponseMessage(response.data) ?? GENERIC_REQUEST_ERROR;
       return { message, status: response.status };
     }
 
-    return { message: axiosError.message };
+    if (
+      axiosError.code === "ECONNABORTED" ||
+      axiosError.code === "ETIMEDOUT" ||
+      axiosError.name === "AbortError"
+    ) {
+      return { message: TIMEOUT_ERROR, status: 408 };
+    }
+
+    return { message: NETWORK_ERROR, status: 0 };
   }
 
-  if (error instanceof Error) {
-    return { message: error.message };
+  if (error instanceof DOMException && error.name === "AbortError") {
+    return { message: TIMEOUT_ERROR, status: 408 };
   }
 
-  return { message: String(error) };
+  return { message: GENERIC_REQUEST_ERROR, status: 0 };
 }
 
 function getBaseUrl(): string {
@@ -49,10 +71,13 @@ export function createApi(): AxiosInstance {
     },
   });
 
-  instance.interceptors.request.use((config) => {
-    config.headers.set("Accept-Language", getLocale());
-    return config;
-  });
+  instance.interceptors.request.use(
+    (config) => {
+      config.headers.set("Accept-Language", getLocale());
+      return config;
+    },
+    (error) => Promise.reject(extractApiError(error)),
+  );
 
   instance.interceptors.response.use(
     (response) => response.data,
