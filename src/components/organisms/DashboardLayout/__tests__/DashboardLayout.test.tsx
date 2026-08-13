@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { DashboardLayout } from "@/components/organisms/DashboardLayout/DashboardLayout";
 import { setLocale } from "@/resources/resources";
 
@@ -52,7 +53,7 @@ describe("DashboardLayout", () => {
       </DashboardLayout>,
     );
 
-    expect(screen.getByRole("searchbox")).not.toBeNull();
+    expect(screen.getByRole("searchbox", { name: /search agents/i })).not.toBeNull();
     expect(
       screen.getByRole("button", { name: /toggle theme/i }),
     ).not.toBeNull();
@@ -80,5 +81,39 @@ describe("DashboardLayout", () => {
 
     expect(screen.getByRole("link", { name: "Panel de control" })).not.toBeNull();
     expect(screen.getByRole("link", { name: "Modelos" })).not.toBeNull();
+  });
+
+  it("opens and closes the mobile navigation drawer", async () => {
+    render(
+      <DashboardLayout>
+        <main>Child</main>
+      </DashboardLayout>,
+    );
+
+    const user = userEvent.setup();
+    const menuButton = screen.getByRole("button", { name: "Open menu" });
+    await user.click(menuButton);
+
+    const mobileNav = screen.getByRole("navigation", { name: "Menu" });
+    expect(within(mobileNav).getByRole("link", { name: "Models" })).not.toBeNull();
+    expect(menuButton.getAttribute("aria-expanded")).toBe("true");
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("navigation", { name: "Menu" })).toBeNull();
+    expect(document.activeElement).toBe(menuButton);
+  });
+
+  it("closes the mobile navigation drawer when a link is selected", async () => {
+    render(
+      <DashboardLayout>
+        <main>Child</main>
+      </DashboardLayout>,
+    );
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
+    await user.click(within(screen.getByRole("navigation", { name: "Menu" })).getByRole("link", { name: "Models" }));
+
+    expect(screen.queryByRole("navigation", { name: "Menu" })).toBeNull();
   });
 });

@@ -178,7 +178,12 @@ export function DashboardView({ className, stats, agents }: DashboardProps) {
         <section className="flex flex-col xl:col-span-2">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-medium text-foreground">{t("dashboard_agents_title")}</h2>
-            <Button variant="ghost" size="sm" className="h-auto gap-1 px-0 py-0 text-xs font-medium text-primary hover:text-primary/80">
+            <Button
+              variant="ghost"
+              size="sm"
+              render={<Link href="/models" />}
+              className="h-auto gap-1 px-0 py-0 text-xs font-medium text-primary hover:text-primary/80"
+            >
               {t("dashboard_agents_manage")}
               <ArrowRight className="size-3.5" />
             </Button>

@@ -74,6 +74,7 @@ describe("Dashboard", () => {
     expect(screen.queryByRole("link", { name: /configure models/i })).not.toBeNull();
     expect(screen.queryByRole("link", { name: /switch sdd profile/i })).not.toBeNull();
     expect(screen.queryByRole("link", { name: /restore backup/i })).not.toBeNull();
+    expect(screen.queryByRole("link", { name: /manage all/i })?.getAttribute("href")).toBe("/models");
   });
 
   it("renders translated Spanish text when locale is es", () => {
