@@ -7,13 +7,17 @@ export interface Resources {
   "nav_backups": string;
   "footer_brand": string;
   "topbar_search_placeholder": string;
+  "topbar_search_aria": string;
   "topbar_theme_toggle_aria": string;
   "topbar_notifications_aria": string;
   "topbar_account_aria": string;
   "topbar_menu_aria": string;
+  "topbar_menu_close_aria": string;
   "sidebar_group_menu": string;
   "sidebar_group_workspace": string;
   "sidebar_sync_cta": string;
+  "sidebar_sync_error_message": string;
+  "sidebar_sync_success": string;
   "workspace_overview": string;
   "dashboard_title": string;
   "dashboard_status_title": string;
