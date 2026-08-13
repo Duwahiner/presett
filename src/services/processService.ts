@@ -8,6 +8,51 @@ export interface SyncResult {
   stderr: string;
 }
 
+export async function probeGentleAiVersion(
+  command: string = "gentle-ai",
+): Promise<Result<string>> {
+  return new Promise((resolve) => {
+    const child = spawn(command, ["--version"]);
+    let stdout = "";
+    let stderr = "";
+    let settled = false;
+
+    const finish = (result: Result<string>) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timeout);
+      resolve(result);
+    };
+
+    const timeout = setTimeout(() => {
+      child.kill();
+      finish(err({ code: "ATOMIC_WRITE_FAILED", message: "gentle-ai version timed out" }));
+    }, 5_000);
+
+    child.stdout.on("data", (data: Buffer) => {
+      stdout += data.toString("utf-8");
+    });
+
+    child.stderr.on("data", (data: Buffer) => {
+      stderr += data.toString("utf-8");
+    });
+
+    child.on("error", (cause) => {
+      finish(err({ code: "FILE_MISSING", message: "gentle-ai CLI unavailable", cause }));
+    });
+
+    child.on("close", (exitCode) => {
+      if (settled) return;
+      if (exitCode !== 0) {
+        finish(err({ code: "ATOMIC_WRITE_FAILED", message: "gentle-ai version failed" }));
+        return;
+      }
+
+      finish(ok((stdout || stderr).trim()));
+    });
+  });
+}
+
 export async function runGentleAiSync(
   command: string = "gentle-ai",
 ): Promise<Result<SyncResult>> {
