@@ -6,7 +6,8 @@
 
 ## Coverage
 - Engine: @vitest/coverage-v8
-- Threshold: TBD
+- Current focused evidence: `src/services/__tests__/backupsService.test.ts` and `src/services/__tests__/backupsApiService.test.ts` exercise backup mutation contracts.
+- Coverage gate: deferred until `src/services/api.ts` and `src/services/backupsService.ts` meet the intended per-file threshold without weakening it.
 
 ## Layers
 - Unit: @testing-library/react
@@ -14,3 +15,7 @@
 
 ## Strict TDD
 - Enabled: true
+
+## Verification limits
+- `npm run lint` and focused Vitest suites are available.
+- `npx tsc --noEmit` is currently blocked by the pre-existing `next.config.ts` `experimental.turbo` type error; this archive does not change that configuration.
