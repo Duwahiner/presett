@@ -5,6 +5,7 @@ import { readModelCacheSafe } from "@/services/modelCacheService";
 import { DEFAULT_OPEN_CODE_CONFIG_DIR } from "@/adapters/opencode";
 import { DEFAULT_MODEL_CACHE_DIR } from "@/services/modelCacheService";
 import { defaultPresettDir } from "@/lib/paths";
+import { buildSafeError, requireMutationOrigin } from "@/lib/localApiSecurity";
 
 export const dynamic = "force-dynamic";
 
@@ -23,10 +24,28 @@ function backupDir(): string {
   );
 }
 
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      Allow: "DELETE, OPTIONS, PUT",
+      "Access-Control-Allow-Methods": "DELETE, OPTIONS, PUT",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
+}
+
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ name: string }> },
 ) {
+  const originResult = requireMutationOrigin(request);
+  if (!originResult.ok) {
+    return NextResponse.json(buildSafeError(originResult.message), {
+      status: originResult.status,
+    });
+  }
+
   const { name } = await params;
   const body = (await request.json()) as {
     assignments: Record<string, { provider: string; model: string; variant: string }>;
@@ -62,9 +81,16 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: Request | undefined,
+  request: Request,
   { params }: { params: Promise<{ name: string }> },
 ) {
+  const originResult = requireMutationOrigin(request);
+  if (!originResult.ok) {
+    return NextResponse.json(buildSafeError(originResult.message), {
+      status: originResult.status,
+    });
+  }
+
   const { name } = await params;
   const result = await deleteProfile(configDir(), name, backupDir());
 

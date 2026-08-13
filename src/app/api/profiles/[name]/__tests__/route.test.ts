@@ -2,7 +2,28 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdtemp, writeFile, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { PUT, DELETE as DELETE_HANDLER } from "../route";
+import { OPTIONS, PUT, DELETE as DELETE_HANDLER } from "../route";
+
+function updateProfileRequest(origin?: string): Request {
+  const request = new Request("http://localhost/api/profiles/custom", {
+    method: "PUT",
+    body: JSON.stringify({
+      assignments: {
+        "sdd-orchestrator-custom": { provider: "openai", model: "gpt-4", variant: "high" },
+      },
+    }),
+  });
+  if (origin) request.headers.set("Origin", origin);
+  return request;
+}
+
+function deleteProfileRequest(origin?: string): Request {
+  const request = new Request("http://localhost/api/profiles/custom", {
+    method: "DELETE",
+  });
+  if (origin) request.headers.set("Origin", origin);
+  return request;
+}
 
 describe("/api/profiles/[name]", () => {
   let tempDir = "";
@@ -36,14 +57,7 @@ describe("/api/profiles/[name]", () => {
       }),
     );
 
-    const request = new Request("http://localhost/api/profiles/custom", {
-      method: "PUT",
-      body: JSON.stringify({
-        assignments: {
-          "sdd-orchestrator-custom": { provider: "openai", model: "gpt-4", variant: "high" },
-        },
-      }),
-    });
+    const request = updateProfileRequest("http://127.0.0.1:3000");
 
     const response = await PUT(request, { params: Promise.resolve({ name: "custom" }) });
     expect(response.status).toBe(200);
@@ -60,12 +74,55 @@ describe("/api/profiles/[name]", () => {
       }),
     );
 
-    const response = await DELETE_HANDLER(undefined, {
+    const response = await DELETE_HANDLER(deleteProfileRequest("http://localhost:3000"), {
       params: Promise.resolve({ name: "custom" }),
     });
     expect(response.status).toBe(200);
 
     const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
     expect(written.agent["sdd-orchestrator-custom"]).toBeUndefined();
+  });
+
+  it("rejects missing Origin before parsing JSON or editing a profile", async () => {
+    await writeFile(
+      join(tempDir, "opencode.json"),
+      JSON.stringify({
+        agent: { "sdd-orchestrator-custom": { model: "x/y", variant: "low" } },
+      }),
+    );
+    const request = new Request("http://localhost/api/profiles/custom", {
+      method: "PUT",
+      body: "not-json",
+    });
+
+    const response = await PUT(request, { params: Promise.resolve({ name: "custom" }) });
+    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
+
+    expect(response.status).toBe(403);
+    expect(written.agent["sdd-orchestrator-custom"].variant).toBe("low");
+  });
+
+  it("rejects non-loopback Origin before deleting a profile", async () => {
+    await writeFile(
+      join(tempDir, "opencode.json"),
+      JSON.stringify({
+        agent: { "sdd-orchestrator-custom": { model: "x/y" } },
+      }),
+    );
+
+    const response = await DELETE_HANDLER(deleteProfileRequest("http://evil.test"), {
+      params: Promise.resolve({ name: "custom" }),
+    });
+    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
+
+    expect(response.status).toBe(403);
+    expect(written.agent["sdd-orchestrator-custom"]).toEqual({ model: "x/y" });
+  });
+
+  it("allows OPTIONS preflight without origin enforcement", async () => {
+    const response = await OPTIONS();
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("Access-Control-Allow-Methods")).toBe("DELETE, OPTIONS, PUT");
   });
 });
