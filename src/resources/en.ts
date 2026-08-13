@@ -144,4 +144,7 @@ export const en: Resources = {
   "models_resetSuccess": "Assignments reset.",
   "models_emptyAssignmentsTitle": "No agent assignments found",
   "models_emptyAssignmentsDesc": "Sync configs or create an assignment source so models can appear here.",
+  "diagnostics_update_notice": "Gentle-AI {{version}} is available on {{channel}}.",
+  "diagnostics_check_now": "Check Gentle-AI releases now",
+  "diagnostics_checking": "Checking releases…",
 };

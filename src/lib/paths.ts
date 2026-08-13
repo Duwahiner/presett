@@ -42,3 +42,7 @@ export function gentleAiBackupsDir(ctx: PathContext = {}): string {
 export function presettBackupsDir(ctx: PathContext = {}): string {
   return join(ctx.presettDir ?? defaultPresettDir(), "backups");
 }
+
+export function diagnosticsStatePath(ctx: PathContext = {}): string {
+  return join(ctx.presettDir ?? defaultPresettDir(), "diagnostics.json");
+}

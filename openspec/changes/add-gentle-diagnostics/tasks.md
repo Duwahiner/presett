@@ -32,9 +32,9 @@ Chain strategy: pending
 
 ## Fase 2: Releases y aviso
 
-- [ ] 2.1 RED: probar comparación stable/RC, frecuencia, concurrencia, timeout y persistencia en `src/services/__tests__/diagnosticsService.test.ts`.
-- [ ] 2.2 Implementar estado propio de PreSett, cliente de Releases acotado y `src/app/api/diagnostics/check/route.ts`.
-- [ ] 2.3 RED/GREEN: crear componente de aviso persistente y programador activo; verificar botón manual y accesibilidad.
+- [x] 2.1 RED: probar comparación stable/RC, frecuencia, concurrencia, timeout y persistencia en `src/services/__tests__/diagnosticsService.test.ts`.
+- [x] 2.2 Implementar estado propio de PreSett, cliente de Releases acotado y `src/app/api/diagnostics/check/route.ts`.
+- [x] 2.3 RED/GREEN: crear componente de aviso persistente y programador activo; verificar botón manual y accesibilidad.
 
 ## Fase 3: Actualización y pantalla
 

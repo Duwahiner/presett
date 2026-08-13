@@ -16,6 +16,8 @@ import {
   Loader2,
 } from "lucide-react";
 import { runSync } from "@/services/backupsApiService";
+import { checkDiagnosticsUpdates } from "@/services/diagnosticsApiService";
+import type { DiagnosticsUpdateState } from "@/services/diagnosticsService";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { t } from "@/resources/resources";
@@ -37,6 +39,8 @@ export function DashboardLayoutView({ children }: DashboardLayoutProps) {
   const router = useRouter();
   const [syncing, setSyncing] = useState(false);
   const [syncMessage, setSyncMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [updateState, setUpdateState] = useState<DiagnosticsUpdateState | null>(null);
+  const [checkingUpdates, setCheckingUpdates] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [search, setSearch] = useState("");
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
@@ -58,6 +62,39 @@ export function DashboardLayoutView({ children }: DashboardLayoutProps) {
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [mobileNavOpen]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    async function checkUpdates() {
+      setCheckingUpdates(true);
+      try {
+        const next = await checkDiagnosticsUpdates();
+        if (cancelled) return;
+        setUpdateState(next);
+        timer = setTimeout(checkUpdates, next.settings.frequencyMinutes * 60_000);
+      } finally {
+        if (!cancelled) setCheckingUpdates(false);
+      }
+    }
+
+    void checkUpdates();
+    return () => {
+      cancelled = true;
+      if (timer) clearTimeout(timer);
+    };
+  }, []);
+
+  async function handleManualUpdateCheck() {
+    if (checkingUpdates) return;
+    setCheckingUpdates(true);
+    try {
+      setUpdateState(await checkDiagnosticsUpdates());
+    } finally {
+      setCheckingUpdates(false);
+    }
+  }
 
   async function handleSync() {
     if (syncing) return;
@@ -256,6 +293,16 @@ export function DashboardLayoutView({ children }: DashboardLayoutProps) {
           )}
 
           <main className="min-h-0 flex-1 overflow-y-auto bg-background/60">
+            {updateState?.notice?.pending && (
+              <div role="alert" className="m-4 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning-foreground">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <p>{t("diagnostics_update_notice", { version: updateState.notice.version, channel: updateState.notice.channel })}</p>
+                  <Button variant="outline" size="sm" onClick={handleManualUpdateCheck} disabled={checkingUpdates}>
+                    {checkingUpdates ? t("diagnostics_checking") : t("diagnostics_check_now")}
+                  </Button>
+                </div>
+              </div>
+            )}
             {children}
           </main>
         </div>
