@@ -9,6 +9,14 @@ export default defineConfig({
     globals: true,
     coverage: {
       provider: "v8",
+      include: ["src/services/api.ts", "src/services/backupsService.ts"],
+      thresholds: {
+        perFile: true,
+        statements: 80,
+        branches: 80,
+        functions: 80,
+        lines: 80,
+      },
     },
   },
 });
