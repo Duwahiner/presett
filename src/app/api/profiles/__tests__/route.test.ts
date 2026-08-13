@@ -1,8 +1,22 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdtemp, writeFile, rm } from "node:fs/promises";
+import { mkdtemp, readFile, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { GET, POST } from "../route";
+import { GET, OPTIONS, POST } from "../route";
+
+function createProfileRequest(origin?: string): Request {
+  const request = new Request("http://localhost/api/profiles", {
+    method: "POST",
+    body: JSON.stringify({
+      name: "custom",
+      assignments: {
+        "sdd-orchestrator-custom": { provider: "openai", model: "gpt-4", variant: "low" },
+      },
+    }),
+  });
+  if (origin) request.headers.set("Origin", origin);
+  return request;
+}
 
 describe("/api/profiles", () => {
   let tempDir = "";
@@ -47,17 +61,40 @@ describe("/api/profiles", () => {
   it("creates a profile on POST", async () => {
     await writeFile(join(tempDir, "opencode.json"), JSON.stringify({ agent: {} }));
 
-    const request = new Request("http://localhost/api/profiles", {
-      method: "POST",
-      body: JSON.stringify({
-        name: "custom",
-        assignments: {
-          "sdd-orchestrator-custom": { provider: "openai", model: "gpt-4", variant: "low" },
-        },
-      }),
-    });
+    const request = createProfileRequest("http://localhost:3000");
 
     const response = await POST(request);
     expect(response.status).toBe(200);
+  });
+
+  it("rejects missing Origin before parsing JSON or creating a profile", async () => {
+    await writeFile(join(tempDir, "opencode.json"), JSON.stringify({ agent: {} }));
+    const request = new Request("http://localhost/api/profiles", {
+      method: "POST",
+      body: "not-json",
+    });
+
+    const response = await POST(request);
+    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
+
+    expect(response.status).toBe(403);
+    expect(written.agent).toEqual({});
+  });
+
+  it("rejects non-loopback Origin before creating a profile", async () => {
+    await writeFile(join(tempDir, "opencode.json"), JSON.stringify({ agent: {} }));
+
+    const response = await POST(createProfileRequest("http://evil.test"));
+    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
+
+    expect(response.status).toBe(403);
+    expect(written.agent).toEqual({});
+  });
+
+  it("allows OPTIONS preflight without origin enforcement", async () => {
+    const response = await OPTIONS();
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("Access-Control-Allow-Methods")).toBe("GET, OPTIONS, POST");
   });
 });

@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import { switchProfile } from "@/adapters/opencode";
 import { DEFAULT_OPEN_CODE_CONFIG_DIR } from "@/adapters/opencode";
 import { defaultPresettDir } from "@/lib/paths";
+import { buildSafeError, requireMutationOrigin } from "@/lib/localApiSecurity";
 
 export const dynamic = "force-dynamic";
 
@@ -17,10 +18,28 @@ function backupDir(): string {
   );
 }
 
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      Allow: "OPTIONS, POST",
+      "Access-Control-Allow-Methods": "OPTIONS, POST",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
+}
+
 export async function POST(
-  _request: Request | undefined,
+  request: Request,
   { params }: { params: Promise<{ name: string }> },
 ) {
+  const originResult = requireMutationOrigin(request);
+  if (!originResult.ok) {
+    return NextResponse.json(buildSafeError(originResult.message), {
+      status: originResult.status,
+    });
+  }
+
   const { name } = await params;
   const result = await switchProfile(configDir(), name, backupDir());
 
