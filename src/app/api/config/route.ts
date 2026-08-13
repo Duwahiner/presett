@@ -9,6 +9,7 @@ import { readModelCacheSafe } from "@/services/modelCacheService";
 import { DEFAULT_OPEN_CODE_CONFIG_DIR } from "@/adapters/opencode";
 import { DEFAULT_MODEL_CACHE_DIR } from "@/services/modelCacheService";
 import { defaultPresettDir } from "@/lib/paths";
+import { buildSafeError, requireMutationOrigin } from "@/lib/localApiSecurity";
 
 export const dynamic = "force-dynamic";
 
@@ -42,7 +43,25 @@ export async function GET() {
   });
 }
 
+export async function OPTIONS() {
+  return new NextResponse(null, {
+    status: 204,
+    headers: {
+      Allow: "GET, OPTIONS, PUT",
+      "Access-Control-Allow-Methods": "GET, OPTIONS, PUT",
+      "Access-Control-Allow-Headers": "Content-Type",
+    },
+  });
+}
+
 export async function PUT(request: Request) {
+  const originResult = requireMutationOrigin(request);
+  if (!originResult.ok) {
+    return NextResponse.json(buildSafeError(originResult.message), {
+      status: originResult.status,
+    });
+  }
+
   const body = (await request.json()) as {
     agentKey: string;
     provider: string;
