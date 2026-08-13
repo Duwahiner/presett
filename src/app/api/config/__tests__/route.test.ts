@@ -2,7 +2,21 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdtemp, writeFile, mkdir, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { GET, PUT } from "../route";
+import { GET, OPTIONS, PUT } from "../route";
+
+function updateConfigRequest(origin?: string): Request {
+  const request = new Request("http://localhost/api/config", {
+    method: "PUT",
+    body: JSON.stringify({
+      agentKey: "sdd-init",
+      provider: "openai",
+      model: "gpt-4",
+      variant: "high",
+    }),
+  });
+  if (origin) request.headers.set("Origin", origin);
+  return request;
+}
 
 describe("GET /api/config", () => {
   let tempDir = "";
@@ -62,15 +76,7 @@ describe("GET /api/config", () => {
       JSON.stringify({ openai: { "gpt-4": ["low", "high"] } }),
     );
 
-    const request = new Request("http://localhost/api/config", {
-      method: "PUT",
-      body: JSON.stringify({
-        agentKey: "sdd-init",
-        provider: "openai",
-        model: "gpt-4",
-        variant: "high",
-      }),
-    });
+    const request = updateConfigRequest("http://localhost:3000");
 
     const response = await PUT(request);
     expect(response.status).toBe(200);
@@ -80,5 +86,48 @@ describe("GET /api/config", () => {
       model: "openai/gpt-4",
       variant: "high",
     });
+  });
+
+  it("rejects missing Origin before parsing JSON or updating config", async () => {
+    await mkdir(tempDir, { recursive: true });
+    await writeFile(
+      join(tempDir, "opencode.json"),
+      JSON.stringify({ agent: { "sdd-init": { model: "x/y", variant: "low" } } }),
+    );
+    const request = new Request("http://localhost/api/config", {
+      method: "PUT",
+      body: "not-json",
+    });
+
+    const response = await PUT(request);
+    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
+
+    expect(response.status).toBe(403);
+    expect(written.agent["sdd-init"].variant).toBe("low");
+  });
+
+  it("rejects non-loopback Origin before updating config", async () => {
+    await mkdir(tempDir, { recursive: true });
+    await writeFile(
+      join(tempDir, "opencode.json"),
+      JSON.stringify({ agent: { "sdd-init": { model: "x/y", variant: "low" } } }),
+    );
+    await writeFile(
+      join(cacheDir, "model-variants.json"),
+      JSON.stringify({ openai: { "gpt-4": ["low", "high"] } }),
+    );
+
+    const response = await PUT(updateConfigRequest("http://evil.test"));
+    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
+
+    expect(response.status).toBe(403);
+    expect(written.agent["sdd-init"].variant).toBe("low");
+  });
+
+  it("allows OPTIONS preflight without origin enforcement", async () => {
+    const response = await OPTIONS();
+
+    expect(response.status).toBe(204);
+    expect(response.headers.get("Access-Control-Allow-Methods")).toBe("GET, OPTIONS, PUT");
   });
 });
