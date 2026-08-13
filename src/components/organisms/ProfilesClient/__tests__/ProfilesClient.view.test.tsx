@@ -16,6 +16,8 @@ describe("ProfilesClientView", () => {
     catalog: {},
     loading: false,
     error: null,
+    feedback: null,
+    pendingAction: null,
     newName: "",
     newAssignments: {},
     onNewNameChange: vi.fn(),
@@ -67,5 +69,15 @@ describe("ProfilesClientView", () => {
 
     const input = screen.getByPlaceholderText("Profile name") as HTMLInputElement;
     expect(input.value).toBe("work");
+  });
+
+  it("describes the profile name rules and disabled create state", async () => {
+    render(<StatefulView />);
+
+    await userEvent.click(screen.getByText("Create Profile"));
+
+    expect(screen.getByText(/use lowercase letters/i)).not.toBeNull();
+    expect(screen.getByText(/add a valid profile name/i)).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Create profile" }).hasAttribute("disabled")).toBe(true);
   });
 });

@@ -145,6 +145,8 @@ export function ProfilesClientView({
   catalog,
   loading,
   error,
+  feedback,
+  pendingAction,
   newName,
   newAssignments,
   onNewNameChange,
@@ -161,6 +163,7 @@ export function ProfilesClientView({
 }: ProfilesClientViewProps) {
   const [showForm, setShowForm] = useState(false);
   const isAssigned = Boolean(newAssignments["orchestrator"]?.provider && newAssignments["orchestrator"]?.model && newAssignments["orchestrator"]?.variant);
+  const canCreate = Boolean(newName && isAssigned);
 
   if (loading) {
     return (
@@ -175,16 +178,35 @@ export function ProfilesClientView({
 
   return (
     <div className="space-y-6">
+      {feedback && (
+        <div
+          role={feedback.type === "error" ? "alert" : "status"}
+          className={cn(
+            "rounded-xl border px-4 py-3 text-sm",
+            feedback.type === "error"
+              ? "border-destructive/20 bg-destructive/10 text-destructive"
+              : "border-success/20 bg-success/10 text-success",
+          )}
+        >
+          {feedback.message}
+        </div>
+      )}
+
       {/* Create Profile Form */}
       {!showForm ? (
-        <Button
-          variant="outline"
-          className="w-full justify-start gap-2"
+        <button
+          type="button"
           onClick={() => setShowForm(true)}
+          className="group flex w-full items-center justify-center gap-3 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-6 transition-all hover:border-primary/60 hover:bg-primary/10"
         >
-          <Plus className="h-4 w-4 text-primary" aria-hidden="true" />
-          {t("profiles_create_title")}
-        </Button>
+          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-primary transition-transform group-hover:scale-110 group-hover:bg-primary/20">
+            <Plus className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div className="text-left">
+            <span className="block text-sm font-semibold text-primary">{t("profiles_create_title")}</span>
+            <span className="block text-xs text-muted-foreground">{t("profiles_create_description")}</span>
+          </div>
+        </button>
       ) : (
         <form
           onSubmit={onCreate}
@@ -212,10 +234,14 @@ export function ProfilesClientView({
             <Input
               id="profile-name"
               type="text"
+              aria-describedby="profile-name-help profile-create-disabled-help"
               placeholder={t("profiles_create_placeholder")}
               value={newName}
-              onChange={(e) => onNewNameChange(e.target.value)}
+              onChange={(e) => onNewNameChange(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
             />
+            <p id="profile-name-help" className="text-xs text-muted-foreground">
+              {t("profiles_nameHelp")}
+            </p>
           </div>
 
           {/* Orchestrator Assignment */}
@@ -249,11 +275,21 @@ export function ProfilesClientView({
           <div className="mt-5 flex items-center gap-3">
             <Button
               type="submit"
-              disabled={!newName || !isAssigned}
+              disabled={!canCreate || pendingAction === "create"}
+              aria-describedby={!canCreate ? "profile-create-disabled-help" : undefined}
             >
-              <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              {pendingAction === "create" ? (
+                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden="true" />
+              ) : (
+                <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
+              )}
               {t("profiles_create_action")}
             </Button>
+            {!canCreate && (
+              <p id="profile-create-disabled-help" className="max-w-xs text-xs text-muted-foreground">
+                {t("profiles_createDisabledHelp")}
+              </p>
+            )}
             <Button
               type="button"
               variant="ghost"
@@ -307,7 +343,10 @@ export function ProfilesClientView({
                   onChange={(a) => onEditAssignmentChange("orchestrator", a)}
                 />
                 <div className="flex gap-2">
-                  <Button onClick={onEditSave} disabled={!editAssignments["orchestrator"]?.provider}>
+                  <Button onClick={onEditSave} disabled={!editAssignments["orchestrator"]?.provider || pendingAction === "edit"}>
+                    {pendingAction === "edit" && (
+                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                    )}
                     {t("profiles_save")}
                   </Button>
                   <Button variant="outline" onClick={onEditCancel}>
@@ -352,7 +391,15 @@ export function ProfilesClientView({
                     {t("profiles_edit")}
                   </Button>
                   {!profile.active && (
-                    <Button variant="ghost" size="sm" onClick={() => onSwitch(profile.name)}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => onSwitch(profile.name)}
+                      disabled={pendingAction === `switch:${profile.name}`}
+                    >
+                      {pendingAction === `switch:${profile.name}` && (
+                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                      )}
                       {t("profiles_switch")}
                     </Button>
                   )}
@@ -362,8 +409,13 @@ export function ProfilesClientView({
                       size="sm"
                       onClick={() => onDelete(profile.name)}
                       aria-label={t("profiles_delete")}
+                      disabled={pendingAction === `delete:${profile.name}`}
                     >
-                      <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      {pendingAction === `delete:${profile.name}` ? (
+                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                      ) : (
+                        <Trash2 className="h-4 w-4" aria-hidden="true" />
+                      )}
                     </Button>
                   ) : null}
                 </div>

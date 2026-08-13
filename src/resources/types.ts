@@ -89,6 +89,12 @@ export interface Resources {
   "profiles_edit": string;
   "profiles_editTitle": string;
   "profiles_save": string;
+  "profiles_nameHelp": string;
+  "profiles_createDisabledHelp": string;
+  "profiles_createSuccess": string;
+  "profiles_switchSuccess": string;
+  "profiles_deleteSuccess": string;
+  "profiles_updateSuccess": string;
   "backups_title": string;
   "backups_status_badge": string;
   "backups_header_description": string;
