@@ -144,4 +144,7 @@ export interface Resources {
   "models_resetSuccess": string;
   "models_emptyAssignmentsTitle": string;
   "models_emptyAssignmentsDesc": string;
+  "diagnostics_update_notice": string;
+  "diagnostics_check_now": string;
+  "diagnostics_checking": string;
 }

@@ -3,6 +3,7 @@ import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DashboardLayout } from "@/components/organisms/DashboardLayout/DashboardLayout";
 import { setLocale } from "@/resources/resources";
+import { checkDiagnosticsUpdates } from "@/services/diagnosticsApiService";
 
 const mockPathname = vi.fn();
 
@@ -24,10 +25,21 @@ vi.mock("next/link", () => ({
   },
 }));
 
+vi.mock("@/services/diagnosticsApiService", () => ({
+  checkDiagnosticsUpdates: vi.fn(async () => ({
+    status: { phase: "success", checkedAt: "2026-08-13T10:00:00.000Z" },
+    settings: { frequencyMinutes: 60 },
+    installedVersion: "1.2.0",
+    channels: { stable: { latestVersion: "1.3.0", updateAvailable: true }, rc: { latestVersion: "1.4.0-rc.1", updateAvailable: true } },
+    notice: { channel: "stable", version: "1.3.0", pending: true },
+  })),
+}));
+
 describe("DashboardLayout", () => {
   beforeEach(() => {
     setLocale("en");
     mockPathname.mockReturnValue("/");
+    vi.mocked(checkDiagnosticsUpdates).mockResolvedValue({ settings: { frequencyMinutes: 60 }, status: { phase: "idle" }, notice: null });
   });
 
   it("renders navigation links and children", () => {
@@ -115,5 +127,21 @@ describe("DashboardLayout", () => {
     await user.click(within(screen.getByRole("navigation", { name: "Menu" })).getByRole("link", { name: "Models" }));
 
     expect(screen.queryByRole("navigation", { name: "Menu" })).toBeNull();
+  });
+
+  it("runs an active update check and renders a persistent notice with manual check", async () => {
+    vi.mocked(checkDiagnosticsUpdates).mockResolvedValue({
+      status: { phase: "success", checkedAt: "2026-08-13T10:00:00.000Z" },
+      settings: { frequencyMinutes: 60 },
+      installedVersion: "1.2.0",
+      channels: { stable: { latestVersion: "1.3.0", updateAvailable: true }, rc: { latestVersion: "1.4.0-rc.1", updateAvailable: true } },
+      notice: { channel: "stable", version: "1.3.0", pending: true },
+    });
+    const user = userEvent.setup();
+    render(<DashboardLayout><main>Child</main></DashboardLayout>);
+
+    expect((await screen.findByRole("alert")).textContent).toContain("Gentle-AI 1.3.0 is available on stable.");
+    await user.click(screen.getByRole("button", { name: "Check Gentle-AI releases now" }));
+    expect(screen.getByRole("button", { name: "Check Gentle-AI releases now" })).not.toBeNull();
   });
 });

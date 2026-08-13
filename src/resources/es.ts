@@ -144,4 +144,7 @@ export const es: Resources = {
   "models_resetSuccess": "Asignaciones restablecidas.",
   "models_emptyAssignmentsTitle": "No hay asignaciones de agentes",
   "models_emptyAssignmentsDesc": "Sincroniza la configuración o crea una fuente de asignaciones para que los modelos aparezcan aquí.",
+  "diagnostics_update_notice": "Gentle-AI {{version}} está disponible en {{channel}}.",
+  "diagnostics_check_now": "Comprobar releases de Gentle-AI ahora",
+  "diagnostics_checking": "Comprobando releases…",
 };
