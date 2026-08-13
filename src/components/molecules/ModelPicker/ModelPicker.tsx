@@ -150,7 +150,6 @@ export function ModelPicker({
       </div>
 
       <Button
-        className="w-full"
         disabled={disabled || !isValid}
         onClick={() => onConfirm({ provider, model, variant })}
       >

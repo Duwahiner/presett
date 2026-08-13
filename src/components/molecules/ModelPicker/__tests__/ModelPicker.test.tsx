@@ -37,6 +37,22 @@ describe("ModelPicker", () => {
     });
   });
 
+  it("keeps the save action compact instead of full width", () => {
+    render(
+      <ModelPicker
+        catalog={catalog}
+        initialProvider="openai"
+        initialModel="gpt-4"
+        initialVariant="high"
+        onConfirm={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: /save/i }).className).not.toContain(
+      "w-full",
+    );
+  });
+
   it("resets model and variant when provider changes", async () => {
     const onConfirm = vi.fn();
     render(<ModelPicker catalog={catalog} onConfirm={onConfirm} />);
