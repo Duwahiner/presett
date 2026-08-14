@@ -15,6 +15,7 @@ import {
   RefreshCw,
   Sparkles,
   Loader2,
+  Settings,
 } from "lucide-react";
 import { runSync } from "@/services/backupsApiService";
 import { checkDiagnosticsUpdates } from "@/services/diagnosticsApiService";
@@ -34,6 +35,7 @@ const navItems: { key: keyof Resources; href: string; icon: React.ComponentType<
   { key: "nav_profiles", href: "/profiles", icon: Layers },
   { key: "nav_backups", href: "/backups", icon: Archive },
   { key: "nav_diagnostics", href: "/diagnostics", icon: Activity },
+  { key: "nav_config", href: "/config", icon: Settings },
 ];
 
 export function DashboardLayoutView({ children }: DashboardLayoutProps) {

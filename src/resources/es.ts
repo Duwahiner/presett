@@ -6,6 +6,7 @@ export const es: Resources = {
   "nav_profiles": "Perfiles",
   "nav_backups": "Backups",
   "nav_diagnostics": "Diagnósticos",
+  "nav_config": "Configuración",
   "footer_brand": "PreSett — Gestor de configuración Gentle-AI",
   "topbar_search_placeholder": "Buscar agentes, modelos, perfiles…",
   "topbar_search_aria": "Buscar agentes, modelos y perfiles",
