@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { Result } from "@/lib/types";
 import { err, ok } from "@/lib/types";
 import type { OpenCodeConfig } from "@/types";
+import type { Locale } from "@/types/state";
 
 export const openCodeAgentEntrySchema = z.object({
   description: z.string().optional(),
@@ -49,6 +50,22 @@ export function parseOpenCodeConfigSafe(raw: string): Result<OpenCodeConfig> {
 
   return ok(result.data as OpenCodeConfig);
 }
+
+export const openCodeGlobalPatchSchema = z.object({
+  domain: z.literal("opencode"),
+  agentKey: z.string().min(1),
+  model: z.string().min(1),
+  variant: z.string().min(1),
+}).strict();
+
+export const gentleAiPatchSchema = z.object({
+  domain: z.literal("gentle-ai"),
+  language: z.enum(["es", "en"]).optional(),
+  persona: z.string().min(1).optional(),
+}).strict();
+
+export const globalConfigPatchSchema = z.discriminatedUnion("domain", [gentleAiPatchSchema, openCodeGlobalPatchSchema]);
+export type GlobalConfigPatch = z.infer<typeof globalConfigPatchSchema>;
 
 export type ModelCache = Record<string, Record<string, string[]>>;
 

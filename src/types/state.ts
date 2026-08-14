@@ -28,5 +28,8 @@ export interface StateJson {
   codexCarrilModelAssignments: Record<string, string>;
   model_assignments: Record<string, ModelAssignment>;
   persona: string;
+  language?: Locale;
   last_update_check?: string;
 }
+
+export type Locale = "es" | "en";
