@@ -31,6 +31,20 @@ describe("GlobalConfigClient runtime behavior", () => {
     expect(screen.getAllByText("Configured")).toHaveLength(2);
   });
 
+  it("renders a full-width configuration header with aligned content", async () => {
+    getGlobalConfig.mockResolvedValueOnce(configuredResponse);
+    render(<GlobalConfigClient />);
+
+    const heading = await screen.findByRole("heading", { name: "Global configuration" });
+    const header = heading.closest("header");
+    expect(header?.className).toContain("bg-card");
+    expect(header?.className).toContain("border-b");
+    expect(header?.parentElement?.className).not.toContain("max-w-3xl");
+    expect(header?.firstElementChild?.className).toContain("max-w-3xl");
+    expect(header?.contains(screen.getByText("Manage Gentle-AI and OpenCode preferences independently."))).toBe(true);
+    expect(screen.getAllByText("Configured").some((badge) => header?.contains(badge))).toBe(true);
+  });
+
   it("saves Gentle-AI without changing the OpenCode payload", async () => {
     getGlobalConfig.mockResolvedValueOnce(configuredResponse);
     patchGlobalConfig.mockResolvedValue({ ok: true });

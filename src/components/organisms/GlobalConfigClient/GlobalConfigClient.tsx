@@ -92,19 +92,22 @@ export function GlobalConfigClient() {
   if (loading) return <Card className="mx-auto max-w-3xl"><CardContent className="flex items-center gap-3 p-6 text-muted-foreground" role="status"><Loader2 className="size-4 animate-spin text-primary" aria-hidden="true" />{t("config_loading")}</CardContent></Card>;
 
   return (
-    <main className="mx-auto max-w-3xl space-y-5 p-5 sm:p-7">
-      <header className="flex items-start gap-3 border-b border-border pb-5">
-        <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Settings2 className="size-5" aria-hidden="true" /></span>
-        <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-center gap-2"><h1 className="text-2xl font-semibold tracking-tight text-foreground">{t("config_title")}</h1><Badge variant={isConfigured ? "secondary" : "outline"} className={isConfigured ? "text-success" : "text-muted-foreground"}>{isConfigured && <Check className="size-3" aria-hidden="true" />}{t(isConfigured ? "config_status_ready" : "config_status_incomplete")}</Badge></div>
-          <p className="mt-1 text-sm text-muted-foreground">{t("config_description")}</p>
+    <main>
+      <header className="border-b border-border bg-card">
+        <div className="mx-auto flex max-w-3xl items-start gap-3 px-5 py-5 sm:px-7">
+          <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Settings2 className="size-5" aria-hidden="true" /></span>
+          <div className="min-w-0 flex-1">
+            <div className="flex flex-wrap items-center gap-2"><h1 className="text-2xl font-semibold tracking-tight text-foreground">{t("config_title")}</h1><Badge variant={isConfigured ? "secondary" : "outline"} className={isConfigured ? "text-success" : "text-muted-foreground"}>{isConfigured && <Check className="size-3" aria-hidden="true" />}{t(isConfigured ? "config_status_ready" : "config_status_incomplete")}</Badge></div>
+            <p className="mt-1 text-sm text-muted-foreground">{t("config_description")}</p>
+          </div>
         </div>
       </header>
 
-      {error && <ErrorBanner title={t("errors_generic")} message={error} />}
-      {success && <div role="status" className="flex items-center gap-2 rounded-lg border border-success/20 bg-success/10 px-4 py-3 text-sm text-success"><Check className="size-4" aria-hidden="true" />{success}</div>}
+      <div className="mx-auto max-w-3xl space-y-5 p-5 sm:p-7">
+        {error && <ErrorBanner title={t("errors_generic")} message={error} />}
+        {success && <div role="status" className="flex items-center gap-2 rounded-lg border border-success/20 bg-success/10 px-4 py-3 text-sm text-success"><Check className="size-4" aria-hidden="true" />{success}</div>}
 
-      <Card>
+        <Card>
         <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
           <div className="flex gap-3"><span className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Sparkles className="size-4" aria-hidden="true" /></span><div><CardTitle>{t("config_gentle_title")}</CardTitle><p className="mt-1 text-sm text-muted-foreground">{t("config_gentle_description")}</p></div></div>
           <Badge variant="outline" className="text-muted-foreground">{t("config_gentle_status")}</Badge>
@@ -114,9 +117,9 @@ export function GlobalConfigClient() {
           <div className="space-y-1.5"><label htmlFor="config-persona" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("config_persona")}</label><Input id="config-persona" value={persona} onChange={(event) => setPersona(event.target.value)} disabled={saving !== null} className="h-10 font-mono" /></div>
         </CardContent>
         <CardFooter><Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10 hover:text-primary" onClick={saveGentle} disabled={saving !== null}>{saving === "gentle-ai" && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}{t("config_gentle_save")}</Button></CardFooter>
-      </Card>
+        </Card>
 
-      <Card>
+        <Card>
         <CardHeader className="flex-row items-start justify-between gap-4 space-y-0"><div className="flex gap-3"><span className="flex size-9 items-center justify-center rounded-lg bg-primary/10 text-primary"><Settings2 className="size-4" aria-hidden="true" /></span><div><CardTitle>{t("config_opencode_title")}</CardTitle><p className="mt-1 text-sm text-muted-foreground">{t("config_opencode_description")}</p></div></div><Badge variant={openCodeConfigured ? "secondary" : "outline"} className={openCodeConfigured ? "text-success" : "text-muted-foreground"}>{t(openCodeConfigured ? "config_status_ready" : "config_status_incomplete")}</Badge></CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-3">
           <div className="space-y-1.5"><label htmlFor="config-agent" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("config_agent")}</label><Input ref={agentInput} id="config-agent" value={agentKey} onChange={(event) => { setAgentKey(event.target.value); setFieldErrors((errors) => ({ ...errors, agentKey: undefined })); }} disabled={saving !== null} aria-invalid={Boolean(fieldErrors.agentKey)} aria-describedby={fieldErrors.agentKey ? "config-agent-error" : undefined} className="h-10 font-mono" /><FieldError id="config-agent-error" message={fieldErrors.agentKey} /></div>
@@ -124,7 +127,8 @@ export function GlobalConfigClient() {
           <div className="space-y-1.5"><label htmlFor="config-variant" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("config_variant")}</label><Input id="config-variant" value={variant} onChange={(event) => { setVariant(event.target.value); setFieldErrors((errors) => ({ ...errors, variant: undefined })); }} disabled={saving !== null} aria-invalid={Boolean(fieldErrors.variant)} aria-describedby={fieldErrors.variant ? "config-variant-error" : undefined} className="h-10 font-mono" /><FieldError id="config-variant-error" message={fieldErrors.variant} /></div>
         </CardContent>
         <CardFooter><Button variant="outline" className="border-primary/30 text-primary hover:bg-primary/10 hover:text-primary" onClick={saveOpenCode} disabled={saving !== null}>{saving === "opencode" && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}{t("config_opencode_save")}</Button></CardFooter>
-      </Card>
+        </Card>
+      </div>
     </main>
   );
 }
