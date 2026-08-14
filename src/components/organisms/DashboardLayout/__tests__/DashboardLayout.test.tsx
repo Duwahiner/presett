@@ -6,10 +6,11 @@ import { setLocale } from "@/resources/resources";
 import { checkDiagnosticsUpdates } from "@/services/diagnosticsApiService";
 
 const mockPathname = vi.fn();
+const mockPush = vi.fn();
 
 vi.mock("next/navigation", () => ({
   usePathname: () => mockPathname(),
-  useRouter: () => ({ push: vi.fn() }),
+  useRouter: () => ({ push: mockPush }),
 }));
 
 vi.mock("next/link", () => ({
@@ -38,6 +39,7 @@ vi.mock("@/services/diagnosticsApiService", () => ({
 describe("DashboardLayout", () => {
   beforeEach(() => {
     setLocale("en");
+    mockPush.mockClear();
     mockPathname.mockReturnValue("/");
     vi.mocked(checkDiagnosticsUpdates).mockResolvedValue({ settings: { frequencyMinutes: 60 }, status: { phase: "idle" }, notice: null });
   });
@@ -56,7 +58,38 @@ describe("DashboardLayout", () => {
     expect(screen.queryByRole("link", { name: "Profiles" })).not.toBeNull();
     expect(screen.queryByRole("link", { name: "Backups" })).not.toBeNull();
     expect(screen.queryByRole("link", { name: "Diagnostics" })).not.toBeNull();
+    expect(screen.queryByRole("link", { name: "Search" })).toBeNull();
     expect(screen.queryByText("Dashboard content")).not.toBeNull();
+  });
+
+  it("redirects topbar searches to the global search page", async () => {
+    mockPathname.mockReturnValue("/models");
+    const user = userEvent.setup();
+    render(
+      <DashboardLayout>
+        <main>Child</main>
+      </DashboardLayout>,
+    );
+
+    await user.type(screen.getByRole("searchbox", { name: /search agents/i }), "claude sonnet");
+    await user.keyboard("{Enter}");
+
+    expect(mockPush).toHaveBeenCalledWith("/search?q=claude%20sonnet");
+  });
+
+  it("clears the topbar search input with an accessible reset control", async () => {
+    const user = userEvent.setup();
+    render(
+      <DashboardLayout>
+        <main>Child</main>
+      </DashboardLayout>,
+    );
+
+    const searchbox = screen.getByRole("searchbox", { name: /search agents/i });
+    await user.type(searchbox, "claude");
+    await user.click(screen.getByRole("button", { name: "Clear search input" }));
+
+    expect((searchbox as HTMLInputElement).value).toBe("");
   });
 
   it("renders the topbar with theme toggle", () => {
@@ -66,7 +99,12 @@ describe("DashboardLayout", () => {
       </DashboardLayout>,
     );
 
-    expect(screen.getByRole("searchbox", { name: /search agents/i })).not.toBeNull();
+    const searchbox = screen.getByRole("searchbox", { name: /search agents/i });
+    expect(searchbox).not.toBeNull();
+    expect(searchbox.getAttribute("placeholder")).toBe("Search PreSett…");
+    expect(searchbox.className).toContain("bg-transparent");
+    expect(searchbox.className).toContain("shadow-none");
+    expect(searchbox.className).toContain("rounded-[.4rem]");
     expect(
       screen.getByRole("button", { name: /toggle theme/i }),
     ).not.toBeNull();
