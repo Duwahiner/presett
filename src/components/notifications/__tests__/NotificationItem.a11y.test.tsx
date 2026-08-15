@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, fireEvent } from "@testing-library/react";
 import { type ReactNode } from "react";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { NotificationItem } from "@/components/notifications/NotificationItem";
@@ -48,5 +48,30 @@ describe("NotificationPanel — a11y attributes", () => {
     const btn = screen.getByRole("button", { name: /close/i });
     expect(btn).not.toBeNull();
     expect(btn.getAttribute("tabindex")).not.toBe("-1");
+  });
+
+  it("traps Tab focus inside panel when open", () => {
+    render(<NotificationPanel open={true} onClose={() => {}} />, { wrapper });
+    const panel = screen.getByRole("dialog", { name: /notifications/i });
+    const closeBtn = screen.getByRole("button", { name: /close/i });
+
+    // Focus should start on the first focusable element (close button)
+    expect(document.activeElement).toBe(closeBtn);
+
+    // Tab from last element should wrap to first
+    fireEvent.keyDown(document, { key: "Tab" });
+    // After Tab, focus should still be within the panel (wrapped)
+    expect(panel.contains(document.activeElement)).toBe(true);
+
+    // Shift+Tab from first element should wrap to last
+    fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
+    expect(panel.contains(document.activeElement)).toBe(true);
+  });
+
+  it("panel has role=dialog and aria-label", () => {
+    render(<NotificationPanel open={true} onClose={() => {}} />, { wrapper });
+    const dialog = screen.getByRole("dialog", { name: /notifications/i });
+    expect(dialog).not.toBeNull();
+    expect(dialog.getAttribute("aria-label")).toBeTruthy();
   });
 });

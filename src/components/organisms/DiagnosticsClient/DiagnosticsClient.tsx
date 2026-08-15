@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Activity, CheckCircle2, Loader2, RefreshCw, XCircle } from "lucide-react";
 import { Badge } from "@/components/atoms/Badge/Badge";
 import { Button } from "@/components/ui/button";
@@ -54,7 +54,8 @@ export function DiagnosticsClient() {
   const [updates, setUpdates] = useState<DiagnosticsUpdateState | null>(null);
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
-  const { onError } = useNotificationToasts();
+  const lastPushedUpdateRef = useRef<string | null>(null);
+  const { onError, push } = useNotificationToasts();
 
   useEffect(() => {
     let mounted = true;
@@ -74,6 +75,14 @@ export function DiagnosticsClient() {
     return () => { mounted = false; };
   }, []);
 
+  // Push update detection as a persistent notification (not inline alert)
+  useEffect(() => {
+    if (updates?.notice?.pending && lastPushedUpdateRef.current !== updates.notice.version) {
+      lastPushedUpdateRef.current = updates.notice.version;
+      push({ severity: "update", title: t("notif_update_available", { version: updates.notice.version }), message: t("diagnostics_update_notice", { version: updates.notice.version, channel: updates.notice.channel }) });
+    }
+  }, [updates, push]);
+
   async function handleCheck() {
     if (checking) return;
     setChecking(true);
@@ -92,8 +101,6 @@ export function DiagnosticsClient() {
 
   return (
     <div className="space-y-6">
-      {updates?.notice?.pending && <div role="alert" className="rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning-foreground">{t("diagnostics_update_notice", { version: updates.notice.version, channel: updates.notice.channel })}</div>}
-
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 text-lg font-semibold"><Activity className="h-5 w-5 text-primary" aria-hidden="true" />{t("diagnostics_releases_title")}</h2>

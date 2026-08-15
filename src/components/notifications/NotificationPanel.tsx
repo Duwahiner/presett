@@ -35,11 +35,41 @@ export function NotificationPanel({ open, onClose }: NotificationPanelProps) {
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
-  // Focus trap: focus panel on open
+  // Focus trap: focus first focusable element on open, trap Tab navigation
   useEffect(() => {
-    if (open && panelRef.current) {
-      panelRef.current.focus();
+    if (!open || !panelRef.current) return;
+
+    const panel = panelRef.current;
+    const focusableSelector = 'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])';
+
+    // Focus the first focusable element (close button or first item)
+    const firstFocusable = panel.querySelector<HTMLElement>(focusableSelector);
+    firstFocusable?.focus();
+
+    function trapFocus(e: KeyboardEvent) {
+      if (e.key !== "Tab" || !panelRef.current) return;
+
+      const focusables = panelRef.current.querySelectorAll<HTMLElement>(focusableSelector);
+      if (focusables.length === 0) return;
+
+      const first = focusables[0];
+      const last = focusables[focusables.length - 1];
+
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
     }
+
+    document.addEventListener("keydown", trapFocus);
+    return () => document.removeEventListener("keydown", trapFocus);
   }, [open]);
 
   if (!open) return null;
