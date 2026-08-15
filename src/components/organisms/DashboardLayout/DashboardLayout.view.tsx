@@ -54,7 +54,8 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
   const mobileNavRef = useRef<HTMLElement | null>(null);
-  const { onError, onSuccess } = useNotificationToasts();
+  const lastPushedUpdateRef = useRef<string | null>(null);
+  const { onError, onSuccess, onInfo, resolve, push } = useNotificationToasts();
 
   useEffect(() => {
     if (!mobileNavOpen) return;
@@ -98,6 +99,14 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
     };
   }, []);
 
+  // Push update detection as a persistent notification (not inline alert)
+  useEffect(() => {
+    if (updateState?.notice?.pending && lastPushedUpdateRef.current !== updateState.notice.version) {
+      lastPushedUpdateRef.current = updateState.notice.version;
+      push({ severity: "update", title: t("notif_update_available", { version: updateState.notice.version }), message: t("diagnostics_update_notice", { version: updateState.notice.version, channel: updateState.notice.channel }) });
+    }
+  }, [updateState, push]);
+
   async function handleManualUpdateCheck() {
     if (checkingUpdates) return;
     setCheckingUpdates(true);
@@ -113,11 +122,12 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
   async function handleSync() {
     if (syncing) return;
     setSyncing(true);
+    const syncId = onInfo(t("sidebar_sync_cta"), t("sidebar_sync_cta"));
     try {
       await runSync();
-      onSuccess(t("sidebar_sync_success"));
+      resolve(syncId, "success", t("sidebar_sync_success"));
     } catch {
-      onError(t("sidebar_group_menu"), t("sidebar_sync_error_message"));
+      resolve(syncId, "error", t("sidebar_sync_error_message"));
     } finally {
       setSyncing(false);
     }
@@ -297,16 +307,6 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
           )}
 
           <main className="min-h-0 flex-1 overflow-y-auto bg-background/60">
-            {updateState?.notice?.pending && (
-              <div role="alert" className="m-4 rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning-foreground">
-                <div className="flex flex-wrap items-center justify-between gap-3">
-                  <p>{t("diagnostics_update_notice", { version: updateState.notice.version, channel: updateState.notice.channel })}</p>
-                  <Button variant="outline" size="sm" onClick={handleManualUpdateCheck} disabled={checkingUpdates}>
-                    {checkingUpdates ? t("diagnostics_checking") : t("diagnostics_check_now")}
-                  </Button>
-                </div>
-              </div>
-            )}
             {children}
           </main>
         </div>

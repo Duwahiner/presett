@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, within, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { DashboardLayout } from "@/components/organisms/DashboardLayout/DashboardLayout";
 import { setLocale } from "@/resources/resources";
@@ -36,10 +36,22 @@ vi.mock("@/services/diagnosticsApiService", () => ({
   })),
 }));
 
+const { mockToastSuccess, mockToastError } = vi.hoisted(() => ({
+  mockToastSuccess: vi.fn(),
+  mockToastError: vi.fn(),
+}));
+vi.mock("sonner", () => ({
+  toast: { success: mockToastSuccess, error: mockToastError },
+  Toaster: () => null,
+}));
+
 describe("DashboardLayout", () => {
   beforeEach(() => {
+    localStorage.clear();
     setLocale("en");
     mockPush.mockClear();
+    mockToastSuccess.mockClear();
+    mockToastError.mockClear();
     mockPathname.mockReturnValue("/");
     vi.mocked(checkDiagnosticsUpdates).mockResolvedValue({ settings: { frequencyMinutes: 60 }, status: { phase: "idle" }, notice: null });
   });
@@ -180,7 +192,7 @@ describe("DashboardLayout", () => {
     expect(screen.queryByRole("navigation", { name: "Menu" })).toBeNull();
   });
 
-  it("runs an active update check and renders a persistent notice with manual check", async () => {
+  it("runs an active update check and persists update as a notification (not inline alert)", async () => {
     vi.mocked(checkDiagnosticsUpdates).mockResolvedValue({
       status: { phase: "success", checkedAt: "2026-08-13T10:00:00.000Z" },
       settings: { frequencyMinutes: 60 },
@@ -188,12 +200,44 @@ describe("DashboardLayout", () => {
       channels: { stable: { latestVersion: "1.3.0", updateAvailable: true }, rc: { latestVersion: "1.4.0-rc.1", updateAvailable: true } },
       notice: { channel: "stable", version: "1.3.0", pending: true },
     });
-    const user = userEvent.setup();
     render(<DashboardLayout><main>Child</main></DashboardLayout>);
 
-    expect((await screen.findByRole("alert")).textContent).toContain("Gentle-AI 1.3.0 is available on stable.");
-    await user.click(screen.getByRole("button", { name: "Check Gentle-AI releases now" }));
-    expect(screen.getByRole("button", { name: "Check Gentle-AI releases now" })).not.toBeNull();
+    // Wait for the async chain: mock → setUpdateState → useEffect → push → localStorage
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
+      expect(stored.length).toBeGreaterThanOrEqual(1);
+    });
+    // Update should NOT render as an inline alert
+    expect(screen.queryByRole("alert")).toBeNull();
+    // Update should be persisted as a notification in localStorage
+    const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
+    expect(stored.length).toBeGreaterThanOrEqual(1);
+    const updateNotif = stored.find((n: { severity: string }) => n.severity === "update");
+    expect(updateNotif).toBeDefined();
+    expect(updateNotif.message).toContain("1.3.0");
+  });
+
+  it("update detection does not invoke toast.success or toast.error (Sonner stays silent)", async () => {
+    vi.mocked(checkDiagnosticsUpdates).mockResolvedValue({
+      status: { phase: "success", checkedAt: "2026-08-13T10:00:00.000Z" },
+      settings: { frequencyMinutes: 60 },
+      installedVersion: "1.2.0",
+      channels: { stable: { latestVersion: "1.3.0", updateAvailable: true }, rc: { latestVersion: "1.4.0-rc.1", updateAvailable: true } },
+      notice: { channel: "stable", version: "1.3.0", pending: true },
+    });
+
+    render(<DashboardLayout><main>Child</main></DashboardLayout>);
+
+    // Wait for the async update detection chain to complete
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
+      const updateNotif = stored.find((n: { severity: string }) => n.severity === "update");
+      expect(updateNotif).toBeDefined();
+    });
+
+    // Sonner toast must NOT be invoked for update notifications
+    expect(mockToastSuccess).not.toHaveBeenCalled();
+    expect(mockToastError).not.toHaveBeenCalled();
   });
 
   it("keeps the layout stable when the active update check fails", async () => {
@@ -203,5 +247,77 @@ describe("DashboardLayout", () => {
 
     expect(await screen.findByText("Child")).not.toBeNull();
     expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("bell click opens notification panel and close button dismisses it", async () => {
+    vi.mocked(checkDiagnosticsUpdates).mockResolvedValue({ settings: { frequencyMinutes: 60 }, status: { phase: "idle" }, notice: null });
+    const user = userEvent.setup();
+    render(<DashboardLayout><main>Child</main></DashboardLayout>);
+
+    // Bell button exists and is accessible
+    const bellButton = screen.getByRole("button", { name: /notifications/i });
+    expect(bellButton).not.toBeNull();
+
+    // Click bell → panel opens with role=dialog
+    await user.click(bellButton);
+    const dialog = screen.getByRole("dialog", { name: /notifications/i });
+    expect(dialog).not.toBeNull();
+    // Panel shows empty state initially
+    expect(screen.getByText("No notifications yet.")).not.toBeNull();
+
+    // Close button dismisses the panel
+    await user.click(screen.getByRole("button", { name: /close/i }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("bell shows unread badge and panel marks notifications as read", async () => {
+    // Pre-populate localStorage with unread notification
+    localStorage.setItem("presett_notifications", JSON.stringify([{
+      id: "pre-existing", severity: "error", title: "Sync Error", message: "Backup failed",
+      status: "unread", inProgress: false, createdAt: new Date().toISOString(),
+    }]));
+
+    const user = userEvent.setup();
+    render(<DashboardLayout><main>Child</main></DashboardLayout>);
+
+    // Bell shows unread badge
+    const bellButton = screen.getByRole("button", { name: /notifications/i });
+    expect(screen.getByText("1")).not.toBeNull();
+
+    // Open panel → notification appears
+    await user.click(bellButton);
+    expect(screen.getByText("Sync Error")).not.toBeNull();
+
+    // Panel marks all as read → badge clears
+    await waitFor(() => {
+      expect(screen.queryByText("1")).toBeNull();
+    });
+  });
+
+  it("sync operation uses lifecycle: in-progress info → resolve on completion", async () => {
+    vi.mocked(checkDiagnosticsUpdates).mockResolvedValue({ settings: { frequencyMinutes: 60 }, status: { phase: "idle" }, notice: null });
+    const user = userEvent.setup();
+    render(<DashboardLayout><main>Child</main></DashboardLayout>);
+
+    // Click sync button → creates in-progress notification
+    const syncButton = screen.getByRole("button", { name: /sync/i });
+    await user.click(syncButton);
+
+    // Panel shows in-progress spinner entry
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
+      const inProgress = stored.find((n: { inProgress: boolean }) => n.inProgress === true);
+      expect(inProgress).toBeDefined();
+      expect(inProgress.severity).toBe("info");
+    });
+
+    // After sync completes → entry resolves (inProgress = false)
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
+      const resolved = stored.find((n: { id: string }) => n.id !== undefined);
+      // The entry should exist and be resolved (not in progress)
+      expect(resolved).toBeDefined();
+      expect(resolved.inProgress).toBe(false);
+    });
   });
 });

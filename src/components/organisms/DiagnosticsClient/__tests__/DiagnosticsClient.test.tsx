@@ -56,15 +56,27 @@ describe("DiagnosticsClient", () => {
     expect(document.body.textContent).not.toMatch(/[A-Z]:\\|\/Users\/|\/home\//);
   });
 
-  it("runs the manual release check with loading feedback and keeps the persistent notice visible", async () => {
+  it("runs the manual release check and persists update as a notification (not inline alert)", async () => {
     const user = userEvent.setup();
     render(<DiagnosticsClient />, { wrapper });
 
-    expect((await screen.findByRole("alert")).textContent).toContain("Gentle-AI 1.3.0 is available on stable.");
+    // Wait for loading to complete
+    await screen.findByText("Gentle-AI CLI");
+
+    // Update should NOT render as an inline alert
+    expect(screen.queryByRole("alert")).toBeNull();
+    // Update should be persisted as a notification in localStorage
+    const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
+    expect(stored.length).toBeGreaterThanOrEqual(1);
+    const updateNotif = stored.find((n: { severity: string }) => n.severity === "update");
+    expect(updateNotif).toBeDefined();
+    expect(updateNotif.message).toContain("1.3.0");
+
     await user.click(screen.getByRole("button", { name: "Check Gentle-AI releases now" }));
 
     await waitFor(() => expect(checkDiagnosticsUpdates).toHaveBeenCalledTimes(2));
-    expect(screen.getByRole("alert").textContent).toContain("Gentle-AI 1.3.0 is available on stable.");
+    // Still no inline alert after manual check
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 
   it("shows an accessible error when diagnostics cannot load", async () => {
