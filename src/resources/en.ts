@@ -6,6 +6,7 @@ export const en: Resources = {
   "nav_profiles": "Profiles",
   "nav_backups": "Backups",
   "nav_diagnostics": "Diagnostics",
+  "nav_config": "Configuration",
   "footer_brand": "PreSett — Gentle-AI configuration manager",
   "topbar_search_placeholder": "Search PreSett…",
   "topbar_search_aria": "Search agents, models, and profiles",

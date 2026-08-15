@@ -6,6 +6,7 @@ export interface Resources {
   "nav_profiles": string;
   "nav_backups": string;
   "nav_diagnostics": string;
+  "nav_config": string;
   "footer_brand": string;
   "topbar_search_placeholder": string;
   "topbar_search_aria": string;
