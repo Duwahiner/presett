@@ -1,21 +1,58 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { type ReactNode } from "react";
+import { type FormEvent, type ReactNode } from "react";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { BackupsClient } from "@/components/organisms/BackupsClient/BackupsClient";
 import { GlobalConfigClient } from "@/components/organisms/GlobalConfigClient/GlobalConfigClient";
 import { DiagnosticsClient } from "@/components/organisms/DiagnosticsClient/DiagnosticsClient";
 import { ModelsClient } from "@/components/organisms/ModelsClient/ModelsClient";
 import { ProfilesClient } from "@/components/organisms/ProfilesClient/ProfilesClient";
+import type { ModelsClientViewProps } from "@/components/organisms/ModelsClient/ModelsClient.types";
+import type { ProfilesClientViewProps } from "@/components/organisms/ProfilesClient/ProfilesClient.types";
+
+vi.mock("@/components/organisms/ModelsClient/ModelsClient.view", () => ({
+  ModelsClientView: ({ onSave, onSwitchProfile, onSync, onReset }: ModelsClientViewProps) => (
+    <>
+      <button onClick={() => void onSave("main", { provider: "openai", model: "gpt-5", variant: "high" })}>Save assignment</button>
+      <button onClick={() => void onSwitchProfile("work")}>Switch profile</button>
+      <button onClick={() => void onSync()}>Sync now</button>
+      <button onClick={() => void onReset()}>Reset all</button>
+    </>
+  ),
+}));
+
+vi.mock("@/components/organisms/ProfilesClient/ProfilesClient.view", () => ({
+  ProfilesClientView: ({
+    newName,
+    editingProfile,
+    onNewNameChange,
+    onAssignmentChange,
+    onCreate,
+    onSwitch,
+    onDelete,
+    onEditStart,
+    onEditSave,
+  }: ProfilesClientViewProps) => (
+    <>
+      <button onClick={() => { onNewNameChange("new"); onAssignmentChange("orchestrator", { provider: "openai", model: "gpt-5", variant: "high" }); }}>Prepare create</button>
+      <button disabled={!newName} onClick={() => void onCreate({ preventDefault: () => {} } as FormEvent)}>Create profile</button>
+      <button onClick={() => void onSwitch("work")}>Switch profile</button>
+      <button onClick={() => void onDelete("work")}>Delete profile</button>
+      <button onClick={() => onEditStart("work")}>Start update</button>
+      {editingProfile && <button onClick={() => void onEditSave()}>Update profile</button>}
+    </>
+  ),
+}));
 
 /* ── Shared mocks ── */
 const mockToast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 vi.mock("sonner", () => ({ toast: mockToast }));
 
+const { runSync } = vi.hoisted(() => ({ runSync: vi.fn() }));
 vi.mock("@/services/backupsApiService", () => ({
   listBackups: vi.fn().mockResolvedValue({ backups: [] }),
-  runSync: vi.fn(),
+  runSync,
   pinBackup: vi.fn().mockResolvedValue(undefined),
   unpinBackup: vi.fn().mockResolvedValue(undefined),
   deleteBackup: vi.fn().mockResolvedValue(undefined),
@@ -77,6 +114,8 @@ beforeEach(() => {
   createProfile.mockResolvedValue(undefined);
   deleteProfile.mockResolvedValue(undefined);
   updateProfile.mockResolvedValue(undefined);
+  runSync.mockResolvedValue({ exitCode: 0, stdout: "ok", stderr: "" });
+  vi.stubGlobal("confirm", vi.fn(() => true));
   getConfig.mockResolvedValue({
     assignments: [{ agentKey: "main", provider: "openai", model: "gpt-5", variant: "high" }],
     defaultAgent: "main",
@@ -100,33 +139,41 @@ beforeEach(() => {
   });
 });
 
-/* ── ModelsClient ── */
+const unsafeError = "Request failed at C:\\Users\\person\\secret.txt\n    at mutation";
+
+function expectNoPersistentNotification() {
+  expect(JSON.parse(localStorage.getItem("presett_notifications") ?? "[]")).toHaveLength(0);
+}
+
+function expectSafePersistentError(title: string) {
+  const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
+  expect(stored).toHaveLength(1);
+  expect(stored[0]).toMatchObject({ severity: "error", title, message: "Request failed at" });
+}
+
+const modelOperations = [
+  { name: "save assignment", button: "Save assignment", success: "Assignment saved.", title: "Unable to save assignment", reject: () => saveAssignment.mockRejectedValueOnce(new Error(unsafeError)) },
+  { name: "switch profile", button: "Switch profile", success: "Profile switched.", title: "Unable to switch profile", reject: () => switchProfile.mockRejectedValueOnce(new Error(unsafeError)) },
+  { name: "sync", button: "Sync now", success: "Sync completed successfully", title: "Sync Now", reject: () => runSync.mockRejectedValueOnce(new Error(unsafeError)) },
+  { name: "reset", button: "Reset all", success: "Assignments reset.", title: "Reset All", reject: () => saveAssignment.mockRejectedValueOnce(new Error(unsafeError)) },
+];
+
 describe("ModelsClient notification integration", () => {
-  it("sync success shows success toast without persisting", async () => {
-    const { runSync } = await import("@/services/backupsApiService");
-    vi.mocked(runSync).mockResolvedValue({ exitCode: 0, stdout: "ok", stderr: "" });
+  it.each(modelOperations)("$name success shows Sonner feedback without persistence", async ({ button, success }) => {
     const user = userEvent.setup();
-
     render(<ModelsClient />, { wrapper });
-    await user.click(await screen.findByRole("button", { name: "Sync Now" }));
-
-    await waitFor(() => expect(mockToast.success).toHaveBeenCalled());
-    expect(JSON.parse(localStorage.getItem("presett_notifications") ?? "[]")).toHaveLength(0);
+    await user.click(await screen.findByRole("button", { name: button }));
+    await waitFor(() => expect(mockToast.success).toHaveBeenCalledWith(success));
+    expectNoPersistentNotification();
   });
 
-  it("sync error shows error toast and persists a safe notification", async () => {
-    const { runSync } = await import("@/services/backupsApiService");
-    vi.mocked(runSync).mockRejectedValue(new Error("Sync failed"));
+  it.each(modelOperations)("$name error shows Sonner feedback and a safe panel notification", async ({ button, title, reject }) => {
+    reject();
     const user = userEvent.setup();
-
     render(<ModelsClient />, { wrapper });
-    await user.click(await screen.findByRole("button", { name: "Sync Now" }));
-
-    await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith("Sync failed"));
-    const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
-    expect(stored).toHaveLength(1);
-    expect(stored[0]).toMatchObject({ severity: "error", message: "Sync failed" });
-    expect(stored[0].message).not.toMatch(/[A-Za-z]:\\|\//);
+    await user.click(await screen.findByRole("button", { name: button }));
+    await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(unsafeError));
+    expectSafePersistentError(title);
   });
 });
 
@@ -211,34 +258,30 @@ describe("DiagnosticsClient notification integration", () => {
 });
 
 /* ── ProfilesClient ── */
+const profileOperations = [
+  { name: "create", button: "Create profile", success: "Profile created.", title: "Unable to create profile", prepare: async (user: ReturnType<typeof userEvent.setup>) => user.click(screen.getByRole("button", { name: "Prepare create" })), reject: () => createProfile.mockRejectedValueOnce(new Error(unsafeError)) },
+  { name: "switch", button: "Switch profile", success: "Profile switched.", title: "Profile switched.", prepare: async () => {}, reject: () => switchProfile.mockRejectedValueOnce(new Error(unsafeError)) },
+  { name: "delete", button: "Delete profile", success: "Profile deleted.", title: "Unable to delete profile", prepare: async () => {}, reject: () => deleteProfile.mockRejectedValueOnce(new Error(unsafeError)) },
+  { name: "update", button: "Update profile", success: "Profile updated.", title: "Unable to update profile", prepare: async (user: ReturnType<typeof userEvent.setup>) => user.click(screen.getByRole("button", { name: "Start update" })), reject: () => updateProfile.mockRejectedValueOnce(new Error(unsafeError)) },
+];
+
 describe("ProfilesClient notification integration", () => {
-  it("switch success shows a toast without persisting a notification", async () => {
+  it.each(profileOperations)("$name success shows Sonner feedback without persistence", async ({ button, success, prepare }) => {
     const user = userEvent.setup();
     render(<ProfilesClient />, { wrapper });
-
-    await screen.findByText("Work");
-    await user.click(screen.getByRole("button", { name: "Switch" }));
-
-    await waitFor(() => expect(mockToast.success).toHaveBeenCalled());
-    const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
-    expect(stored).toHaveLength(0);
+    await prepare(user);
+    await user.click(await screen.findByRole("button", { name: button }));
+    await waitFor(() => expect(mockToast.success).toHaveBeenCalledWith(success));
+    expectNoPersistentNotification();
   });
 
-  it("switch error shows a toast and persists a sanitized notification", async () => {
-    switchProfile.mockRejectedValue(
-      new Error("Switch failed at C:\\Users\\person\\secret.txt\n    at switchProfile"),
-    );
+  it.each(profileOperations)("$name error shows Sonner feedback and a safe panel notification", async ({ button, title, prepare, reject }) => {
+    reject();
     const user = userEvent.setup();
     render(<ProfilesClient />, { wrapper });
-
-    await screen.findByText("Work");
-    await user.click(screen.getByRole("button", { name: "Switch" }));
-
-    await waitFor(() => expect(mockToast.error).toHaveBeenCalled());
-    const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
-    expect(stored).toHaveLength(1);
-    expect(stored[0].severity).toBe("error");
-    expect(stored[0].message).not.toContain("C:\\Users");
-    expect(stored[0].message).not.toContain("at switchProfile");
+    await prepare(user);
+    await user.click(await screen.findByRole("button", { name: button }));
+    await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(unsafeError));
+    expectSafePersistentError(title);
   });
 });

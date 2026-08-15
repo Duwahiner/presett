@@ -75,7 +75,7 @@ export function ProfilesClient() {
       await refresh();
       onSuccess(t("profiles_createSuccess"));
     } catch (cause) {
-      onError(t("profiles_createSuccess"), cause instanceof Error ? cause.message : String(cause));
+      onError(t("profiles_createError"), cause instanceof Error ? cause.message : String(cause));
     } finally {
       setPendingAction(null);
     }
@@ -102,7 +102,7 @@ export function ProfilesClient() {
       await refresh();
       onSuccess(t("profiles_deleteSuccess"));
     } catch (cause) {
-      onError(t("profiles_deleteSuccess"), cause instanceof Error ? cause.message : String(cause));
+      onError(t("profiles_deleteError"), cause instanceof Error ? cause.message : String(cause));
     } finally {
       setPendingAction(null);
     }
@@ -123,7 +123,7 @@ export function ProfilesClient() {
       await refresh();
       onSuccess(t("profiles_updateSuccess"));
     } catch (cause) {
-      onError(t("profiles_updateSuccess"), cause instanceof Error ? cause.message : String(cause));
+      onError(t("profiles_updateError"), cause instanceof Error ? cause.message : String(cause));
     } finally {
       setPendingAction(null);
     }

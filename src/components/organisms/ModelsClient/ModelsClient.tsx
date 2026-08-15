@@ -73,7 +73,7 @@ export function ModelsClient() {
       );
       onSuccess(t("models_assignmentSaved"));
     } catch (cause) {
-      onError(t("models_assignmentSaved"), cause instanceof Error ? cause.message : String(cause));
+      onError(t("models_assignmentSaveError"), cause instanceof Error ? cause.message : String(cause));
     } finally {
       setSaving(null);
     }
@@ -90,7 +90,7 @@ export function ModelsClient() {
       setOriginalAssignments(config.assignments);
       onSuccess(t("models_profileSwitched"));
     } catch (cause) {
-      onError(t("models_profileSwitched"), cause instanceof Error ? cause.message : String(cause));
+      onError(t("models_profileSwitchError"), cause instanceof Error ? cause.message : String(cause));
     } finally {
       setSwitchingProfile(false);
     }
