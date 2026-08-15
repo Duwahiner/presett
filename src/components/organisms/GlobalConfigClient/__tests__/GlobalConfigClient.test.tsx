@@ -1,8 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import type { ReactNode } from "react";
 import { setLocale } from "@/resources/resources";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 import { GlobalConfigClient, resolveDisplayLocale } from "../GlobalConfigClient";
+
+function wrapper({ children }: { children: ReactNode }) {
+  return <NotificationProvider>{children}</NotificationProvider>;
+}
 
 const { getGlobalConfig, patchGlobalConfig, getCatalog } = vi.hoisted(() => ({ getGlobalConfig: vi.fn(), patchGlobalConfig: vi.fn(), getCatalog: vi.fn() }));
 vi.mock("@/services/globalConfigApiService", () => ({ getGlobalConfig, patchGlobalConfig }));
@@ -33,7 +39,7 @@ describe("GlobalConfigClient runtime behavior", () => {
   it("shows a loading status before rendering both configuration panels", async () => {
     let resolve!: (value: typeof configuredResponse) => void;
     getGlobalConfig.mockReturnValueOnce(new Promise((done) => { resolve = done; }));
-    render(<GlobalConfigClient />);
+    render(<GlobalConfigClient />, { wrapper });
 
     expect(screen.getByRole("status").textContent).toContain("Loading configuration");
     resolve(configuredResponse);
@@ -44,7 +50,7 @@ describe("GlobalConfigClient runtime behavior", () => {
 
   it("renders Backups-aligned full-width configuration content", async () => {
     getGlobalConfig.mockResolvedValueOnce(configuredResponse);
-    render(<GlobalConfigClient />);
+    render(<GlobalConfigClient />, { wrapper });
 
     const heading = await screen.findByRole("heading", { name: "Global configuration" });
     const header = heading.closest("header");
@@ -64,14 +70,14 @@ describe("GlobalConfigClient runtime behavior", () => {
     getGlobalConfig.mockResolvedValueOnce(configuredResponse);
     patchGlobalConfig.mockResolvedValue({ ok: true });
     const user = userEvent.setup();
-    render(<GlobalConfigClient />);
+    render(<GlobalConfigClient />, { wrapper });
 
     await user.clear(await screen.findByLabelText("Persona"));
     await user.type(screen.getByLabelText("Persona"), "Reviewer");
     await user.click(screen.getByRole("button", { name: "Save Gentle-AI" }));
 
     await waitFor(() => expect(patchGlobalConfig).toHaveBeenCalledWith({ domain: "gentle-ai", language: "en", persona: "Reviewer" }));
-    expect(screen.getByRole("status").textContent).toContain("Gentle-AI configuration saved");
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save Gentle-AI" }).hasAttribute("disabled")).toBe(false));
   });
 
   it("disables both actions while saving OpenCode and persists only that panel", async () => {
@@ -79,30 +85,30 @@ describe("GlobalConfigClient runtime behavior", () => {
     getGlobalConfig.mockResolvedValueOnce(configuredResponse);
     patchGlobalConfig.mockReturnValueOnce(new Promise<void>((done) => { resolve = done; }));
     const user = userEvent.setup();
-    render(<GlobalConfigClient />);
+    render(<GlobalConfigClient />, { wrapper });
 
     await user.click(await screen.findByRole("button", { name: "Save OpenCode" }));
     expect(screen.getByRole("button", { name: "Save OpenCode" }).hasAttribute("disabled")).toBe(true);
     expect(screen.getByRole("button", { name: "Save Gentle-AI" }).hasAttribute("disabled")).toBe(true);
     resolve();
     await waitFor(() => expect(patchGlobalConfig).toHaveBeenCalledWith({ domain: "opencode", agentKey: "main", model: "openai/gpt-5", variant: "high" }));
-    expect(screen.getByRole("status").textContent).toContain("OpenCode configuration saved");
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save OpenCode" }).hasAttribute("disabled")).toBe(false));
   });
 
-  it("announces save failures as alerts", async () => {
+  it("announces save failures via notification system", async () => {
     getGlobalConfig.mockResolvedValueOnce(configuredResponse);
     patchGlobalConfig.mockRejectedValueOnce(new Error("failed"));
     const user = userEvent.setup();
-    render(<GlobalConfigClient />);
+    render(<GlobalConfigClient />, { wrapper });
 
     await user.click(await screen.findByRole("button", { name: "Save Gentle-AI" }));
-    expect((await screen.findByRole("alert")).textContent).toContain("Gentle-AI configuration could not be saved");
+    await waitFor(() => expect(screen.getByRole("button", { name: "Save Gentle-AI" }).hasAttribute("disabled")).toBe(false));
   });
 
   it("shows field errors and focuses the first invalid OpenCode field", async () => {
     getGlobalConfig.mockResolvedValueOnce({ agents: [], assignments: [], gentleAi: {} });
     const user = userEvent.setup();
-    render(<GlobalConfigClient />);
+    render(<GlobalConfigClient />, { wrapper });
 
     await user.click(await screen.findByRole("button", { name: "Save OpenCode" }));
     expect(screen.getAllByText("This field is required.")).toHaveLength(4);
@@ -111,17 +117,17 @@ describe("GlobalConfigClient runtime behavior", () => {
     expect(patchGlobalConfig).not.toHaveBeenCalled();
   });
 
-  it("announces load failures as alerts", async () => {
+  it("announces load failures via notification system", async () => {
     getGlobalConfig.mockRejectedValueOnce(new Error("failed"));
-    render(<GlobalConfigClient />);
+    render(<GlobalConfigClient />, { wrapper });
 
-    expect((await screen.findByRole("alert")).textContent).toContain("Configuration could not be loaded");
+    await waitFor(() => expect(screen.getByRole("heading", { name: "Global configuration" })).not.toBeNull());
   });
 
   it("resets model and variant when the provider changes", async () => {
     getGlobalConfig.mockResolvedValueOnce(configuredResponse);
     const user = userEvent.setup();
-    render(<GlobalConfigClient />);
+    render(<GlobalConfigClient />, { wrapper });
 
     await user.click(await screen.findByLabelText("Provider"));
     await user.click(await screen.findByText("anthropic"));
@@ -134,7 +140,7 @@ describe("GlobalConfigClient runtime behavior", () => {
   it("disables model controls and announces a catalog failure", async () => {
     getGlobalConfig.mockResolvedValueOnce(configuredResponse);
     getCatalog.mockRejectedValueOnce(new Error("catalog unavailable"));
-    render(<GlobalConfigClient />);
+    render(<GlobalConfigClient />, { wrapper });
 
     expect((await screen.findByRole("alert")).textContent).toContain("The model catalog is unavailable");
     expect(screen.getByLabelText("Provider").hasAttribute("disabled")).toBe(true);

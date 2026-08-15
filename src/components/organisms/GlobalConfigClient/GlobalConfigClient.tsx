@@ -11,6 +11,7 @@ import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
 import { getGlobalConfig, patchGlobalConfig } from "@/services/globalConfigApiService";
 import { getCatalog, type ModelCatalog } from "@/services/modelsApiService";
 import { setLocale, t } from "@/resources/resources";
+import { useNotificationToasts } from "@/hooks/useNotificationToasts";
 import type { Locale } from "@/types/state";
 
 type OpenCodeField = "agentKey" | "provider" | "model" | "variant";
@@ -70,9 +71,8 @@ export function GlobalConfigClient() {
   const [catalogUnavailable, setCatalogUnavailable] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<"gentle-ai" | "opencode" | null>(null);
-  const [success, setSuccess] = useState("");
-  const [error, setError] = useState("");
   const [fieldErrors, setFieldErrors] = useState<Partial<Record<OpenCodeField, string>>>({});
+  const { onError, onSuccess } = useNotificationToasts();
 
   useEffect(() => {
     void Promise.allSettled([getGlobalConfig(), getCatalog()]).then(([configResult, catalogResult]) => {
@@ -91,7 +91,7 @@ export function GlobalConfigClient() {
           setVariant(assignment.variant);
         }
       } else {
-        setError(t("config_load_error"));
+        onError(t("errors_generic"), t("config_load_error"));
       }
       if (catalogResult.status === "fulfilled") {
         setCatalog(catalogResult.value.catalog);
@@ -102,14 +102,12 @@ export function GlobalConfigClient() {
   }, []);
 
   async function saveGentle() {
-    setError("");
-    setSuccess("");
     setSaving("gentle-ai");
     try {
       await patchGlobalConfig({ domain: "gentle-ai", language, persona });
-      setSuccess(t("config_gentle_saved"));
+      onSuccess(t("config_gentle_saved"));
     } catch {
-      setError(t("config_gentle_error"));
+      onError(t("errors_generic"), t("config_gentle_error"));
     } finally {
       setSaving(null);
     }
@@ -123,14 +121,12 @@ export function GlobalConfigClient() {
       document.getElementById("config-agent")?.focus();
       return;
     }
-    setError("");
-    setSuccess("");
     setSaving("opencode");
     try {
       await patchGlobalConfig({ domain: "opencode", agentKey, model: `${provider}/${model}`, variant });
-      setSuccess(t("config_opencode_saved"));
+      onSuccess(t("config_opencode_saved"));
     } catch {
-      setError(t("config_opencode_error"));
+      onError(t("errors_generic"), t("config_opencode_error"));
     } finally {
       setSaving(null);
     }
@@ -158,9 +154,7 @@ export function GlobalConfigClient() {
       </header>
 
       <div className="flex-1 space-y-6 overflow-y-auto p-6">
-        {error && <ErrorBanner title={t("errors_generic")} message={error} />}
         {catalogUnavailable && <ErrorBanner title={t("errors_generic")} message={t("config_catalog_error")} />}
-        {success && <div role="status" className="flex items-center gap-2 rounded-lg border border-success/20 bg-success/10 px-4 py-3 text-sm text-success"><Check className="size-4" aria-hidden="true" />{success}</div>}
 
         <Card>
         <CardHeader className="flex-row items-start justify-between gap-4 space-y-0">
