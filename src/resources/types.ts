@@ -10,6 +10,7 @@ export interface Resources {
   "footer_brand": string;
   "topbar_search_placeholder": string;
   "topbar_search_aria": string;
+  "topbar_search_clear_aria": string;
   "topbar_theme_toggle_aria": string;
   "topbar_notifications_aria": string;
   "topbar_account_aria": string;
@@ -197,4 +198,20 @@ export interface Resources {
   "config_opencode_saved": string;
   "config_opencode_error": string;
   "config_field_required": string;
+  "search_title": string;
+  "search_status_badge": string;
+  "search_header_description": string;
+  "search_empty_title": string;
+  "search_empty_description": string;
+  "search_loading": string;
+  "search_no_results": string;
+  "search_error_fallback": string;
+  "search_partial_warning": string;
+  "search_group_agent": string;
+  "search_group_model": string;
+  "search_group_profile": string;
+  "search_group_backup": string;
+  "search_group_config": string;
+  "search_pinned": string;
+  "search_active": string;
 }

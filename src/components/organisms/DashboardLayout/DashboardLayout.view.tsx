@@ -12,6 +12,7 @@ import {
   Menu,
   Bell,
   Search,
+  X,
   RefreshCw,
   Sparkles,
   Loader2,
@@ -206,27 +207,33 @@ export function DashboardLayoutView({ children }: DashboardLayoutProps) {
             </Button>
 
             <form
-              className="relative flex w-full max-w-md items-center"
+              className="relative flex min-w-0 w-full max-w-lg items-center"
               onSubmit={(e) => {
                 e.preventDefault();
                 const q = search.trim();
                 if (!q) return;
-                const page = pathname?.startsWith("/models") ? "/models"
-                  : pathname?.startsWith("/profiles") ? "/profiles"
-                  : pathname?.startsWith("/backups") ? "/backups"
-                  : "/models";
-                router.push(`${page}?q=${encodeURIComponent(q)}`);
+                router.push(`/search?q=${encodeURIComponent(q)}`);
               }}
             >
-              <Search className="pointer-events-none absolute left-3.5 size-4 text-muted-foreground" />
+              <Search className="pointer-events-none absolute left-4 size-5 text-card-foreground" />
               <Input
                 type="search"
                 aria-label={t("topbar_search_aria")}
                 placeholder={t("topbar_search_placeholder")}
-                className="h-10 rounded-full border-border bg-muted/60 pl-10 pr-4 text-sm placeholder:text-muted-foreground"
+                className="h-11 rounded-[.4rem] border-border bg-transparent pl-12 pr-10 text-[15px] font-medium text-card-foreground shadow-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/80 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 [&::-webkit-search-cancel-button]:appearance-none"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />
+              {search && (
+                <button
+                  type="button"
+                  aria-label={t("topbar_search_clear_aria")}
+                  className="absolute right-2 inline-flex size-7 items-center justify-center rounded-full text-card-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  onClick={() => setSearch("")}
+                >
+                  <X className="size-5" aria-hidden="true" />
+                </button>
+              )}
             </form>
 
             <div className="ml-auto flex items-center gap-1.5">
