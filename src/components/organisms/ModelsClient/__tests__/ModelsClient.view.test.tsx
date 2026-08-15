@@ -11,11 +11,10 @@ describe("ModelsClientView", () => {
 
   const defaultProps: ModelsClientViewProps = {
     assignments: [],
-    catalog: {},
+    catalog: { openai: { "gpt-5": ["high"] } },
     loading: false,
     error: null,
     saving: null,
-    feedback: null,
     profiles: [],
     activeProfile: "default",
     syncing: false,
@@ -34,14 +33,10 @@ describe("ModelsClientView", () => {
     expect(screen.getByText(/sync configs or create/i)).not.toBeNull();
   });
 
-  it("renders contextual mutation feedback", () => {
-    render(
-      <ModelsClientView
-        {...defaultProps}
-        feedback={{ type: "success", message: "Assignment saved." }}
-      />,
-    );
+  it("does not render inline mutation feedback", () => {
+    render(<ModelsClientView {...defaultProps} />);
 
-    expect(screen.getByRole("status").textContent).toBe("Assignment saved.");
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.queryByRole("alert")).toBeNull();
   });
 });

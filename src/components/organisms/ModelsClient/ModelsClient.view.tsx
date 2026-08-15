@@ -18,7 +18,6 @@ export function ModelsClientView({
   loading,
   error,
   saving,
-  feedback,
   profiles,
   activeProfile,
   syncing,
@@ -104,20 +103,6 @@ export function ModelsClientView({
           title={t("models_validationUnavailable")}
           message={t("models_validationMessage")}
         />
-      )}
-
-      {feedback && (
-        <div
-          role={feedback.type === "error" ? "alert" : "status"}
-          className={cn(
-            "rounded-xl border px-4 py-3 text-sm",
-            feedback.type === "error"
-              ? "border-destructive/20 bg-destructive/10 text-destructive"
-              : "border-success/20 bg-success/10 text-success",
-          )}
-        >
-          {feedback.message}
-        </div>
       )}
 
       {/* Agent Assignments */}
