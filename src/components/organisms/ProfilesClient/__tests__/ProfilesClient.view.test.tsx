@@ -16,7 +16,6 @@ describe("ProfilesClientView", () => {
     catalog: {},
     loading: false,
     error: null,
-    feedback: null,
     pendingAction: null,
     newName: "",
     newAssignments: {},

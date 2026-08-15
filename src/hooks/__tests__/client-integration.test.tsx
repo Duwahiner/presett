@@ -6,6 +6,7 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import { BackupsClient } from "@/components/organisms/BackupsClient/BackupsClient";
 import { GlobalConfigClient } from "@/components/organisms/GlobalConfigClient/GlobalConfigClient";
 import { DiagnosticsClient } from "@/components/organisms/DiagnosticsClient/DiagnosticsClient";
+import { ProfilesClient } from "@/components/organisms/ProfilesClient/ProfilesClient";
 
 /* ── Shared mocks ── */
 const mockToast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
@@ -27,6 +28,18 @@ const { getGlobalConfig, patchGlobalConfig, getCatalog } = vi.hoisted(() => ({
 }));
 vi.mock("@/services/globalConfigApiService", () => ({ getGlobalConfig, patchGlobalConfig }));
 vi.mock("@/services/modelsApiService", () => ({ getCatalog }));
+
+const { listProfiles, switchProfile } = vi.hoisted(() => ({
+  listProfiles: vi.fn(),
+  switchProfile: vi.fn(),
+}));
+vi.mock("@/services/profilesApiService", () => ({
+  listProfiles,
+  createProfile: vi.fn(),
+  switchProfile,
+  deleteProfile: vi.fn(),
+  updateProfile: vi.fn(),
+}));
 
 const { mockGetDiagnostics, mockCheckUpdates } = vi.hoisted(() => ({
   mockGetDiagnostics: vi.fn(),
@@ -51,6 +64,10 @@ beforeEach(() => {
     gentleAi: { language: "en", persona: "Builder" },
   });
   getCatalog.mockResolvedValue({ catalog: { openai: { "gpt-5": ["high"] } } });
+  listProfiles.mockResolvedValue({
+    profiles: [{ name: "work", displayName: "Work", active: false, modelCount: 1 }],
+  });
+  switchProfile.mockResolvedValue(undefined);
   mockGetDiagnostics.mockResolvedValue({
     cli: { installed: true, version: "1.2.0" },
     config: { available: true },
@@ -147,5 +164,38 @@ describe("DiagnosticsClient notification integration", () => {
     mockCheckUpdates.mockRejectedValue(new Error("Network error"));
     await userEvent.click(screen.getByRole("button", { name: /check.*releases/i }));
     await waitFor(() => expect(mockToast.error).toHaveBeenCalled());
+  });
+});
+
+/* ── ProfilesClient ── */
+describe("ProfilesClient notification integration", () => {
+  it("switch success shows a toast without persisting a notification", async () => {
+    const user = userEvent.setup();
+    render(<ProfilesClient />, { wrapper });
+
+    await screen.findByText("Work");
+    await user.click(screen.getByRole("button", { name: "Switch" }));
+
+    await waitFor(() => expect(mockToast.success).toHaveBeenCalled());
+    const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
+    expect(stored).toHaveLength(0);
+  });
+
+  it("switch error shows a toast and persists a sanitized notification", async () => {
+    switchProfile.mockRejectedValue(
+      new Error("Switch failed at C:\\Users\\person\\secret.txt\n    at switchProfile"),
+    );
+    const user = userEvent.setup();
+    render(<ProfilesClient />, { wrapper });
+
+    await screen.findByText("Work");
+    await user.click(screen.getByRole("button", { name: "Switch" }));
+
+    await waitFor(() => expect(mockToast.error).toHaveBeenCalled());
+    const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
+    expect(stored).toHaveLength(1);
+    expect(stored[0].severity).toBe("error");
+    expect(stored[0].message).not.toContain("C:\\Users");
+    expect(stored[0].message).not.toContain("at switchProfile");
   });
 });
