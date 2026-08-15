@@ -111,3 +111,7 @@ export function getAll(): Notification[] {
 export function getUnreadCount(): number {
   return readStore().filter((n) => n.status === "unread").length;
 }
+
+export function init(): void {
+  prune();
+}
