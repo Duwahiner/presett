@@ -100,6 +100,7 @@ export async function post<T>(url: string, data?: unknown): Promise<T> {
 export async function put<T>(url: string, data?: unknown): Promise<T> {
   return api.put<T>(url, data) as Promise<T>;
 }
+export async function patch<T>(url: string, data?: unknown): Promise<T> { return api.patch<T>(url, data) as Promise<T>; }
 
 export async function del<T>(url: string): Promise<T> {
   return api.delete<T>(url) as Promise<T>;

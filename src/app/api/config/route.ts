@@ -4,12 +4,16 @@ import {
   listModelAssignments,
   readOpenCodeConfigSafe,
   updateModelAssignment,
+  writeOpenCodeConfig,
 } from "@/adapters/opencode";
 import { readModelCacheSafe } from "@/services/modelCacheService";
 import { DEFAULT_OPEN_CODE_CONFIG_DIR } from "@/adapters/opencode";
 import { DEFAULT_MODEL_CACHE_DIR } from "@/services/modelCacheService";
 import { defaultPresettDir } from "@/lib/paths";
 import { buildSafeError, requireMutationOrigin } from "@/lib/localApiSecurity";
+import { readGentleAiConfigSafe, writeGentleAiConfig } from "@/adapters/gentle-ai";
+import { readStateJsonSafe } from "@/services/stateService";
+import { globalConfigPatchSchema } from "@/lib/validators";
 
 export const dynamic = "force-dynamic";
 
@@ -27,20 +31,50 @@ function backupDir(): string {
     join(defaultPresettDir(), "backups")
   );
 }
+function gentleAiDir(): string { return process.env.PRESETT_TEST_GENTLE_AI_DIR ?? join(process.env.HOME ?? "", ".gentle-ai"); }
 
 export async function GET() {
   const configResult = await readOpenCodeConfigSafe(configDir());
-  if (!configResult.ok) {
-    return NextResponse.json(
-      { error: configResult.error },
-      { status: configResult.error.code === "FILE_MISSING" ? 404 : 500 },
-    );
-  }
-
+  const stateResult = await readStateJsonSafe(gentleAiDir());
   return NextResponse.json({
-    defaultAgent: configResult.value.default_agent,
-    assignments: listModelAssignments(configResult.value),
+    defaultAgent: configResult.ok ? configResult.value.default_agent : undefined,
+    assignments: configResult.ok ? listModelAssignments(configResult.value) : [],
+    gentleAi: stateResult.ok ? { persona: stateResult.value.persona, language: stateResult.value.language } : {},
   });
+}
+
+export async function PATCH(request: Request) {
+  const originResult = requireMutationOrigin(request);
+  if (!originResult.ok) return NextResponse.json(buildSafeError(originResult.message), { status: originResult.status });
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch {
+    return NextResponse.json(buildSafeError("Invalid JSON body"), { status: 400 });
+  }
+  const parsed = globalConfigPatchSchema.safeParse(body);
+  if (!parsed.success) {
+    const fields: Record<string, string> = {};
+    for (const issue of parsed.error.issues) {
+      if (issue.code === "unrecognized_keys") {
+        for (const key of issue.keys) fields[key] = "Unrecognized field";
+      } else {
+        fields[issue.path.join(".") || "body"] = issue.message;
+      }
+    }
+    return NextResponse.json({ error: { message: "Invalid configuration fields", fields } }, { status: 400 });
+  }
+  if (parsed.data.domain === "gentle-ai") {
+    const existing = await readStateJsonSafe(gentleAiDir());
+    const result = await writeGentleAiConfig(gentleAiDir(), { ...(existing.ok ? existing.value : {}), language: parsed.data.language, persona: parsed.data.persona }, backupDir());
+    return result.ok ? NextResponse.json({ ok: true }) : NextResponse.json(buildSafeError("Configuration could not be saved"), { status: 500 });
+  }
+  const existing = await readOpenCodeConfigSafe(configDir());
+  if (!existing.ok) return NextResponse.json(buildSafeError("OpenCode configuration unavailable"), { status: 503 });
+  const agent = existing.value.agent[parsed.data.agentKey];
+  if (!agent) return NextResponse.json(buildSafeError("Unknown OpenCode agent"), { status: 400 });
+  const result = await writeOpenCodeConfig(configDir(), { ...existing.value, agent: { ...existing.value.agent, [parsed.data.agentKey]: { ...agent, model: parsed.data.model, variant: parsed.data.variant } } }, backupDir());
+  return result.ok ? NextResponse.json({ ok: true }) : NextResponse.json(buildSafeError("Configuration could not be saved"), { status: 500 });
 }
 
 export async function OPTIONS() {

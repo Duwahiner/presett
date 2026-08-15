@@ -141,7 +141,7 @@ export async function writeOpenCodeConfig(
     await writeFile(tmpPath, JSON.stringify(config, null, 2));
     await rename(tmpPath, targetPath);
   } catch (cause) {
-    await rm(tmpPath, { force: true });
+    await rm(tmpPath, { force: true, recursive: true });
     return err({
       code: "ATOMIC_WRITE_FAILED",
       message: "Failed to atomically write opencode.json",

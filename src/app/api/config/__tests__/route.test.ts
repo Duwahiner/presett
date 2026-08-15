@@ -2,7 +2,7 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest";
 import { mkdtemp, writeFile, mkdir, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { GET, OPTIONS, PUT } from "../route";
+import { GET, OPTIONS, PATCH, PUT } from "../route";
 
 function updateConfigRequest(origin?: string): Request {
   const request = new Request("http://localhost/api/config", {
@@ -18,24 +18,37 @@ function updateConfigRequest(origin?: string): Request {
   return request;
 }
 
+function patchRequest(body: unknown): Request {
+  const request = new Request("http://localhost/api/config", {
+    method: "PATCH", body: JSON.stringify(body),
+  });
+  request.headers.set("Origin", "http://localhost:3000");
+  return request;
+}
+
 describe("GET /api/config", () => {
   let tempDir = "";
   let cacheDir = "";
+  let gentleAiDir = "";
 
   beforeEach(async () => {
     tempDir = await mkdtemp(join(tmpdir(), "presett-config-"));
     cacheDir = await mkdtemp(join(tmpdir(), "presett-config-cache-"));
+    gentleAiDir = await mkdtemp(join(tmpdir(), "presett-gentle-ai-"));
     process.env.PRESETT_TEST_CONFIG_DIR = tempDir;
     process.env.PRESETT_TEST_MODEL_CACHE_DIR = cacheDir;
     process.env.PRESETT_TEST_BACKUP_DIR = join(tempDir, "backups");
+    process.env.PRESETT_TEST_GENTLE_AI_DIR = gentleAiDir;
   });
 
   afterEach(async () => {
     delete process.env.PRESETT_TEST_CONFIG_DIR;
     delete process.env.PRESETT_TEST_MODEL_CACHE_DIR;
     delete process.env.PRESETT_TEST_BACKUP_DIR;
+    delete process.env.PRESETT_TEST_GENTLE_AI_DIR;
     await rm(tempDir, { recursive: true, force: true });
     await rm(cacheDir, { recursive: true, force: true });
+    await rm(gentleAiDir, { recursive: true, force: true });
   });
 
   it("returns current model assignments", async () => {
@@ -59,6 +72,65 @@ describe("GET /api/config", () => {
     expect(response.status).toBe(200);
     expect(body.assignments).toHaveLength(1);
     expect(body.assignments[0].agentKey).toBe("gentle-orchestrator");
+  });
+
+  it("returns both domains and defaults without creating missing config files", async () => {
+    const response = await GET();
+    const body = await response.json();
+    expect(response.status).toBe(200);
+    expect(body).toMatchObject({ assignments: [], gentleAi: {} });
+    expect(body).not.toHaveProperty("gentleAi.language");
+  });
+
+  it("patches Gentle-AI without touching OpenCode", async () => {
+    const original = JSON.stringify({ agent: { main: { model: "openai/old", variant: "low" } } });
+    await writeFile(join(tempDir, "opencode.json"), original);
+    const response = await PATCH(patchRequest({ domain: "gentle-ai", language: "es", persona: "Builder" }));
+    expect(response.status).toBe(200);
+    expect(JSON.parse(await readFile(join(gentleAiDir, "state.json"), "utf8"))).toMatchObject({ language: "es", persona: "Builder" });
+    expect(await readFile(join(tempDir, "opencode.json"), "utf8")).toBe(original);
+  });
+
+  it("patches OpenCode and GET exposes the persisted active model", async () => {
+    await writeFile(join(tempDir, "opencode.json"), JSON.stringify({ default_agent: "main", agent: { main: { model: "openai/old", variant: "low" } } }));
+    const response = await PATCH(patchRequest({ domain: "opencode", agentKey: "main", model: "openai/new", variant: "high" }));
+    expect(response.status).toBe(200);
+    const body = await (await GET()).json();
+    expect(body.assignments).toContainEqual({ agentKey: "main", provider: "openai", model: "new", variant: "high" });
+  });
+
+  it("returns field-level safe errors and does not mutate files for invalid input", async () => {
+    const original = JSON.stringify({ agent: { main: { model: "openai/old", variant: "low" } } });
+    await writeFile(join(tempDir, "opencode.json"), original);
+    const response = await PATCH(patchRequest({ domain: "opencode", agentKey: "", model: "", variant: "", secret: "no" }));
+    const body = await response.json();
+    expect(response.status).toBe(400);
+    expect(body.error.fields).toMatchObject({ agentKey: expect.any(String), model: expect.any(String), variant: expect.any(String), secret: expect.any(String) });
+    expect(JSON.stringify(body)).not.toContain("opencode.json");
+    expect(await readFile(join(tempDir, "opencode.json"), "utf8")).toBe(original);
+  });
+
+  it("sanitizes read and write failures", async () => {
+    const response = await PATCH(patchRequest({ domain: "opencode", agentKey: "main", model: "openai/new", variant: "high" }));
+    expect(response.status).toBe(503);
+    expect(JSON.stringify(await response.json())).not.toContain("opencode.json");
+  });
+
+  it("sanitizes a real OpenCode write-path failure", async () => {
+    await writeFile(
+      join(tempDir, "opencode.json"),
+      JSON.stringify({ agent: { main: { model: "openai/old", variant: "low" } } }),
+    );
+    await mkdir(join(tempDir, "opencode.json.presett-tmp"));
+
+    const response = await PATCH(
+      patchRequest({ domain: "opencode", agentKey: "main", model: "openai/new", variant: "high" }),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(500);
+    expect(body).toEqual({ error: { message: "Configuration could not be saved" } });
+    expect(JSON.stringify(body)).not.toMatch(/opencode\.json|presett-tmp|C:\\|cause|code/);
   });
 
   it("updates a model assignment on PUT", async () => {
