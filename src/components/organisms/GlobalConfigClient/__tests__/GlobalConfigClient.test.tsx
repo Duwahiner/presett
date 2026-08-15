@@ -4,19 +4,30 @@ import userEvent from "@testing-library/user-event";
 import { setLocale } from "@/resources/resources";
 import { GlobalConfigClient, resolveDisplayLocale } from "../GlobalConfigClient";
 
-const { getGlobalConfig, patchGlobalConfig } = vi.hoisted(() => ({ getGlobalConfig: vi.fn(), patchGlobalConfig: vi.fn() }));
+const { getGlobalConfig, patchGlobalConfig, getCatalog } = vi.hoisted(() => ({ getGlobalConfig: vi.fn(), patchGlobalConfig: vi.fn(), getCatalog: vi.fn() }));
 vi.mock("@/services/globalConfigApiService", () => ({ getGlobalConfig, patchGlobalConfig }));
+vi.mock("@/services/modelsApiService", () => ({ getCatalog }));
 
 const configuredResponse = {
   defaultAgent: "main",
+  agents: ["main", "reviewer"],
   assignments: [{ agentKey: "main", provider: "openai", model: "gpt-5", variant: "high" }],
   gentleAi: { language: "en", persona: "Builder" },
+};
+
+const catalogResponse = {
+  providers: ["openai", "anthropic"],
+  catalog: {
+    openai: { "gpt-5": ["high", "low"] },
+    anthropic: { claude: ["balanced"] },
+  },
 };
 
 describe("GlobalConfigClient runtime behavior", () => {
   beforeEach(() => {
     vi.resetAllMocks();
     setLocale("en");
+    getCatalog.mockResolvedValue(catalogResponse);
   });
 
   it("shows a loading status before rendering both configuration panels", async () => {
@@ -89,12 +100,12 @@ describe("GlobalConfigClient runtime behavior", () => {
   });
 
   it("shows field errors and focuses the first invalid OpenCode field", async () => {
-    getGlobalConfig.mockResolvedValueOnce({ assignments: [], gentleAi: {} });
+    getGlobalConfig.mockResolvedValueOnce({ agents: [], assignments: [], gentleAi: {} });
     const user = userEvent.setup();
     render(<GlobalConfigClient />);
 
     await user.click(await screen.findByRole("button", { name: "Save OpenCode" }));
-    expect(screen.getAllByText("This field is required.")).toHaveLength(3);
+    expect(screen.getAllByText("This field is required.")).toHaveLength(4);
     expect(document.activeElement).toBe(screen.getByLabelText("Agent"));
     expect(screen.getByLabelText("Agent").getAttribute("aria-invalid")).toBe("true");
     expect(patchGlobalConfig).not.toHaveBeenCalled();
@@ -105,6 +116,29 @@ describe("GlobalConfigClient runtime behavior", () => {
     render(<GlobalConfigClient />);
 
     expect((await screen.findByRole("alert")).textContent).toContain("Configuration could not be loaded");
+  });
+
+  it("resets model and variant when the provider changes", async () => {
+    getGlobalConfig.mockResolvedValueOnce(configuredResponse);
+    const user = userEvent.setup();
+    render(<GlobalConfigClient />);
+
+    await user.click(await screen.findByLabelText("Provider"));
+    await user.click(await screen.findByText("anthropic"));
+
+    expect(screen.getByLabelText("Model").textContent).not.toContain("gpt-5");
+    expect(screen.getByLabelText("Variant").textContent).not.toContain("high");
+    expect(screen.getByLabelText("Model").hasAttribute("disabled")).toBe(false);
+  });
+
+  it("disables model controls and announces a catalog failure", async () => {
+    getGlobalConfig.mockResolvedValueOnce(configuredResponse);
+    getCatalog.mockRejectedValueOnce(new Error("catalog unavailable"));
+    render(<GlobalConfigClient />);
+
+    expect((await screen.findByRole("alert")).textContent).toContain("The model catalog is unavailable");
+    expect(screen.getByLabelText("Provider").hasAttribute("disabled")).toBe(true);
+    expect(screen.getByRole("button", { name: "Save OpenCode" }).hasAttribute("disabled")).toBe(true);
   });
 });
 
