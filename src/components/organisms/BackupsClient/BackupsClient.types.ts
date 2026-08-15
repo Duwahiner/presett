@@ -13,7 +13,6 @@ export interface BackupsClientViewProps {
   error: string | null;
   syncOutput: string | null;
   syncing: boolean;
-  feedback: { type: "success" | "error"; message: string } | null;
   pendingAction: string | null;
   onSync: () => void;
   onRestore: (id: string) => void;

@@ -24,7 +24,6 @@ export function BackupsClientView({
   error,
   syncOutput,
   syncing,
-  feedback,
   pendingAction,
   onSync,
   onRestore,
@@ -67,25 +66,11 @@ export function BackupsClientView({
           )}
           {t("backups_sync_action")}
         </Button>
-        {feedback && (
-          <div
-            role={feedback.type === "error" ? "alert" : "status"}
-            className={cn(
-              "mt-4 rounded-xl border px-4 py-3 text-sm",
-              feedback.type === "error"
-                ? "border-destructive/20 bg-destructive/10 text-destructive"
-                : "border-success/20 bg-success/10 text-success",
-            )}
-          >
-            {feedback.message}
-          </div>
-        )}
         {syncOutput && (
           <pre
             role="status"
             className={cn(
-              "mt-4 max-h-48 overflow-auto rounded-lg border border-border bg-muted p-4 font-mono text-xs",
-              feedback?.type === "error" ? "text-destructive" : "text-success",
+              "mt-4 max-h-48 overflow-auto rounded-lg border border-border bg-muted p-4 font-mono text-xs text-muted-foreground",
             )}
           >
             {syncOutput}

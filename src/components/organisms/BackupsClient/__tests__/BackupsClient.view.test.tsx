@@ -70,9 +70,10 @@ describe("BackupsClientView", () => {
     expect(screen.getByRole("button", { name: "Pin" }).hasAttribute("disabled")).toBe(true);
   });
 
-  it("announces mutation feedback", () => {
-    renderView({ feedback: { type: "success", message: "Backup pinned." } });
+  it("does not render inline feedback (delegated to notification system)", () => {
+    renderView();
 
-    expect(screen.getByRole("status").textContent).toContain("Backup pinned.");
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.queryByRole("status")).toBeNull();
   });
 });
