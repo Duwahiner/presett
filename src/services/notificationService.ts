@@ -10,7 +10,12 @@ export interface Notification {
   createdAt: string;
 }
 
-export type NotificationDraft = Omit<Notification, "id" | "status" | "createdAt">;
+export type NotificationDraft = Omit<
+  Notification,
+  "id" | "status" | "createdAt" | "inProgress"
+> & {
+  inProgress?: boolean;
+};
 
 export const STORAGE_KEY = "presett_notifications";
 export const MAX_ENTRIES = 100;
