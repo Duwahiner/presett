@@ -89,12 +89,12 @@ export function GlobalConfigClient() {
   const openCodeConfigured = Boolean(agentKey && model && variant);
   const isConfigured = gentleConfigured && openCodeConfigured;
 
-  if (loading) return <Card className="mx-auto max-w-3xl"><CardContent className="flex items-center gap-3 p-6 text-muted-foreground" role="status"><Loader2 className="size-4 animate-spin text-primary" aria-hidden="true" />{t("config_loading")}</CardContent></Card>;
+  if (loading) return <Card><CardContent className="flex items-center gap-3 p-6 text-muted-foreground" role="status"><Loader2 className="size-4 animate-spin text-primary" aria-hidden="true" />{t("config_loading")}</CardContent></Card>;
 
   return (
-    <main>
+    <main className="flex h-full flex-col">
       <header className="border-b border-border bg-card">
-        <div className="mx-auto flex max-w-3xl items-start gap-3 px-5 py-5 sm:px-7">
+        <div className="flex items-start gap-3 px-8 py-6">
           <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary"><Settings2 className="size-5" aria-hidden="true" /></span>
           <div className="min-w-0 flex-1">
             <div className="flex flex-wrap items-center gap-2"><h1 className="text-2xl font-semibold tracking-tight text-foreground">{t("config_title")}</h1><Badge variant={isConfigured ? "secondary" : "outline"} className={isConfigured ? "text-success" : "text-muted-foreground"}>{isConfigured && <Check className="size-3" aria-hidden="true" />}{t(isConfigured ? "config_status_ready" : "config_status_incomplete")}</Badge></div>
@@ -103,7 +103,7 @@ export function GlobalConfigClient() {
         </div>
       </header>
 
-      <div className="mx-auto max-w-3xl space-y-5 p-5 sm:p-7">
+      <div className="flex-1 space-y-6 overflow-y-auto p-6">
         {error && <ErrorBanner title={t("errors_generic")} message={error} />}
         {success && <div role="status" className="flex items-center gap-2 rounded-lg border border-success/20 bg-success/10 px-4 py-3 text-sm text-success"><Check className="size-4" aria-hidden="true" />{success}</div>}
 

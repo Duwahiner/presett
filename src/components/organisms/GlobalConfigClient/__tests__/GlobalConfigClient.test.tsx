@@ -31,7 +31,7 @@ describe("GlobalConfigClient runtime behavior", () => {
     expect(screen.getAllByText("Configured")).toHaveLength(2);
   });
 
-  it("renders a full-width configuration header with aligned content", async () => {
+  it("renders Backups-aligned full-width configuration content", async () => {
     getGlobalConfig.mockResolvedValueOnce(configuredResponse);
     render(<GlobalConfigClient />);
 
@@ -40,7 +40,11 @@ describe("GlobalConfigClient runtime behavior", () => {
     expect(header?.className).toContain("bg-card");
     expect(header?.className).toContain("border-b");
     expect(header?.parentElement?.className).not.toContain("max-w-3xl");
-    expect(header?.firstElementChild?.className).toContain("max-w-3xl");
+    expect(header?.firstElementChild?.className).toContain("px-8");
+    expect(header?.firstElementChild?.className).toContain("py-6");
+    expect(header?.nextElementSibling?.className).toContain("p-6");
+    expect(header?.nextElementSibling?.className).toContain("space-y-6");
+    expect(header?.nextElementSibling?.className).not.toContain("max-w-3xl");
     expect(header?.contains(screen.getByText("Manage Gentle-AI and OpenCode preferences independently."))).toBe(true);
     expect(screen.getAllByText("Configured").some((badge) => header?.contains(badge))).toBe(true);
   });
