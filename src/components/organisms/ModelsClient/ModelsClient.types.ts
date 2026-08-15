@@ -14,7 +14,6 @@ export interface ModelsClientViewProps {
   loading: boolean;
   error: string | null;
   saving: string | null;
-  feedback: { type: "success" | "error"; message: string } | null;
   profiles: Profile[];
   activeProfile: string;
   syncing: boolean;

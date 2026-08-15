@@ -6,6 +6,7 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import { BackupsClient } from "@/components/organisms/BackupsClient/BackupsClient";
 import { GlobalConfigClient } from "@/components/organisms/GlobalConfigClient/GlobalConfigClient";
 import { DiagnosticsClient } from "@/components/organisms/DiagnosticsClient/DiagnosticsClient";
+import { ModelsClient } from "@/components/organisms/ModelsClient/ModelsClient";
 import { ProfilesClient } from "@/components/organisms/ProfilesClient/ProfilesClient";
 
 /* ── Shared mocks ── */
@@ -21,24 +22,29 @@ vi.mock("@/services/backupsApiService", () => ({
   restoreBackup: vi.fn().mockResolvedValue(undefined),
 }));
 
-const { getGlobalConfig, patchGlobalConfig, getCatalog } = vi.hoisted(() => ({
+const { getGlobalConfig, patchGlobalConfig, getCatalog, getConfig, saveAssignment } = vi.hoisted(() => ({
   getGlobalConfig: vi.fn(),
   patchGlobalConfig: vi.fn(),
   getCatalog: vi.fn(),
+  getConfig: vi.fn(),
+  saveAssignment: vi.fn(),
 }));
 vi.mock("@/services/globalConfigApiService", () => ({ getGlobalConfig, patchGlobalConfig }));
-vi.mock("@/services/modelsApiService", () => ({ getCatalog }));
+vi.mock("@/services/modelsApiService", () => ({ getCatalog, getConfig, saveAssignment }));
 
-const { listProfiles, switchProfile } = vi.hoisted(() => ({
+const { listProfiles, createProfile, switchProfile, deleteProfile, updateProfile } = vi.hoisted(() => ({
   listProfiles: vi.fn(),
+  createProfile: vi.fn(),
   switchProfile: vi.fn(),
+  deleteProfile: vi.fn(),
+  updateProfile: vi.fn(),
 }));
 vi.mock("@/services/profilesApiService", () => ({
   listProfiles,
-  createProfile: vi.fn(),
+  createProfile,
   switchProfile,
-  deleteProfile: vi.fn(),
-  updateProfile: vi.fn(),
+  deleteProfile,
+  updateProfile,
 }));
 
 const { mockGetDiagnostics, mockCheckUpdates } = vi.hoisted(() => ({
@@ -68,6 +74,13 @@ beforeEach(() => {
     profiles: [{ name: "work", displayName: "Work", active: false, modelCount: 1 }],
   });
   switchProfile.mockResolvedValue(undefined);
+  createProfile.mockResolvedValue(undefined);
+  deleteProfile.mockResolvedValue(undefined);
+  updateProfile.mockResolvedValue(undefined);
+  getConfig.mockResolvedValue({
+    assignments: [{ agentKey: "main", provider: "openai", model: "gpt-5", variant: "high" }],
+    defaultAgent: "main",
+  });
   mockGetDiagnostics.mockResolvedValue({
     cli: { installed: true, version: "1.2.0" },
     config: { available: true },
@@ -84,6 +97,36 @@ beforeEach(() => {
     installedVersion: "1.2.0",
     channels: { stable: { latestVersion: "1.3.0", updateAvailable: true }, rc: { latestVersion: "1.4.0-rc.1", updateAvailable: false } },
     notice: { channel: "stable", version: "1.3.0", pending: true },
+  });
+});
+
+/* ── ModelsClient ── */
+describe("ModelsClient notification integration", () => {
+  it("sync success shows success toast without persisting", async () => {
+    const { runSync } = await import("@/services/backupsApiService");
+    vi.mocked(runSync).mockResolvedValue({ exitCode: 0, stdout: "ok", stderr: "" });
+    const user = userEvent.setup();
+
+    render(<ModelsClient />, { wrapper });
+    await user.click(await screen.findByRole("button", { name: "Sync Now" }));
+
+    await waitFor(() => expect(mockToast.success).toHaveBeenCalled());
+    expect(JSON.parse(localStorage.getItem("presett_notifications") ?? "[]")).toHaveLength(0);
+  });
+
+  it("sync error shows error toast and persists a safe notification", async () => {
+    const { runSync } = await import("@/services/backupsApiService");
+    vi.mocked(runSync).mockRejectedValue(new Error("Sync failed"));
+    const user = userEvent.setup();
+
+    render(<ModelsClient />, { wrapper });
+    await user.click(await screen.findByRole("button", { name: "Sync Now" }));
+
+    await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith("Sync failed"));
+    const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
+    expect(stored).toHaveLength(1);
+    expect(stored[0]).toMatchObject({ severity: "error", message: "Sync failed" });
+    expect(stored[0].message).not.toMatch(/[A-Za-z]:\\|\//);
   });
 });
 
