@@ -216,4 +216,9 @@ export interface Resources {
   "search_group_config": string;
   "search_pinned": string;
   "search_active": string;
+  "notif_update_title": string;
+  "notif_update_available": string;
+  "notif_panel_title": string;
+  "notif_panel_empty": string;
+  "notif_item_dismiss_aria": string;
 }

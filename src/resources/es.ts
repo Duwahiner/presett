@@ -216,4 +216,9 @@ export const es: Resources = {
   "search_group_config": "Configuración",
   "search_pinned": "Fijado",
   "search_active": "Activo",
+  "notif_update_title": "Actualización disponible",
+  "notif_update_available": "Gentle AI {{version}} está listo para instalar.",
+  "notif_panel_title": "Notificaciones",
+  "notif_panel_empty": "Aún no hay notificaciones.",
+  "notif_item_dismiss_aria": "Descartar",
 };

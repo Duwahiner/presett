@@ -10,7 +10,6 @@ import {
   Archive,
   Activity,
   Menu,
-  Bell,
   Search,
   X,
   RefreshCw,
@@ -27,6 +26,9 @@ import { t } from "@/resources/resources";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { NotificationProvider } from "@/contexts/NotificationContext";
+import { BellButton } from "@/components/notifications/BellButton";
+import { NotificationPanel } from "@/components/notifications/NotificationPanel";
 import type { DashboardLayoutProps } from "./DashboardLayout.types";
 import type { Resources } from "@/resources/types";
 
@@ -48,6 +50,7 @@ export function DashboardLayoutView({ children }: DashboardLayoutProps) {
   const [checkingUpdates, setCheckingUpdates] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const [notificationOpen, setNotificationOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
   const mobileNavRef = useRef<HTMLElement | null>(null);
 
@@ -147,8 +150,9 @@ export function DashboardLayoutView({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <div className="flex h-screen w-full items-stretch overflow-hidden bg-background">
-      <div className="flex h-full w-full overflow-hidden bg-card">
+    <NotificationProvider>
+      <div className="flex h-screen w-full items-stretch overflow-hidden bg-background">
+        <div className="flex h-full w-full overflow-hidden bg-card">
         <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-sidebar md:flex">
           <div className="flex h-16 items-center gap-2.5 px-5">
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
@@ -237,13 +241,10 @@ export function DashboardLayoutView({ children }: DashboardLayoutProps) {
             </form>
 
             <div className="ml-auto flex items-center gap-1.5">
-              <Button
-                variant="ghost"
-                size="icon"
-                aria-label={t("topbar_notifications_aria")}
-              >
-                <Bell className="size-[18px]" />
-              </Button>
+              <BellButton
+                open={notificationOpen}
+                onToggle={() => setNotificationOpen((o) => !o)}
+              />
 
               <ThemeToggle />
 
@@ -323,5 +324,11 @@ export function DashboardLayoutView({ children }: DashboardLayoutProps) {
         </div>
       </div>
     </div>
+
+    <NotificationPanel
+        open={notificationOpen}
+        onClose={() => setNotificationOpen(false)}
+      />
+    </NotificationProvider>
   );
 }
