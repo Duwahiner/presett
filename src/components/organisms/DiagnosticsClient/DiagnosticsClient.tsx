@@ -7,14 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { t } from "@/resources/resources";
+import { useNotificationToasts } from "@/hooks/useNotificationToasts";
 import { checkDiagnosticsUpdates, getDiagnostics } from "@/services/diagnosticsApiService";
 import type { DiagnosticsReport, DiagnosticsUpdateState, RouteState } from "@/services/diagnosticsService";
-
-type Feedback = { type: "error" | "success"; message: string } | null;
-
-function safeMessage(cause: unknown, fallback: string) {
-  return cause instanceof Error ? cause.message : fallback;
-}
 
 function StatusBadge({ ok, text }: { ok: boolean; text: string }) {
   return <Badge variant={ok ? "success" : "error"}>{text}</Badge>;
@@ -59,7 +54,7 @@ export function DiagnosticsClient() {
   const [updates, setUpdates] = useState<DiagnosticsUpdateState | null>(null);
   const [loading, setLoading] = useState(true);
   const [checking, setChecking] = useState(false);
-  const [feedback, setFeedback] = useState<Feedback>(null);
+  const { onError } = useNotificationToasts();
 
   useEffect(() => {
     let mounted = true;
@@ -70,7 +65,7 @@ export function DiagnosticsClient() {
         setDiagnostics(local);
         setUpdates(releaseState);
       } catch (cause) {
-        if (mounted) setFeedback({ type: "error", message: safeMessage(cause, t("diagnostics_load_error")) });
+        if (mounted) onError(t("diagnostics_title"), cause instanceof Error ? cause.message : t("diagnostics_load_error"));
       } finally {
         if (mounted) setLoading(false);
       }
@@ -82,11 +77,10 @@ export function DiagnosticsClient() {
   async function handleCheck() {
     if (checking) return;
     setChecking(true);
-    setFeedback(null);
     try {
       setUpdates(await checkDiagnosticsUpdates());
     } catch (cause) {
-      setFeedback({ type: "error", message: safeMessage(cause, t("diagnostics_check_error")) });
+      onError(t("diagnostics_title"), cause instanceof Error ? cause.message : t("diagnostics_check_error"));
     } finally {
       setChecking(false);
     }
@@ -98,7 +92,6 @@ export function DiagnosticsClient() {
 
   return (
     <div className="space-y-6">
-      {feedback && <div role={feedback.type === "error" ? "alert" : "status"} className={cn("rounded-xl border px-4 py-3 text-sm", feedback.type === "error" ? "border-destructive/20 bg-destructive/10 text-destructive" : "border-success/20 bg-success/10 text-success")}>{feedback.message}</div>}
       {updates?.notice?.pending && <div role="alert" className="rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning-foreground">{t("diagnostics_update_notice", { version: updates.notice.version, channel: updates.notice.channel })}</div>}
 
       <Card className="p-6">

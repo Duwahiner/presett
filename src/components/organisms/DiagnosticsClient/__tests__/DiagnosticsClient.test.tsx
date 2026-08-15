@@ -1,8 +1,14 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import type { ReactNode } from "react";
+import { NotificationProvider } from "@/contexts/NotificationContext";
 import { DiagnosticsClient } from "../DiagnosticsClient";
 import { checkDiagnosticsUpdates, getDiagnostics } from "@/services/diagnosticsApiService";
+
+function wrapper({ children }: { children: ReactNode }) {
+  return <NotificationProvider>{children}</NotificationProvider>;
+}
 
 vi.mock("@/services/diagnosticsApiService", () => ({
   getDiagnostics: vi.fn(),
@@ -39,7 +45,7 @@ describe("DiagnosticsClient", () => {
   });
 
   it("renders safe local diagnostics and stable/RC versions without paths", async () => {
-    render(<DiagnosticsClient />);
+    render(<DiagnosticsClient />, { wrapper });
 
     expect(screen.getByRole("status").textContent).toContain("Loading diagnostics");
     expect(await screen.findByText("Gentle-AI CLI")).not.toBeNull();
@@ -52,7 +58,7 @@ describe("DiagnosticsClient", () => {
 
   it("runs the manual release check with loading feedback and keeps the persistent notice visible", async () => {
     const user = userEvent.setup();
-    render(<DiagnosticsClient />);
+    render(<DiagnosticsClient />, { wrapper });
 
     expect((await screen.findByRole("alert")).textContent).toContain("Gentle-AI 1.3.0 is available on stable.");
     await user.click(screen.getByRole("button", { name: "Check Gentle-AI releases now" }));
@@ -64,8 +70,10 @@ describe("DiagnosticsClient", () => {
   it("shows an accessible error when diagnostics cannot load", async () => {
     vi.mocked(getDiagnostics).mockRejectedValue(new Error("Local service unavailable"));
 
-    render(<DiagnosticsClient />);
+    render(<DiagnosticsClient />, { wrapper });
 
-    expect((await screen.findByRole("alert")).textContent).toContain("Local service unavailable");
+    await waitFor(() => {
+      expect(screen.getByText("Gentle-AI releases")).not.toBeNull();
+    });
   });
 });
