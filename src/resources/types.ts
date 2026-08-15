@@ -192,8 +192,10 @@ export interface Resources {
   "config_opencode_title": string;
   "config_opencode_description": string;
   "config_agent": string;
+  "config_provider": string;
   "config_model": string;
   "config_variant": string;
+  "config_catalog_error": string;
   "config_opencode_save": string;
   "config_opencode_saved": string;
   "config_opencode_error": string;

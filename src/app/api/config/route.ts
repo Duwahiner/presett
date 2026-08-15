@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 import {
   listModelAssignments,
   readOpenCodeConfigSafe,
+  splitModelRef,
   updateModelAssignment,
   writeOpenCodeConfig,
 } from "@/adapters/opencode";
@@ -13,7 +14,11 @@ import { defaultPresettDir } from "@/lib/paths";
 import { buildSafeError, requireMutationOrigin } from "@/lib/localApiSecurity";
 import { readGentleAiConfigSafe, writeGentleAiConfig } from "@/adapters/gentle-ai";
 import { readStateJsonSafe } from "@/services/stateService";
-import { globalConfigPatchSchema } from "@/lib/validators";
+import {
+  buildModelCache,
+  globalConfigPatchSchema,
+  validateModelAssignment,
+} from "@/lib/validators";
 
 export const dynamic = "force-dynamic";
 
@@ -38,6 +43,7 @@ export async function GET() {
   const stateResult = await readStateJsonSafe(gentleAiDir());
   return NextResponse.json({
     defaultAgent: configResult.ok ? configResult.value.default_agent : undefined,
+    agents: configResult.ok ? Object.keys(configResult.value.agent) : [],
     assignments: configResult.ok ? listModelAssignments(configResult.value) : [],
     gentleAi: stateResult.ok ? { persona: stateResult.value.persona, language: stateResult.value.language } : {},
   });
@@ -73,6 +79,22 @@ export async function PATCH(request: Request) {
   if (!existing.ok) return NextResponse.json(buildSafeError("OpenCode configuration unavailable"), { status: 503 });
   const agent = existing.value.agent[parsed.data.agentKey];
   if (!agent) return NextResponse.json(buildSafeError("Unknown OpenCode agent"), { status: 400 });
+
+  const cacheResult = await readModelCacheSafe(cacheDir());
+  if (!cacheResult.ok) {
+    return NextResponse.json(buildSafeError("Model catalog unavailable"), { status: 503 });
+  }
+
+  const { provider, model } = splitModelRef(parsed.data.model);
+  const validation = validateModelAssignment(buildModelCache(cacheResult.value), {
+    provider,
+    model,
+    variant: parsed.data.variant,
+  });
+  if (!validation.ok) {
+    return NextResponse.json(buildSafeError("Invalid model selection"), { status: 400 });
+  }
+
   const result = await writeOpenCodeConfig(configDir(), { ...existing.value, agent: { ...existing.value.agent, [parsed.data.agentKey]: { ...agent, model: parsed.data.model, variant: parsed.data.variant } } }, backupDir());
   return result.ok ? NextResponse.json({ ok: true }) : NextResponse.json(buildSafeError("Configuration could not be saved"), { status: 500 });
 }

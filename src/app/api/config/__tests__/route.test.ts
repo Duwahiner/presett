@@ -51,13 +51,14 @@ describe("GET /api/config", () => {
     await rm(gentleAiDir, { recursive: true, force: true });
   });
 
-  it("returns current model assignments", async () => {
+  it("returns every configured agent alongside current model assignments", async () => {
     await mkdir(tempDir, { recursive: true });
     await writeFile(
       join(tempDir, "opencode.json"),
       JSON.stringify({
         agent: {
           "gentle-orchestrator": { model: "openai/gpt-4", variant: "low" },
+          reviewer: { mode: "subagent" },
         },
       }),
     );
@@ -72,6 +73,7 @@ describe("GET /api/config", () => {
     expect(response.status).toBe(200);
     expect(body.assignments).toHaveLength(1);
     expect(body.assignments[0].agentKey).toBe("gentle-orchestrator");
+    expect(body.agents).toEqual(["gentle-orchestrator", "reviewer"]);
   });
 
   it("returns both domains and defaults without creating missing config files", async () => {
@@ -93,6 +95,7 @@ describe("GET /api/config", () => {
 
   it("patches OpenCode and GET exposes the persisted active model", async () => {
     await writeFile(join(tempDir, "opencode.json"), JSON.stringify({ default_agent: "main", agent: { main: { model: "openai/old", variant: "low" } } }));
+    await writeFile(join(cacheDir, "model-variants.json"), JSON.stringify({ openai: { new: ["high"] } }));
     const response = await PATCH(patchRequest({ domain: "opencode", agentKey: "main", model: "openai/new", variant: "high" }));
     expect(response.status).toBe(200);
     const body = await (await GET()).json();
@@ -116,12 +119,44 @@ describe("GET /api/config", () => {
     expect(JSON.stringify(await response.json())).not.toContain("opencode.json");
   });
 
+  it("rejects an unknown catalog model without mutating OpenCode", async () => {
+    const original = JSON.stringify({ agent: { main: { model: "openai/old", variant: "low" } } });
+    await writeFile(join(tempDir, "opencode.json"), original);
+    await writeFile(join(cacheDir, "model-variants.json"), JSON.stringify({ openai: { known: ["high"] } }));
+
+    const response = await PATCH(patchRequest({ domain: "opencode", agentKey: "main", model: "openai/unknown", variant: "high" }));
+
+    expect(response.status).toBe(400);
+    expect(await readFile(join(tempDir, "opencode.json"), "utf8")).toBe(original);
+  });
+
+  it("rejects an unknown agent without mutating OpenCode", async () => {
+    const original = JSON.stringify({ agent: { main: { model: "openai/old", variant: "low" } } });
+    await writeFile(join(tempDir, "opencode.json"), original);
+
+    const response = await PATCH(patchRequest({ domain: "opencode", agentKey: "missing", model: "openai/new", variant: "high" }));
+
+    expect(response.status).toBe(400);
+    expect(await readFile(join(tempDir, "opencode.json"), "utf8")).toBe(original);
+  });
+
+  it("blocks OpenCode saves when the model catalog is unavailable", async () => {
+    const original = JSON.stringify({ agent: { main: { model: "openai/old", variant: "low" } } });
+    await writeFile(join(tempDir, "opencode.json"), original);
+
+    const response = await PATCH(patchRequest({ domain: "opencode", agentKey: "main", model: "openai/new", variant: "high" }));
+
+    expect(response.status).toBe(503);
+    expect(await readFile(join(tempDir, "opencode.json"), "utf8")).toBe(original);
+  });
+
   it("sanitizes a real OpenCode write-path failure", async () => {
     await writeFile(
       join(tempDir, "opencode.json"),
       JSON.stringify({ agent: { main: { model: "openai/old", variant: "low" } } }),
     );
     await mkdir(join(tempDir, "opencode.json.presett-tmp"));
+    await writeFile(join(cacheDir, "model-variants.json"), JSON.stringify({ openai: { new: ["high"] } }));
 
     const response = await PATCH(
       patchRequest({ domain: "opencode", agentKey: "main", model: "openai/new", variant: "high" }),
