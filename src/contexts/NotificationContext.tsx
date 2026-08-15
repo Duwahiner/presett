@@ -4,6 +4,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   type ReactNode,
@@ -17,6 +18,7 @@ import {
   resolve as svcResolve,
   dismiss as svcDismiss,
   markAllRead as svcMarkAllRead,
+  init as svcInit,
 } from "@/services/notificationService";
 
 export interface NotificationContextValue {
@@ -34,6 +36,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const [tick, setTick] = useState(0);
 
   const refresh = useCallback(() => setTick((t) => t + 1), []);
+
+  // Prune on mount (TTL + cap enforcement)
+  useEffect(() => {
+    svcInit();
+  }, []);
 
   const notifications = useMemo(() => svcGetAll(), [tick]);
   const unreadCount = useMemo(() => svcUnread(), [tick]);
