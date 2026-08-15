@@ -27,8 +27,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { NotificationProvider } from "@/contexts/NotificationContext";
+import { useNotificationToasts } from "@/hooks/useNotificationToasts";
 import { BellButton } from "@/components/notifications/BellButton";
 import { NotificationPanel } from "@/components/notifications/NotificationPanel";
+import { Toaster } from "@/components/ui/sonner";
 import type { DashboardLayoutProps } from "./DashboardLayout.types";
 import type { Resources } from "@/resources/types";
 
@@ -41,11 +43,10 @@ const navItems: { key: keyof Resources; href: string; icon: React.ComponentType<
   { key: "nav_config", href: "/config", icon: Settings },
 ];
 
-export function DashboardLayoutView({ children }: DashboardLayoutProps) {
+function DashboardLayoutInner({ children }: DashboardLayoutProps) {
   const pathname = usePathname();
   const router = useRouter();
   const [syncing, setSyncing] = useState(false);
-  const [syncMessage, setSyncMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [updateState, setUpdateState] = useState<DiagnosticsUpdateState | null>(null);
   const [checkingUpdates, setCheckingUpdates] = useState(false);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -53,6 +54,7 @@ export function DashboardLayoutView({ children }: DashboardLayoutProps) {
   const [notificationOpen, setNotificationOpen] = useState(false);
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
   const mobileNavRef = useRef<HTMLElement | null>(null);
+  const { onError, onSuccess } = useNotificationToasts();
 
   useEffect(() => {
     if (!mobileNavOpen) return;
@@ -111,12 +113,11 @@ export function DashboardLayoutView({ children }: DashboardLayoutProps) {
   async function handleSync() {
     if (syncing) return;
     setSyncing(true);
-    setSyncMessage(null);
     try {
       await runSync();
-      setSyncMessage({ type: "success", text: t("sidebar_sync_success") });
+      onSuccess(t("sidebar_sync_success"));
     } catch {
-      setSyncMessage({ type: "error", text: t("sidebar_sync_error_message") });
+      onError(t("sidebar_group_menu"), t("sidebar_sync_error_message"));
     } finally {
       setSyncing(false);
     }
@@ -150,10 +151,10 @@ export function DashboardLayoutView({ children }: DashboardLayoutProps) {
   }
 
   return (
-    <NotificationProvider>
-      <div className="flex h-screen w-full items-stretch overflow-hidden bg-background">
-        <div className="flex h-full w-full overflow-hidden bg-card">
-        <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-sidebar md:flex">
+    <>
+    <div className="flex h-screen w-full items-stretch overflow-hidden bg-background">
+      <div className="flex h-full w-full overflow-hidden bg-card">
+      <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-sidebar md:flex">
           <div className="flex h-16 items-center gap-2.5 px-5">
             <div className="flex size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
               <Sparkles className="size-4" />
@@ -179,19 +180,6 @@ export function DashboardLayoutView({ children }: DashboardLayoutProps) {
                 : <RefreshCw className="size-4" />}
               {t("sidebar_sync_cta")}
             </Button>
-            {syncMessage && (
-              <p
-                role={syncMessage.type === "error" ? "alert" : "status"}
-                className={cn(
-                  "mt-2 rounded-lg px-3 py-2 text-xs",
-                  syncMessage.type === "error"
-                    ? "bg-destructive/10 text-destructive"
-                    : "bg-success/10 text-success",
-                )}
-              >
-                {syncMessage.text}
-              </p>
-            )}
           </div>
         </aside>
 
@@ -329,6 +317,15 @@ export function DashboardLayoutView({ children }: DashboardLayoutProps) {
         open={notificationOpen}
         onClose={() => setNotificationOpen(false)}
       />
+    </>
+  );
+}
+
+export function DashboardLayoutView({ children }: DashboardLayoutProps) {
+  return (
+    <NotificationProvider>
+      <DashboardLayoutInner>{children}</DashboardLayoutInner>
+      <Toaster />
     </NotificationProvider>
   );
 }
