@@ -34,16 +34,24 @@ const NotificationContext = createContext<NotificationContextValue | null>(null)
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const [tick, setTick] = useState(0);
+  const [hydrated, setHydrated] = useState(false);
 
   const refresh = useCallback(() => setTick((t) => t + 1), []);
 
   // Prune on mount (TTL + cap enforcement)
   useEffect(() => {
     svcInit();
+    setHydrated(true);
   }, []);
 
-  const notifications = useMemo(() => svcGetAll(), [tick]);
-  const unreadCount = useMemo(() => svcUnread(), [tick]);
+  const notifications = useMemo(
+    () => (hydrated ? svcGetAll() : []),
+    [hydrated, tick],
+  );
+  const unreadCount = useMemo(
+    () => (hydrated ? svcUnread() : 0),
+    [hydrated, tick],
+  );
 
   const push = useCallback(
     (draft: NotificationDraft): string => {
