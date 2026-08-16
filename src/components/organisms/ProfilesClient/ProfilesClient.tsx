@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { listProfiles, createProfile, switchProfile, deleteProfile, updateProfile } from "@/services/profilesApiService";
 import { getCatalog } from "@/services/modelsApiService";
 import { t } from "@/resources/resources";
+import { useNotificationToasts } from "@/hooks/useNotificationToasts";
 import type { ModelCatalog } from "@/components/molecules/ModelPicker/ModelPicker";
 import { ProfilesClientView } from "./ProfilesClient.view";
 import type { Profile } from "./ProfilesClient.types";
@@ -18,7 +19,6 @@ export function ProfilesClient() {
   const [catalog, setCatalog] = useState<ModelCatalog>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
   const [newAssignments, setNewAssignments] = useState<
@@ -28,6 +28,7 @@ export function ProfilesClient() {
   const [editAssignments, setEditAssignments] = useState<
     Record<string, { provider: string; model: string; variant: string }>
   >({});
+  const { onError, onSuccess } = useNotificationToasts();
 
   useEffect(() => {
     async function load() {
@@ -56,7 +57,6 @@ export function ProfilesClient() {
     e.preventDefault();
     if (!newName) return;
     setPendingAction("create");
-    setFeedback(null);
 
     const assignments: Record<string, { provider: string; model: string; variant: string }> = {
       [`sdd-orchestrator-${newName}`]: newAssignments["orchestrator"] ?? { provider: "", model: "", variant: "" },
@@ -73,9 +73,9 @@ export function ProfilesClient() {
       setNewName("");
       setNewAssignments({});
       await refresh();
-      setFeedback({ type: "success", message: t("profiles_createSuccess") });
+      onSuccess(t("profiles_createSuccess"));
     } catch (cause) {
-      setFeedback({ type: "error", message: cause instanceof Error ? cause.message : String(cause) });
+      onError(t("profiles_createError"), cause instanceof Error ? cause.message : String(cause));
     } finally {
       setPendingAction(null);
     }
@@ -83,13 +83,12 @@ export function ProfilesClient() {
 
   async function handleSwitch(name: string) {
     setPendingAction(`switch:${name}`);
-    setFeedback(null);
     try {
       await switchProfile(name);
       await refresh();
-      setFeedback({ type: "success", message: t("profiles_switchSuccess") });
+      onSuccess(t("profiles_switchSuccess"));
     } catch (cause) {
-      setFeedback({ type: "error", message: cause instanceof Error ? cause.message : String(cause) });
+      onError(t("profiles_switchSuccess"), cause instanceof Error ? cause.message : String(cause));
     } finally {
       setPendingAction(null);
     }
@@ -98,13 +97,12 @@ export function ProfilesClient() {
   async function handleDelete(name: string) {
     if (!confirm(t("profiles_deleteConfirm", { name }))) return;
     setPendingAction(`delete:${name}`);
-    setFeedback(null);
     try {
       await deleteProfile(name);
       await refresh();
-      setFeedback({ type: "success", message: t("profiles_deleteSuccess") });
+      onSuccess(t("profiles_deleteSuccess"));
     } catch (cause) {
-      setFeedback({ type: "error", message: cause instanceof Error ? cause.message : String(cause) });
+      onError(t("profiles_deleteError"), cause instanceof Error ? cause.message : String(cause));
     } finally {
       setPendingAction(null);
     }
@@ -118,15 +116,14 @@ export function ProfilesClient() {
   async function handleEditSave() {
     if (!editingProfile) return;
     setPendingAction("edit");
-    setFeedback(null);
     try {
       await updateProfile(editingProfile, editAssignments);
       setEditingProfile(null);
       setEditAssignments({});
       await refresh();
-      setFeedback({ type: "success", message: t("profiles_updateSuccess") });
+      onSuccess(t("profiles_updateSuccess"));
     } catch (cause) {
-      setFeedback({ type: "error", message: cause instanceof Error ? cause.message : String(cause) });
+      onError(t("profiles_updateError"), cause instanceof Error ? cause.message : String(cause));
     } finally {
       setPendingAction(null);
     }
@@ -143,7 +140,6 @@ export function ProfilesClient() {
       catalog={catalog}
       loading={loading}
       error={error}
-      feedback={feedback}
       pendingAction={pendingAction}
       newName={newName}
       newAssignments={newAssignments}

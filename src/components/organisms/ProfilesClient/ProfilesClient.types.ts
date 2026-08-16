@@ -12,7 +12,6 @@ export interface ProfilesClientViewProps {
   catalog: ModelCatalog;
   loading: boolean;
   error: string | null;
-  feedback: { type: "success" | "error"; message: string } | null;
   pendingAction: string | null;
   newName: string;
   newAssignments: Record<string, { provider: string; model: string; variant: string }>;

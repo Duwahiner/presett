@@ -95,9 +95,12 @@ export interface Resources {
   "profiles_nameHelp": string;
   "profiles_createDisabledHelp": string;
   "profiles_createSuccess": string;
+  "profiles_createError": string;
   "profiles_switchSuccess": string;
   "profiles_deleteSuccess": string;
+  "profiles_deleteError": string;
   "profiles_updateSuccess": string;
+  "profiles_updateError": string;
   "backups_title": string;
   "backups_status_badge": string;
   "backups_header_description": string;
@@ -143,7 +146,9 @@ export interface Resources {
   "models_resetConfirmDesc": string;
   "models_syncSuccess": string;
   "models_assignmentSaved": string;
+  "models_assignmentSaveError": string;
   "models_profileSwitched": string;
+  "models_profileSwitchError": string;
   "models_resetSuccess": string;
   "models_emptyAssignmentsTitle": string;
   "models_emptyAssignmentsDesc": string;

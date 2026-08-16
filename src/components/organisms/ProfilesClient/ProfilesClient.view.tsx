@@ -145,7 +145,6 @@ export function ProfilesClientView({
   catalog,
   loading,
   error,
-  feedback,
   pendingAction,
   newName,
   newAssignments,
@@ -178,20 +177,6 @@ export function ProfilesClientView({
 
   return (
     <div className="space-y-6">
-      {feedback && (
-        <div
-          role={feedback.type === "error" ? "alert" : "status"}
-          className={cn(
-            "rounded-xl border px-4 py-3 text-sm",
-            feedback.type === "error"
-              ? "border-destructive/20 bg-destructive/10 text-destructive"
-              : "border-success/20 bg-success/10 text-success",
-          )}
-        >
-          {feedback.message}
-        </div>
-      )}
-
       {/* Create Profile Form */}
       {!showForm ? (
         <button
