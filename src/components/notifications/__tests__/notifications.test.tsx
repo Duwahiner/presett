@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { type ReactNode } from "react";
+import { renderToString } from "react-dom/server";
+import { hydrateRoot } from "react-dom/client";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { BellButton } from "@/components/notifications/BellButton";
 import { NotificationItem } from "@/components/notifications/NotificationItem";
@@ -33,6 +35,28 @@ describe("BellButton", () => {
     render(<BellButton open={false} onToggle={() => {}} />, { wrapper });
 
     expect(screen.getByText("2")).not.toBeNull();
+  });
+
+  it("keeps SSR markup stable and hydrates the badge from storage", async () => {
+    svc.push({ severity: "error", title: "E", message: "m1" });
+    const tree = (
+      <NotificationProvider>
+        <BellButton open={false} onToggle={() => {}} />
+      </NotificationProvider>
+    );
+    const serverMarkup = renderToString(tree);
+    const container = document.createElement("div");
+    container.innerHTML = serverMarkup;
+    const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    hydrateRoot(container, tree);
+
+    expect(container.textContent).not.toContain("1");
+    await waitFor(() => expect(container.textContent).toContain("1"));
+    expect(consoleError).not.toHaveBeenCalledWith(
+      expect.stringContaining("hydration"),
+    );
+    consoleError.mockRestore();
   });
 
   it("calls onToggle when clicked", () => {
