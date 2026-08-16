@@ -5,6 +5,7 @@ import { getConfig, getCatalog, saveAssignment } from "@/services/modelsApiServi
 import { listProfiles, switchProfile } from "@/services/profilesApiService";
 import { runSync } from "@/services/backupsApiService";
 import { t } from "@/resources/resources";
+import { useNotificationToasts } from "@/hooks/useNotificationToasts";
 import type { ModelCatalog } from "@/components/molecules/ModelPicker/ModelPicker";
 import type { Profile } from "@/services/profilesApiService";
 import { ModelsClientView } from "./ModelsClient.view";
@@ -18,11 +19,11 @@ export function ModelsClient() {
   const [activeProfile, setActiveProfile] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
   const [saving, setSaving] = useState<string | null>(null);
   const [syncing, setSyncing] = useState(false);
   const [switchingProfile, setSwitchingProfile] = useState(false);
   const [resetting, setResetting] = useState(false);
+  const { onError, onSuccess } = useNotificationToasts();
 
   useEffect(() => {
     let isMounted = true;
@@ -65,15 +66,14 @@ export function ModelsClient() {
     assignment: { provider: string; model: string; variant: string },
   ) {
     setSaving(agentKey);
-    setFeedback(null);
     try {
       await saveAssignment({ agentKey, ...assignment });
       setAssignments((prev) =>
         prev.map((a) => (a.agentKey === agentKey ? { ...a, ...assignment } : a)),
       );
-      setFeedback({ type: "success", message: t("models_assignmentSaved") });
+      onSuccess(t("models_assignmentSaved"));
     } catch (cause) {
-      setFeedback({ type: "error", message: cause instanceof Error ? cause.message : String(cause) });
+      onError(t("models_assignmentSaved"), cause instanceof Error ? cause.message : String(cause));
     } finally {
       setSaving(null);
     }
@@ -81,7 +81,6 @@ export function ModelsClient() {
 
   async function handleSwitchProfile(name: string) {
     setSwitchingProfile(true);
-    setFeedback(null);
     try {
       await switchProfile(name);
       setActiveProfile(name);
@@ -89,9 +88,9 @@ export function ModelsClient() {
       const config = await getConfig();
       setAssignments(config.assignments);
       setOriginalAssignments(config.assignments);
-      setFeedback({ type: "success", message: t("models_profileSwitched") });
+      onSuccess(t("models_profileSwitched"));
     } catch (cause) {
-      setFeedback({ type: "error", message: cause instanceof Error ? cause.message : String(cause) });
+      onError(t("models_profileSwitched"), cause instanceof Error ? cause.message : String(cause));
     } finally {
       setSwitchingProfile(false);
     }
@@ -99,12 +98,11 @@ export function ModelsClient() {
 
   async function handleSync() {
     setSyncing(true);
-    setFeedback(null);
     try {
       await runSync();
-      setFeedback({ type: "success", message: t("models_syncSuccess") });
+      onSuccess(t("models_syncSuccess"));
     } catch (cause) {
-      setFeedback({ type: "error", message: cause instanceof Error ? cause.message : String(cause) });
+      onError(t("models_syncNow"), cause instanceof Error ? cause.message : String(cause));
     } finally {
       setSyncing(false);
     }
@@ -112,7 +110,6 @@ export function ModelsClient() {
 
   async function handleReset() {
     setResetting(true);
-    setFeedback(null);
     try {
       // Restore each assignment to its original value
       await Promise.all(
@@ -121,9 +118,9 @@ export function ModelsClient() {
         ),
       );
       setAssignments([...originalAssignments]);
-      setFeedback({ type: "success", message: t("models_resetSuccess") });
+      onSuccess(t("models_resetSuccess"));
     } catch (cause) {
-      setFeedback({ type: "error", message: cause instanceof Error ? cause.message : String(cause) });
+      onError(t("models_resetAll"), cause instanceof Error ? cause.message : String(cause));
     } finally {
       setResetting(false);
     }
@@ -136,7 +133,6 @@ export function ModelsClient() {
       loading={loading}
       error={error}
       saving={saving}
-      feedback={feedback}
       profiles={profiles}
       activeProfile={activeProfile}
       syncing={syncing}
