@@ -192,6 +192,8 @@ export interface Profile {
   displayName: string;
   active: boolean;
   modelCount: number;
+  /** ISO-8601 timestamp — derived from config file mtime as canonical source. */
+  updatedAt: string;
 }
 
 const SDD_ORCHESTRATOR_PREFIX = "sdd-orchestrator-";
@@ -214,7 +216,26 @@ function isProfileAgent(agentKey: string): { profile: string; isOrchestrator: bo
   return null;
 }
 
-export function listProfiles(config: OpenCodeConfig): Profile[] {
+/**
+ * Derive `updatedAt` from the config file mtime (canonical source).
+ * Falls back to `Date.now()` when configDir is omitted or stat fails.
+ */
+async function deriveConfigMtime(configDir?: string): Promise<string> {
+  if (!configDir) return new Date().toISOString();
+  try {
+    const s = await stat(join(configDir, "opencode.json"));
+    return s.mtime.toISOString();
+  } catch {
+    return new Date().toISOString();
+  }
+}
+
+export async function listProfiles(
+  config: OpenCodeConfig,
+  configDir?: string,
+): Promise<Profile[]> {
+  const updatedAt = await deriveConfigMtime(configDir);
+
   const profiles = new Map<
     string,
     { name: string; displayName: string; modelCount: number }
@@ -247,6 +268,7 @@ export function listProfiles(config: OpenCodeConfig): Profile[] {
         ? config.default_agent === undefined ||
           config.default_agent === "gentle-orchestrator"
         : config.default_agent === `${SDD_ORCHESTRATOR_PREFIX}${p.name}`,
+    updatedAt,
   }));
 }
 

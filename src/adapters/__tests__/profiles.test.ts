@@ -15,7 +15,7 @@ const cache: ModelCache = {
 };
 
 describe("listProfiles", () => {
-  it("lists base and named profiles with active state", () => {
+  it("lists base and named profiles with active state", async () => {
     const config = {
       default_agent: "sdd-orchestrator-custom",
       agent: {
@@ -26,13 +26,15 @@ describe("listProfiles", () => {
       },
     };
 
-    const profiles = listProfiles(config);
+    const profiles = await listProfiles(config);
 
     expect(profiles.map((p) => p.name)).toContain("");
     expect(profiles.map((p) => p.name)).toContain("custom");
     const custom = profiles.find((p) => p.name === "custom");
     expect(custom?.active).toBe(true);
     expect(custom?.modelCount).toBe(2);
+    expect(custom?.updatedAt).toBeDefined();
+    expect(typeof custom?.updatedAt).toBe("string");
   });
 });
 

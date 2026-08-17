@@ -107,8 +107,9 @@ function createModelCandidates(cache: ModelCache): Candidate[] {
   );
 }
 
-function createProfileCandidates(config: OpenCodeConfig): Candidate[] {
-  return listProfiles(config).map((profile) => ({
+async function createProfileCandidates(config: OpenCodeConfig): Promise<Candidate[]> {
+  const profiles = await listProfiles(config);
+  return profiles.map((profile) => ({
     type: "profile",
     id: profile.name || "base",
     label: profile.displayName,
@@ -178,7 +179,7 @@ export async function searchEntities(options: SearchOptions): Promise<SearchResp
   const candidates: Candidate[] = [];
   if (configResult.ok) {
     candidates.push(...createAgentCandidates(configResult.value));
-    candidates.push(...createProfileCandidates(configResult.value));
+    candidates.push(...(await createProfileCandidates(configResult.value)));
     candidates.push(...createConfigCandidates(configResult.value));
   } else {
     warnings.push("config");
