@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   deleteBackup,
   listBackups,
@@ -11,8 +11,37 @@ import {
 } from "@/services/backupsApiService";
 import { t } from "@/resources/resources";
 import { useNotificationToasts } from "@/hooks/useNotificationToasts";
+import { filterAndSortBackups } from "./filterAndSortBackups";
 import { BackupsClientView } from "./BackupsClient.view";
 import type { BackupInfo } from "./BackupsClient.types";
+import type { ListingControlsState } from "@/components/molecules/ListingControls/ListingControls.types";
+
+const CONTROLS_CONFIG = {
+  search: { placeholder: "listing_search_placeholder" as const, ariaLabel: "listing_search_aria" as const },
+  filters: [
+    {
+      key: "pinned",
+      labelKey: "listing_filter_pinned" as const,
+      options: [{ value: "true", labelKey: "backups_pinned" as const }],
+    },
+  ],
+  sort: {
+    fields: [
+      { value: "timestamp", labelKey: "listing_sort_date" as const },
+      { value: "size", labelKey: "listing_sort_size" as const },
+      { value: "fileCount", labelKey: "listing_sort_fileCount" as const },
+    ],
+    defaultField: "timestamp",
+    defaultDir: "desc" as const,
+  },
+};
+
+const INITIAL_CONTROLS: ListingControlsState = {
+  search: "",
+  activeFilters: {},
+  sortField: "timestamp",
+  sortDir: "desc",
+};
 
 export function BackupsClient() {
   const [backups, setBackups] = useState<BackupInfo[]>([]);
@@ -23,7 +52,13 @@ export function BackupsClient() {
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
   const [restoreConfirmId, setRestoreConfirmId] = useState<string | null>(null);
+  const [controls, setControls] = useState<ListingControlsState>(INITIAL_CONTROLS);
   const { onError, onSuccess } = useNotificationToasts();
+
+  const derivedBackups = useMemo(
+    () => filterAndSortBackups(backups, controls),
+    [backups, controls],
+  );
 
   async function refresh() {
     try {
@@ -47,6 +82,14 @@ export function BackupsClient() {
     }
     load();
   }, []);
+
+  function handleControlsChange(next: Partial<ListingControlsState>) {
+    setControls((prev) => ({ ...prev, ...next }));
+  }
+
+  function handleClearControls() {
+    setControls(INITIAL_CONTROLS);
+  }
 
   async function handleSync() {
     setSyncing(true);
@@ -125,11 +168,16 @@ export function BackupsClient() {
   return (
     <BackupsClientView
       backups={backups}
+      derivedBackups={derivedBackups}
       loading={loading}
       error={error}
       syncOutput={syncOutput}
       syncing={syncing}
       pendingAction={pendingAction}
+      controls={{ config: CONTROLS_CONFIG, state: controls }}
+      resultCount={derivedBackups.length}
+      onControlsChange={handleControlsChange}
+      onClearControls={handleClearControls}
       onSync={handleSync}
       onRestore={setRestoreConfirmId}
       onPin={handlePin}

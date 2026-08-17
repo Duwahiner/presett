@@ -246,6 +246,7 @@ export const en: Resources = {
   "listing_filter_provider": "Provider",
   "listing_filter_model": "Model",
   "listing_filter_variant": "Variant",
+  "listing_filter_pinned": "Pinned",
   "listing_active_filters": "{{count}} active filters",
   "listing_clear_filters": "Clear filters",
   "listing_no_data_models": "No model assignments",
