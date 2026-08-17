@@ -8,6 +8,8 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AgentAssignmentRow } from "@/components/molecules/AgentAssignmentRow/AgentAssignmentRow";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
+import { ListingControls } from "@/components/molecules/ListingControls/ListingControls";
+import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
 import { t } from "@/resources/resources";
 import type { ModelsClientViewProps } from "./ModelsClient.types";
 import { Loader2 } from "lucide-react";
@@ -27,6 +29,11 @@ export function ModelsClientView({
   onSwitchProfile,
   onSync,
   onReset,
+  derivedAssignments,
+  controls,
+  controlsState,
+  onControlsChange,
+  onControlsClear,
 }: ModelsClientViewProps) {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
@@ -40,6 +47,9 @@ export function ModelsClientView({
   }
 
   if (error) return <ErrorBanner title={t("models_loadError")} message={error} />;
+
+  const displayAssignments = derivedAssignments ?? assignments;
+  const hasControls = controls && controlsState && onControlsChange && onControlsClear;
 
   return (
     <div className="space-y-4">
@@ -105,20 +115,41 @@ export function ModelsClientView({
         />
       )}
 
+      {/* Listing Controls */}
+      {hasControls && (
+        <ListingControls
+          config={controls}
+          state={controlsState}
+          onChange={onControlsChange}
+          onClear={onControlsClear}
+          resultCount={displayAssignments.length}
+        />
+      )}
+
       {/* Agent Assignments */}
-      {assignments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card/40 p-12 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <AlertCircle className="h-7 w-7 text-primary" aria-hidden="true" />
+      {assignments.length === 0 && displayAssignments.length === 0 ? (
+        hasControls ? (
+          <ListingEmptyState variant="no-data" entity="models" />
+        ) : (
+          <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card/40 p-12 text-center">
+            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+              <AlertCircle className="h-7 w-7 text-primary" aria-hidden="true" />
+            </div>
+            <h4 className="mt-4 font-semibold text-card-foreground">{t("models_emptyAssignmentsTitle")}</h4>
+            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+              {t("models_emptyAssignmentsDesc")}
+            </p>
           </div>
-          <h4 className="mt-4 font-semibold text-card-foreground">{t("models_emptyAssignmentsTitle")}</h4>
-          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-            {t("models_emptyAssignmentsDesc")}
-          </p>
-        </div>
+        )
+      ) : displayAssignments.length === 0 ? (
+        <ListingEmptyState
+          variant="no-matches"
+          entity="models"
+          onClear={onControlsClear}
+        />
       ) : (
         <div className="space-y-3">
-          {assignments.map((assignment) => (
+          {displayAssignments.map((assignment) => (
             <AgentAssignmentRow
               key={assignment.agentKey}
               agentKey={assignment.agentKey}
