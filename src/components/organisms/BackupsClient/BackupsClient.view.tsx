@@ -14,17 +14,24 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge } from "@/components/atoms/Badge/Badge";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
+import { ListingControls } from "@/components/molecules/ListingControls/ListingControls";
+import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
 import { cn } from "@/lib/utils";
 import { t } from "@/resources/resources";
 import type { BackupsClientViewProps } from "./BackupsClient.types";
 
 export function BackupsClientView({
   backups,
+  derivedBackups,
   loading,
   error,
   syncOutput,
   syncing,
   pendingAction,
+  controls,
+  resultCount,
+  onControlsChange,
+  onClearControls,
   onSync,
   onRestore,
   onPin,
@@ -47,6 +54,9 @@ export function BackupsClientView({
   }
 
   if (error) return <ErrorBanner title={t("backups_loadError")} message={error} />;
+
+  const showNoData = backups.length === 0;
+  const showNoMatches = backups.length > 0 && derivedBackups.length === 0;
 
   return (
     <div className="space-y-6">
@@ -78,21 +88,25 @@ export function BackupsClientView({
         )}
       </div>
 
-      {backups.length === 0 ? (
-        <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card/40 p-12 text-center">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-            <AlertCircle className="h-7 w-7 text-primary" aria-hidden="true" />
-          </div>
-          <h4 className="mt-4 font-semibold text-card-foreground">{t("backups_noBackups")}</h4>
-          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-            {t("backups_sync_description")}
-          </p>
-        </div>
+      {!showNoData && (
+        <ListingControls
+          config={controls.config}
+          state={controls.state}
+          onChange={onControlsChange}
+          onClear={onClearControls}
+          resultCount={resultCount}
+        />
+      )}
+
+      {showNoData ? (
+        <ListingEmptyState variant="no-data" entity="backups" />
+      ) : showNoMatches ? (
+        <ListingEmptyState variant="no-matches" entity="backups" onClear={onClearControls} />
       ) : (
         <div className="relative space-y-0">
           <div className="absolute left-4 top-4 bottom-4 w-px bg-border" aria-hidden="true" />
           <div className="space-y-3">
-            {backups.map((backup) => (
+            {derivedBackups.map((backup) => (
               <div
                 key={backup.id}
                 className="relative flex items-start gap-4 rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-border/80 hover:bg-accent/40"

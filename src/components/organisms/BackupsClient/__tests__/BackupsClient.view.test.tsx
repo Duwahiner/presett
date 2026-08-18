@@ -13,15 +13,61 @@ const backup = {
   pinned: false,
 };
 
+const backupPinned = {
+  id: "backup-2",
+  source: "auto",
+  timestamp: "2026-08-12T12:00:00Z",
+  fileCount: 3,
+  size: 1024,
+  pinned: true,
+};
+
+const defaultControls = {
+  config: {
+    search: { placeholder: "listing_search_placeholder" as const, ariaLabel: "listing_search_aria" as const },
+    filters: [
+      {
+        key: "pinned",
+        labelKey: "listing_filter_pinned" as const,
+        options: [
+          { value: "true", labelKey: "backups_pinned" as const },
+        ],
+      },
+    ],
+    sort: {
+      fields: [
+        { value: "timestamp", labelKey: "listing_sort_date" as const },
+        { value: "size", labelKey: "listing_sort_size" as const },
+        { value: "fileCount", labelKey: "listing_sort_fileCount" as const },
+      ],
+      defaultField: "timestamp",
+      defaultDir: "desc" as const,
+    },
+  },
+  state: {
+    search: "",
+    activeFilters: {} as Record<string, string>,
+    sortField: "timestamp",
+    sortDir: "desc" as const,
+  },
+  onChange: vi.fn(),
+  onClear: vi.fn(),
+  resultCount: 1,
+};
+
 function renderView(overrides: Partial<ComponentProps<typeof BackupsClientView>> = {}) {
   const props = {
     backups: [backup],
+    derivedBackups: [backup],
     loading: false,
     error: null,
     syncOutput: null,
     syncing: false,
-    feedback: null,
     pendingAction: null,
+    controls: defaultControls,
+    resultCount: 1,
+    onControlsChange: vi.fn(),
+    onClearControls: vi.fn(),
     onSync: vi.fn(),
     onRestore: vi.fn(),
     onPin: vi.fn(),
@@ -75,5 +121,73 @@ describe("BackupsClientView", () => {
 
     expect(screen.queryByRole("alert")).toBeNull();
     expect(screen.queryByRole("status")).toBeNull();
+  });
+});
+
+describe("BackupsClientView — filter/sort integration", () => {
+  it("renders ListingControls when controls prop is provided", () => {
+    renderView({
+      backups: [backup, backupPinned],
+      controls: defaultControls,
+      onControlsChange: vi.fn(),
+      resultCount: 2,
+      derivedBackups: [backup, backupPinned],
+    });
+
+    // getByPlaceholderText throws if not found — acts as "in the document" assertion
+    const input = screen.getByPlaceholderText("Search\u2026");
+    expect(input).toBeTruthy();
+  });
+
+  it("shows no-data empty state when backups array is empty", () => {
+    renderView({
+      backups: [],
+      derivedBackups: [],
+      controls: defaultControls,
+      resultCount: 0,
+    });
+
+    const heading = screen.getByText("No backups found");
+    expect(heading).toBeTruthy();
+  });
+
+  it("shows no-matches empty state when backups exist but derived is empty", () => {
+    renderView({
+      backups: [backup],
+      derivedBackups: [],
+      controls: defaultControls,
+      resultCount: 0,
+    });
+
+    const heading = screen.getByText("No matching backups");
+    expect(heading).toBeTruthy();
+  });
+
+  it("renders only derived backups when derivedBackups differs from backups", () => {
+    renderView({
+      backups: [backup, backupPinned],
+      derivedBackups: [backupPinned],
+      controls: defaultControls,
+      resultCount: 1,
+    });
+
+    expect(screen.getByText("backup-2")).toBeTruthy();
+    expect(screen.queryByText("backup-1")).toBeNull();
+  });
+
+  it("calls onControlsChange when search input changes", async () => {
+    const onControlsChange = vi.fn();
+    const user = userEvent.setup();
+    renderView({
+      backups: [backup],
+      controls: defaultControls,
+      onControlsChange,
+      derivedBackups: [backup],
+      resultCount: 1,
+    });
+
+    await user.type(screen.getByPlaceholderText("Search\u2026"), "test");
+
+    expect(onControlsChange).toHaveBeenCalled();
   });
 });

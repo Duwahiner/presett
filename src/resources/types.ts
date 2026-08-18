@@ -246,6 +246,7 @@ export interface Resources {
   "listing_filter_provider": string;
   "listing_filter_model": string;
   "listing_filter_variant": string;
+  "listing_filter_pinned": string;
   "listing_active_filters": string;
   "listing_clear_filters": string;
   "listing_no_data_models": string;
