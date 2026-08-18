@@ -56,6 +56,8 @@ describe("/api/profiles", () => {
 
     expect(response.status).toBe(200);
     expect(body.profiles.map((p: { name: string }) => p.name)).toContain("custom");
+    // updatedAt derived from config file mtime
+    expect(body.profiles.every((p: { updatedAt: string }) => typeof p.updatedAt === "string")).toBe(true);
   });
 
   it("creates a profile on POST", async () => {

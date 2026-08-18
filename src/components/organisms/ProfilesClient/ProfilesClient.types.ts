@@ -1,10 +1,13 @@
 import type { ModelCatalog } from "@/components/molecules/ModelPicker/ModelPicker";
+import type { ListingControlsConfig, ListingControlsState } from "@/components/molecules/ListingControls/ListingControls.types";
 
 export interface Profile {
   name: string;
   displayName: string;
   active: boolean;
   modelCount: number;
+  /** ISO-8601 timestamp of the last modification to this profile. */
+  updatedAt: string;
 }
 
 export interface ProfilesClientViewProps {
@@ -26,4 +29,9 @@ export interface ProfilesClientViewProps {
   onEditSave: () => void;
   onEditCancel: () => void;
   onEditAssignmentChange: (key: string, assignment: { provider: string; model: string; variant: string }) => void;
+  derivedProfiles?: Profile[];
+  controls?: ListingControlsConfig;
+  controlsState?: ListingControlsState;
+  onControlsChange?: (next: Partial<ListingControlsState>) => void;
+  onControlsClear?: () => void;
 }

@@ -238,6 +238,8 @@ export interface Resources {
   "listing_sort_provider": string;
   "listing_sort_model": string;
   "listing_sort_variant": string;
+  "listing_sort_active": string;
+  "listing_sort_lastUpdated": string;
   "listing_filter_agent": string;
   "listing_filter_agent_openai": string;
   "listing_filter_agent_anthropic": string;

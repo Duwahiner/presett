@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/atoms/Badge/Badge";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
+import { ListingControls } from "@/components/molecules/ListingControls/ListingControls";
+import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
 import { t } from "@/resources/resources";
 import type { ProfilesClientViewProps } from "./ProfilesClient.types";
 import type { ModelCatalog } from "@/components/molecules/ModelPicker/ModelPicker";
@@ -159,10 +161,20 @@ export function ProfilesClientView({
   onEditSave,
   onEditCancel,
   onEditAssignmentChange,
+  derivedProfiles,
+  controls,
+  controlsState,
+  onControlsChange,
+  onControlsClear,
 }: ProfilesClientViewProps) {
   const [showForm, setShowForm] = useState(false);
   const isAssigned = Boolean(newAssignments["orchestrator"]?.provider && newAssignments["orchestrator"]?.model && newAssignments["orchestrator"]?.variant);
   const canCreate = Boolean(newName && isAssigned);
+
+  const visibleProfiles = derivedProfiles ?? profiles;
+  const isFiltered = Boolean(controlsState && (controlsState.search.length > 0 || Object.keys(controlsState.activeFilters).length > 0));
+  const showNoData = profiles.length === 0;
+  const showNoMatch = profiles.length > 0 && visibleProfiles.length === 0 && isFiltered;
 
   if (loading) {
     return (
@@ -179,10 +191,12 @@ export function ProfilesClientView({
     <div className="space-y-6">
       {/* Create Profile Form */}
       {!showForm ? (
-        <button
+        <Button
           type="button"
+          variant="outline"
           onClick={() => setShowForm(true)}
           className="group flex w-full items-center justify-center gap-3 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-6 transition-all hover:border-primary/60 hover:bg-primary/10"
+          aria-label={t("profiles_create_title")}
         >
           <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-primary transition-transform group-hover:scale-110 group-hover:bg-primary/20">
             <Plus className="h-5 w-5" aria-hidden="true" />
@@ -191,7 +205,7 @@ export function ProfilesClientView({
             <span className="block text-sm font-semibold text-primary">{t("profiles_create_title")}</span>
             <span className="block text-xs text-muted-foreground">{t("profiles_create_description")}</span>
           </div>
-        </button>
+        </Button>
       ) : (
         <form
           onSubmit={onCreate}
@@ -306,8 +320,30 @@ export function ProfilesClientView({
       )}
 
       {/* Profile List */}
+      {controls && controlsState && onControlsChange && onControlsClear && (
+        <ListingControls
+          config={controls}
+          state={controlsState}
+          onChange={onControlsChange}
+          onClear={onControlsClear}
+          resultCount={visibleProfiles.length}
+        />
+      )}
+
+      {showNoData && (
+        <ListingEmptyState variant="no-data" entity="profiles" />
+      )}
+
+      {showNoMatch && (
+        <ListingEmptyState
+          variant="no-matches"
+          entity="profiles"
+          onClear={onControlsClear}
+        />
+      )}
+
       <div className="space-y-3">
-        {profiles.map((profile) => (
+        {visibleProfiles.map((profile) => (
           <div
             key={profile.name}
             className={`relative rounded-xl border border-border bg-card p-4 transition-colors hover:border-border/80 hover:bg-accent/40 ${

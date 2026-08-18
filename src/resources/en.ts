@@ -238,6 +238,8 @@ export const en: Resources = {
   "listing_sort_provider": "Provider",
   "listing_sort_model": "Model",
   "listing_sort_variant": "Variant",
+  "listing_sort_active": "Active",
+  "listing_sort_lastUpdated": "Last updated",
   "listing_filter_agent": "Agent",
   "listing_filter_agent_openai": "OpenAI",
   "listing_filter_agent_anthropic": "Anthropic",
