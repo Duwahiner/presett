@@ -234,6 +234,10 @@ export interface Resources {
   "listing_sort_size": string;
   "listing_sort_fileCount": string;
   "listing_sort_direction_aria": string;
+  "listing_sort_agent": string;
+  "listing_sort_provider": string;
+  "listing_sort_model": string;
+  "listing_sort_variant": string;
   "listing_filter_agent": string;
   "listing_filter_agent_openai": string;
   "listing_filter_agent_anthropic": string;
