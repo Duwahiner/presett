@@ -37,7 +37,7 @@ export async function GET() {
     );
   }
 
-  return NextResponse.json({ profiles: listProfiles(result.value) });
+  return NextResponse.json({ profiles: await listProfiles(result.value, configDir()) });
 }
 
 export async function OPTIONS() {

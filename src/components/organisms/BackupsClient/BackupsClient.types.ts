@@ -1,3 +1,8 @@
+import type {
+  ListingControlsConfig,
+  ListingControlsState,
+} from "@/components/molecules/ListingControls/ListingControls.types";
+
 export interface BackupInfo {
   id: string;
   source: string;
@@ -7,13 +12,23 @@ export interface BackupInfo {
   pinned: boolean;
 }
 
+export interface BackupsControls {
+  config: ListingControlsConfig;
+  state: ListingControlsState;
+}
+
 export interface BackupsClientViewProps {
   backups: BackupInfo[];
+  derivedBackups: BackupInfo[];
   loading: boolean;
   error: string | null;
   syncOutput: string | null;
   syncing: boolean;
   pendingAction: string | null;
+  controls: BackupsControls;
+  resultCount: number;
+  onControlsChange: (next: Partial<ListingControlsState>) => void;
+  onClearControls: () => void;
   onSync: () => void;
   onRestore: (id: string) => void;
   onPin: (id: string) => void;

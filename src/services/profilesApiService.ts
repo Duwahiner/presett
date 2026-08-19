@@ -5,6 +5,8 @@ export interface Profile {
   displayName: string;
   active: boolean;
   modelCount: number;
+  /** ISO-8601 timestamp of the last modification to this profile. */
+  updatedAt: string;
 }
 
 export interface ProfileAssignment {

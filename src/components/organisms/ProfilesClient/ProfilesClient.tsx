@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { listProfiles, createProfile, switchProfile, deleteProfile, updateProfile } from "@/services/profilesApiService";
 import { getCatalog } from "@/services/modelsApiService";
 import { t } from "@/resources/resources";
@@ -8,11 +8,67 @@ import { useNotificationToasts } from "@/hooks/useNotificationToasts";
 import type { ModelCatalog } from "@/components/molecules/ModelPicker/ModelPicker";
 import { ProfilesClientView } from "./ProfilesClient.view";
 import type { Profile } from "./ProfilesClient.types";
+import type { ListingControlsConfig, ListingControlsState } from "@/components/molecules/ListingControls/ListingControls.types";
 
 const SDD_PHASES = [
   "init", "propose", "spec", "design", "tasks",
   "apply", "verify", "archive", "explore", "onboard",
 ];
+
+const profilesControlsConfig: ListingControlsConfig = {
+  search: {
+    placeholder: "listing_search_placeholder",
+    ariaLabel: "listing_search_aria",
+  },
+  sort: {
+    fields: [
+      { value: "name", labelKey: "listing_sort_name" },
+      { value: "active", labelKey: "listing_sort_active" },
+      { value: "updatedAt", labelKey: "listing_sort_lastUpdated" },
+    ],
+    defaultField: "name",
+    defaultDir: "asc",
+  },
+};
+
+export function filterAndSortProfiles(
+  profiles: Profile[],
+  state: ListingControlsState,
+): Profile[] {
+  let result = profiles;
+
+  // Text search — matches name or displayName (case-insensitive)
+  if (state.search) {
+    const q = state.search.toLowerCase();
+    result = result.filter(
+      (p) => p.name.toLowerCase().includes(q) || p.displayName.toLowerCase().includes(q),
+    );
+  }
+
+  // Stable sort by sortField + secondary sort by name for determinism
+  const dir = state.sortDir === "asc" ? 1 : -1;
+  const field = state.sortField;
+  return [...result].sort((a, b) => {
+    let cmp = 0;
+    switch (field) {
+      case "name": cmp = a.name.localeCompare(b.name); break;
+      case "active": {
+        // asc = inactive first (false < true), desc = active first
+        const activeCmp = Number(a.active) - Number(b.active);
+        cmp = state.sortDir === "asc" ? activeCmp : -activeCmp;
+        break;
+      }
+      case "updatedAt": {
+        cmp = a.updatedAt.localeCompare(b.updatedAt);
+        break;
+      }
+      default: cmp = 0;
+    }
+    if (field !== "active" && cmp !== 0) return cmp * dir;
+    if (field === "active" && cmp !== 0) return cmp;
+    return a.name.localeCompare(b.name);
+  });
+}
 
 export function ProfilesClient() {
   const [profiles, setProfiles] = useState<Profile[]>([]);
@@ -29,6 +85,32 @@ export function ProfilesClient() {
     Record<string, { provider: string; model: string; variant: string }>
   >({});
   const { onError, onSuccess } = useNotificationToasts();
+
+  // Filter/sort state — mount-local, cleared on unmount
+  const [controlsState, setControlsState] = useState<ListingControlsState>({
+    search: "",
+    activeFilters: {},
+    sortField: profilesControlsConfig.sort.defaultField,
+    sortDir: profilesControlsConfig.sort.defaultDir,
+  });
+
+  const derivedProfiles = useMemo(
+    () => filterAndSortProfiles(profiles, controlsState),
+    [profiles, controlsState],
+  );
+
+  function handleControlsChange(next: Partial<ListingControlsState>) {
+    setControlsState((prev) => ({ ...prev, ...next }));
+  }
+
+  function handleControlsClear() {
+    setControlsState({
+      search: "",
+      activeFilters: {},
+      sortField: profilesControlsConfig.sort.defaultField,
+      sortDir: profilesControlsConfig.sort.defaultDir,
+    });
+  }
 
   useEffect(() => {
     async function load() {
@@ -158,6 +240,11 @@ export function ProfilesClient() {
       onEditAssignmentChange={(key, assignment) =>
         setEditAssignments((prev) => ({ ...prev, [key]: assignment }))
       }
+      derivedProfiles={derivedProfiles}
+      controls={profilesControlsConfig}
+      controlsState={controlsState}
+      onControlsChange={handleControlsChange}
+      onControlsClear={handleControlsClear}
     />
   );
 }
