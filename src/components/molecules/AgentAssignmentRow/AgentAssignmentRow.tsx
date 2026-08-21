@@ -63,15 +63,15 @@ export function AgentAssignmentRow({
               <span>{suffix}</span>
             </h4>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex border border-border bg-muted px-1.5 font-mono text-[10px] font-bold uppercase text-muted-foreground">
+              <span className="inline-flex border-2 border-border px-1.5 font-mono text-[10px] font-bold uppercase text-foreground light:border-black light:text-black">
                 {provider}
               </span>
               <span className="text-muted-foreground/50">/</span>
-              <span className="inline-flex border border-border bg-muted px-1.5 font-mono text-[10px] font-bold uppercase text-muted-foreground">
+              <span className="inline-flex border-2 border-border px-1.5 font-mono text-[10px] font-bold uppercase text-foreground light:border-black light:text-black">
                 {model || t("agentAssignment_unset")}
               </span>
               <span className="text-muted-foreground/50">/</span>
-              <span className="inline-flex border border-border bg-muted px-1.5 font-mono text-[10px] font-bold uppercase text-muted-foreground">
+              <span className="inline-flex border-2 border-border px-1.5 font-mono text-[10px] font-bold uppercase text-foreground light:border-black light:text-black">
                 {variant || t("agentAssignment_unset")}
               </span>
             </div>
