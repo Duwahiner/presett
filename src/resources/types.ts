@@ -7,6 +7,7 @@ export interface Resources {
   "nav_backups": string;
   "nav_diagnostics": string;
   "nav_config": string;
+  "nav_settings": string;
   "footer_brand": string;
   "topbar_search_placeholder": string;
   "topbar_search_aria": string;
@@ -40,6 +41,7 @@ export interface Resources {
   "dashboard_stat_profiles_label": string;
   "dashboard_stat_backups_label": string;
   "dashboard_stat_system_label": string;
+  "dashboard_gentle_ai_version": string;
   "dashboard_quick_access_title": string;
   "dashboard_agents_title": string;
   "dashboard_agents_manage": string;
@@ -78,6 +80,8 @@ export interface Resources {
   "profiles_create_placeholder": string;
   "profiles_create_required": string;
   "profiles_create_action": string;
+  "profiles_name_required": string;
+  "profiles_save_profile": string;
   "profiles_orchestrator_assignment": string;
   "profiles_assigned": string;
   "profiles_saveAssignment": string;

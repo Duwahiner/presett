@@ -6,7 +6,7 @@ export function Stat({ label, value, icon: Icon, trend, className }: StatProps) 
   return (
     <div
       className={cn(
-        "relative overflow-hidden rounded-xl border border-border bg-card p-6 text-card-foreground shadow-sm transition-colors",
+        "relative overflow-hidden border-2 border-border bg-card p-4 text-card-foreground transition-colors",
         className,
       )}
     >
@@ -33,7 +33,7 @@ export function Stat({ label, value, icon: Icon, trend, className }: StatProps) 
             </div>
           )}
         </div>
-        <div className="rounded-lg bg-primary/10 p-2.5">
+        <div className="bg-primary/15 p-2">
           <Icon className="h-5 w-5 text-primary" />
         </div>
       </div>

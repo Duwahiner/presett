@@ -16,19 +16,19 @@ beforeEach(() => {
 describe("Integration — severity display + lifecycle + panel", () => {
   it("error notification shows in panel", () => {
     svc.push({ severity: "error", title: "Sync Failed", message: "Backup error." });
-    render(<NotificationPanel open={true} onClose={() => {}} />, { wrapper });
+    render(<NotificationPanel />, { wrapper });
     expect(screen.getByText("Sync Failed")).not.toBeNull();
   });
 
   it("update notification shows version in panel", () => {
     svc.push({ severity: "update", title: "Update available", message: "Gentle AI v2.1.0 is ready to install." });
-    render(<NotificationPanel open={true} onClose={() => {}} />, { wrapper });
+    render(<NotificationPanel />, { wrapper });
     expect(screen.getByText("Gentle AI v2.1.0 is ready to install.")).not.toBeNull();
   });
 
   it("info notification shows spinner when inProgress", () => {
     svc.push({ severity: "info", title: "Syncing", message: "Please wait…", inProgress: true });
-    render(<NotificationPanel open={true} onClose={() => {}} />, { wrapper });
+    render(<NotificationPanel />, { wrapper });
     expect(screen.getByRole("status")).not.toBeNull();
   });
 
@@ -59,28 +59,16 @@ describe("Integration — severity display + lifecycle + panel", () => {
     expect(screen.getByText("Sync complete.")).not.toBeNull();
   });
 
-  it("panel: opens, marks read, closes on Escape", () => {
+  it("panel: displays notifications when rendered", () => {
     svc.push({ severity: "error", title: "Error", message: "msg" });
-    expect(svc.getUnreadCount()).toBe(1);
-    function Harness() {
-      const [open, setOpen] = useState(false);
-      return (
-        <div>
-          <button data-testid="open" onClick={() => setOpen(true)}>Open</button>
-          <NotificationPanel open={open} onClose={() => setOpen(false)} />
-        </div>
-      );
-    }
-    render(<Harness />, { wrapper });
-    act(() => { fireEvent.click(screen.getByTestId("open")); });
+    render(<NotificationPanel />, { wrapper });
     expect(screen.getByText("Error")).not.toBeNull();
-    expect(svc.getUnreadCount()).toBe(0);
-    act(() => { fireEvent.keyDown(document, { key: "Escape" }); });
-    expect(screen.queryByText("Error")).toBeNull();
+    // Note: markAllRead is now called by the parent (DashboardLayout) when the Popover opens,
+    // not by the NotificationPanel itself
   });
 
   it("panel: empty state when no notifications", () => {
-    render(<NotificationPanel open={true} onClose={() => {}} />, { wrapper });
+    render(<NotificationPanel />, { wrapper });
     expect(screen.getByText("No notifications yet.")).not.toBeNull();
   });
 
@@ -90,7 +78,7 @@ describe("Integration — severity display + lifecycle + panel", () => {
       const { dismiss, notifications } = useNotifications();
       return (
         <div>
-          <NotificationPanel open={true} onClose={() => {}} />
+          <NotificationPanel />
           <button data-testid="dismiss" onClick={() => { if (notifications.length > 0) dismiss(notifications[0].id); }}>Dismiss</button>
         </div>
       );

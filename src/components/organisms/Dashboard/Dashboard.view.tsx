@@ -43,17 +43,17 @@ function AgentTile({ agent }: { agent: DashboardAgent }) {
   const isConfigured = Boolean(agent.provider && agent.model && agent.variant);
 
   return (
-    <div className="group flex flex-col rounded-2xl border border-border bg-card p-4 transition-shadow hover:shadow-md">
+    <div className="group flex flex-col border-2 border-border bg-card p-4 transition-shadow hover:shadow-[4px_4px_0_0_var(--border)]">
       <div className="flex items-start justify-between">
-        <div className="flex size-10 items-center justify-center rounded-xl bg-muted text-sm font-semibold text-foreground">
+        <div className="flex size-10 items-center justify-center bg-muted font-mono text-sm font-bold text-foreground">
           {agent.agentKey.slice(0, 2).toUpperCase()}
         </div>
         <span
           className={cn(
-            "flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[11px] font-medium",
+            "flex items-center gap-1.5 px-2.5 py-1 font-mono text-[11px] font-bold uppercase",
             isConfigured
-              ? "bg-success/10 text-success"
-              : "bg-warning/15 text-warning-foreground",
+              ? "border border-accent/50 bg-accent/15 text-accent-foreground"
+              : "border border-warning/50 bg-warning/15 text-warning-foreground",
           )}
         >
           {isConfigured ? (
@@ -90,11 +90,11 @@ function AgentTile({ agent }: { agent: DashboardAgent }) {
 function AddAgentTile() {
   return (
     <Link href="/models" className="block">
-      <div className="flex min-h-[148px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
-        <span className="flex size-10 items-center justify-center rounded-xl bg-muted">
+      <div className="flex min-h-[148px] flex-col items-center justify-center gap-2 border-2 border-dashed border-border text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground">
+        <span className="flex size-10 items-center justify-center bg-muted">
           <Plus className="size-5" />
         </span>
-        <span className="text-sm font-medium">{t("dashboard_agent_add")}</span>
+        <span className="font-mono text-xs font-bold uppercase">{t("dashboard_agent_add")}</span>
       </div>
     </Link>
   );
@@ -112,13 +112,13 @@ function QuickAction({ icon: Icon, title, desc, href }: QuickActionProps) {
     <Link href={href} className="block">
       <Button
         variant="ghost"
-        className="flex h-auto w-full items-center justify-start gap-3 rounded-xl border border-transparent p-2.5 text-left font-normal hover:border-border hover:bg-muted"
+        className="flex h-auto w-full items-center justify-start gap-3 border-2 border-transparent p-2.5 text-left font-normal hover:border-border hover:bg-muted"
       >
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-muted text-foreground">
+        <span className="flex size-9 shrink-0 items-center justify-center bg-muted text-foreground">
           <Icon className="size-[18px]" />
         </span>
         <span className="min-w-0 flex-1">
-          <span className="block text-sm font-medium text-foreground">{title}</span>
+          <span className="block font-mono text-xs font-bold uppercase text-foreground">{title}</span>
           <span className="block truncate text-xs text-muted-foreground">{desc}</span>
         </span>
         <ArrowRight className="size-4 text-muted-foreground" />
@@ -132,7 +132,7 @@ export function DashboardView({ className, stats, agents }: DashboardProps) {
     <div className={cn("flex h-full flex-col gap-6 overflow-y-auto p-5 sm:p-7", className)}>
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div>
-          <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+          <p className="font-mono text-xs font-bold uppercase text-muted-foreground">
             {t("workspace_overview")}
           </p>
           <h1 className="mt-1 text-3xl font-semibold tracking-tight text-foreground text-balance">
@@ -177,7 +177,7 @@ export function DashboardView({ className, stats, agents }: DashboardProps) {
       <div className="grid flex-1 grid-cols-1 gap-6 xl:grid-cols-3">
         <section className="flex flex-col xl:col-span-2">
           <div className="mb-3 flex items-center justify-between">
-            <h2 className="text-base font-medium text-foreground">{t("dashboard_agents_title")}</h2>
+            <h2 className="font-mono text-sm font-bold uppercase text-foreground">{t("dashboard_agents_title")}</h2>
             <Button
               variant="ghost"
               size="sm"
@@ -197,7 +197,7 @@ export function DashboardView({ className, stats, agents }: DashboardProps) {
         </section>
 
         <section className="flex flex-col">
-          <h2 className="mb-3 text-base font-medium text-foreground">{t("dashboard_quick_access_title")}</h2>
+          <h2 className="mb-3 font-mono text-sm font-bold uppercase text-foreground">{t("dashboard_quick_access_title")}</h2>
           <Card className="flex flex-col gap-2.5 p-3">
             <QuickAction
               icon={Cpu}
@@ -218,18 +218,25 @@ export function DashboardView({ className, stats, agents }: DashboardProps) {
               href="/backups"
             />
 
-            <div className="mt-4 rounded-xl bg-accent p-4">
-              <p className="text-sm font-medium text-accent-foreground">{t("tdd_strict_mode_title")}</p>
+            <div className="mt-4 border-2 border-accent/50 bg-accent/15 p-4">
+              <p className="font-mono text-xs font-bold uppercase text-accent-foreground">{t("tdd_strict_mode_title")}</p>
               <p className="mt-1 text-xs text-accent-foreground/80 text-pretty">
                 {t("tdd_strict_mode_desc")}
               </p>
-              <div className="mt-3 flex items-center gap-2 text-xs font-medium text-accent-foreground">
-                <span className="flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
+              <div className="mt-3 flex items-center gap-2 font-mono text-xs font-bold uppercase text-accent-foreground">
+                <span className="flex size-4 items-center justify-center bg-primary text-primary-foreground">
                   <Check className="size-3" />
                 </span>
                 {t("tdd_strict_mode_enabled")}
               </div>
             </div>
+
+            {stats.gentleAiVersion && (
+              <div className="mt-4 border-2 border-border bg-card p-4">
+                <p className="font-mono text-xs font-bold uppercase text-muted-foreground">{t("dashboard_gentle_ai_version")}</p>
+                <p className="mt-1 font-mono text-sm font-bold text-foreground">{stats.gentleAiVersion}</p>
+              </div>
+            )}
           </Card>
         </section>
       </div>

@@ -86,4 +86,18 @@ describe("Dashboard", () => {
     expect(screen.queryByText(t("dashboard_stat_profiles_label"))).not.toBeNull();
     expect(screen.queryByText(t("dashboard_stat_backups_label"))).not.toBeNull();
   });
+
+  it("renders Gentle-AI version card when version is provided", () => {
+    const statsWithVersion = { ...defaultStats, gentleAiVersion: "2.4.0" };
+    render(<Dashboard stats={statsWithVersion} agents={defaultAgents} />);
+
+    expect(screen.queryByText("2.4.0")).not.toBeNull();
+    expect(screen.queryByText(t("dashboard_gentle_ai_version"))).not.toBeNull();
+  });
+
+  it("does not render Gentle-AI version card when version is absent", () => {
+    render(<Dashboard stats={defaultStats} agents={defaultAgents} />);
+
+    expect(screen.queryByText(t("dashboard_gentle_ai_version"))).toBeNull();
+  });
 });

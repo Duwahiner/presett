@@ -3,6 +3,7 @@ export interface DashboardStats {
   profileCount: number;
   backupCount: number;
   lastSync: string;
+  gentleAiVersion?: string;
 }
 
 export interface DashboardAgent {

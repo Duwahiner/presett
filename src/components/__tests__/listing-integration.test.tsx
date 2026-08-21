@@ -60,13 +60,13 @@ const backupsDefaults: BackupsClientViewProps = {
   pendingAction: null, controls: { config: backupsConfig, state: defaultBackupState },
   resultCount: 0, onControlsChange: () => {}, onClearControls: () => {},
   onSync: () => {}, onRestore: () => {}, onPin: () => {}, onUnpin: () => {}, onDelete: () => {},
-  deleteConfirmId: null, restoreConfirmId: null,
-  onDeleteConfirm: () => {}, onDeleteCancel: () => {}, onRestoreConfirm: () => {}, onRestoreCancel: () => {},
+  deleteConfirmId: null,
+  onDeleteConfirm: () => {}, onDeleteCancel: () => {},
 };
 
 const profilesDefaults: ProfilesClientViewProps = {
   profiles: [], catalog: {}, loading: false, error: null, pendingAction: null,
-  newName: "", newAssignments: {}, onNewNameChange: () => {}, onAssignmentChange: () => {},
+  newAssignments: {}, onAssignmentChange: () => {},
   onCreate: () => {}, onSwitch: () => {}, onDelete: () => {},
   editingProfile: null, editAssignments: {},
   onEditStart: () => {}, onEditSave: () => {}, onEditCancel: () => {}, onEditAssignmentChange: () => {},

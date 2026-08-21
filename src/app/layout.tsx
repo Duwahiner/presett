@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "@/lib/theme-provider";
 import { DashboardLayout } from "@/components/organisms/DashboardLayout/DashboardLayout";
+import { IS_VISUAL_AUDIT_MODE } from "@/lib/visual-audit";
+import { AuditModeProvider } from "@/lib/visual-audit/audit-context";
 import "./globals.css";
 
 const inter = Inter({
@@ -27,11 +29,20 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const auditClass = IS_VISUAL_AUDIT_MODE ? "dark" : "";
+  const existingClasses = `${inter.variable} ${jetbrainsMono.variable}`;
+
   return (
-    <html lang="en" className={`${inter.variable} ${jetbrainsMono.variable}`} suppressHydrationWarning>
+    <html
+      lang="en"
+      className={`${existingClasses} ${auditClass}`.trim()}
+      suppressHydrationWarning
+    >
       <body className="font-sans antialiased">
-        <ThemeProvider>
-          <DashboardLayout>{children}</DashboardLayout>
+        <ThemeProvider forcedTheme={IS_VISUAL_AUDIT_MODE ? "dark" : undefined}>
+          <AuditModeProvider isAuditMode={IS_VISUAL_AUDIT_MODE}>
+            <DashboardLayout>{children}</DashboardLayout>
+          </AuditModeProvider>
         </ThemeProvider>
       </body>
     </html>

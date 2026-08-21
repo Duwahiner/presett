@@ -11,6 +11,8 @@ import type { Profile } from "@/services/profilesApiService";
 import { ModelsClientView } from "./ModelsClient.view";
 import type { Assignment } from "./ModelsClient.types";
 import type { ListingControlsConfig, ListingControlsState } from "@/components/molecules/ListingControls/ListingControls.types";
+import { useAuditMode } from "@/lib/visual-audit/audit-context";
+import { AUDIT_FIXTURE_CONFIG, AUDIT_FIXTURE_CATALOG, AUDIT_FIXTURE_PROFILES, AUDIT_FIXTURE_MODELS_ASSIGNMENTS } from "@/lib/visual-audit/fixtures";
 
 const modelsControlsConfig: ListingControlsConfig = {
   filters: [
@@ -100,6 +102,7 @@ export function filterAndSortModels(
 }
 
 export function ModelsClient() {
+  const isAuditMode = useAuditMode();
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [originalAssignments, setOriginalAssignments] = useState<Assignment[]>([]);
   const [catalog, setCatalog] = useState<ModelCatalog>({});
@@ -140,6 +143,17 @@ export function ModelsClient() {
   }
 
   useEffect(() => {
+    if (isAuditMode) {
+      // Short-circuit to fixtures
+      setAssignments(AUDIT_FIXTURE_MODELS_ASSIGNMENTS);
+      setOriginalAssignments(AUDIT_FIXTURE_MODELS_ASSIGNMENTS);
+      setCatalog(AUDIT_FIXTURE_CATALOG);
+      setProfiles(AUDIT_FIXTURE_PROFILES.profiles);
+      setActiveProfile(AUDIT_FIXTURE_CONFIG.defaultAgent);
+      setLoading(false);
+      return;
+    }
+
     let isMounted = true;
 
     async function loadInitialData() {
@@ -173,12 +187,13 @@ export function ModelsClient() {
     return () => {
       isMounted = false;
     };
-  }, []);
+  }, [isAuditMode]);
 
   async function handleSave(
     agentKey: string,
     assignment: { provider: string; model: string; variant: string },
   ) {
+    if (isAuditMode) return; // Deny writes in audit mode
     setSaving(agentKey);
     try {
       await saveAssignment({ agentKey, ...assignment });
@@ -194,6 +209,7 @@ export function ModelsClient() {
   }
 
   async function handleSwitchProfile(name: string) {
+    if (isAuditMode) return; // Deny writes in audit mode
     setSwitchingProfile(true);
     try {
       await switchProfile(name);
@@ -211,6 +227,7 @@ export function ModelsClient() {
   }
 
   async function handleSync() {
+    if (isAuditMode) return; // Deny writes in audit mode
     setSyncing(true);
     try {
       await runSync();
@@ -223,6 +240,7 @@ export function ModelsClient() {
   }
 
   async function handleReset() {
+    if (isAuditMode) return; // Deny writes in audit mode
     setResetting(true);
     try {
       // Restore each assignment to its original value

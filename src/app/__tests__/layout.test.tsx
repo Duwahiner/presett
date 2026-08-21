@@ -18,6 +18,28 @@ vi.mock("@/lib/theme-provider", () => ({
   ),
 }));
 
+vi.mock("@/lib/visual-audit", () => ({
+  IS_VISUAL_AUDIT_MODE: false,
+}));
+
+vi.mock("@/lib/visual-audit/audit-context", () => ({
+  AuditModeProvider: ({ children }: { children: React.ReactNode }) => (
+    <div data-testid="audit-mode-provider">{children}</div>
+  ),
+  useAuditMode: () => false,
+  AuditNotificationProvider: ({ children }: { children: React.ReactNode }) => (
+    <div>{children}</div>
+  ),
+  useAuditNotifications: () => ({
+    notifications: [],
+    unreadCount: 0,
+    push: () => "noop",
+    resolve: () => {},
+    dismiss: () => {},
+    markAllRead: () => {},
+  }),
+}));
+
 const cleanupCallbacks: Array<() => void> = [];
 
 function renderRootLayout(children: React.ReactNode) {

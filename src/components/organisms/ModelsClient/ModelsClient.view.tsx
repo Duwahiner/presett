@@ -39,7 +39,7 @@ export function ModelsClientView({
 
   if (loading) {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-8 text-muted-foreground shadow-sm">
+      <div className="flex items-center gap-3 border-2 border-border bg-card p-8 text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
         <span>{t("models_loading")}</span>
       </div>
@@ -54,8 +54,8 @@ export function ModelsClientView({
   return (
     <div className="space-y-4">
       {/* Profile Selector */}
-      <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+      <div className="flex items-center gap-3 border-2 border-border bg-card p-4">
+        <div className="flex h-8 w-8 items-center justify-center bg-primary/15">
           <UserCircle className="h-4 w-4 text-primary" />
         </div>
         <div className="flex-1">
@@ -68,7 +68,7 @@ export function ModelsClientView({
           <Select.Trigger
             aria-label={t("models_activeProfile")}
             className={cn(
-              "flex h-9 w-full max-w-[200px] items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
+              "flex h-9 w-full max-w-[200px] items-center justify-between border border-input bg-transparent px-3 py-1 text-sm transition-colors",
               "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
               "disabled:cursor-not-allowed disabled:opacity-50",
             )}
@@ -80,7 +80,7 @@ export function ModelsClientView({
             <Select.Positioner className="z-50">
               <Select.Popup
                 className={cn(
-                  "max-h-60 min-w-[var(--anchor-width)] overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md",
+                  "max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)]",
                   "focus-visible:outline-none",
                 )}
               >
@@ -89,7 +89,7 @@ export function ModelsClientView({
                     key={p.name}
                     value={p.name}
                     className={cn(
-                      "relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none",
+                      "relative flex w-full cursor-pointer select-none items-center px-2 py-1.5 text-sm outline-none",
                       "focus:bg-accent focus:text-accent-foreground",
                     )}
                   >
@@ -131,11 +131,11 @@ export function ModelsClientView({
         hasControls ? (
           <ListingEmptyState variant="no-data" entity="models" />
         ) : (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card/40 p-12 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-              <AlertCircle className="h-7 w-7 text-primary" aria-hidden="true" />
+          <div className="flex flex-col items-center justify-center border-2 border-border bg-card p-8 text-center">
+            <div className="flex h-10 w-10 items-center justify-center bg-primary/15">
+              <AlertCircle className="h-5 w-5 text-primary" aria-hidden="true" />
             </div>
-            <h4 className="mt-4 font-semibold text-card-foreground">{t("models_emptyAssignmentsTitle")}</h4>
+            <h4 className="mt-4 font-mono text-sm font-bold uppercase text-card-foreground">{t("models_emptyAssignmentsTitle")}</h4>
             <p className="mt-1 max-w-sm text-sm text-muted-foreground">
               {t("models_emptyAssignmentsDesc")}
             </p>

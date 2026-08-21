@@ -1,5 +1,4 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { useState } from "react";
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ProfilesClientView } from "../ProfilesClient.view";
@@ -48,9 +47,7 @@ describe("ProfilesClientView", () => {
     loading: false,
     error: null,
     pendingAction: null,
-    newName: "",
     newAssignments: {},
-    onNewNameChange: vi.fn(),
     onAssignmentChange: vi.fn(),
     onCreate: vi.fn(),
     onSwitch: vi.fn(),
@@ -63,20 +60,6 @@ describe("ProfilesClientView", () => {
     onEditAssignmentChange: vi.fn(),
   };
 
-  function StatefulView(
-    props: Partial<Omit<ProfilesClientViewProps, "newName" | "onNewNameChange">>,
-  ) {
-    const [newName, setNewName] = useState("");
-    return (
-      <ProfilesClientView
-        {...defaultProps}
-        {...props}
-        newName={newName}
-        onNewNameChange={setNewName}
-      />
-    );
-  }
-
   it("renders the create profile button using Button primitive", () => {
     render(<ProfilesClientView {...defaultProps} />);
 
@@ -86,7 +69,7 @@ describe("ProfilesClientView", () => {
   });
 
   it("shows form and input when clicking create button", async () => {
-    render(<StatefulView />);
+    render(<ProfilesClientView {...defaultProps} />);
 
     await userEvent.click(screen.getByText("Create Profile"));
 
@@ -94,7 +77,7 @@ describe("ProfilesClientView", () => {
   });
 
   it("updates the input value when typing", async () => {
-    render(<StatefulView />);
+    render(<ProfilesClientView {...defaultProps} />);
 
     await userEvent.click(screen.getByText("Create Profile"));
     await userEvent.type(screen.getByPlaceholderText("Profile name"), "work");
@@ -104,13 +87,25 @@ describe("ProfilesClientView", () => {
   });
 
   it("describes the profile name rules and disabled create state", async () => {
-    render(<StatefulView />);
+    render(<ProfilesClientView {...defaultProps} />);
 
     await userEvent.click(screen.getByText("Create Profile"));
 
-    expect(screen.getByText(/use lowercase letters/i)).not.toBeNull();
-    expect(screen.getByText(/add a valid profile name/i)).not.toBeNull();
-    expect(screen.getByRole("button", { name: "Create profile" }).hasAttribute("disabled")).toBe(true);
+    expect(screen.getByText("Profile name")).not.toBeNull();
+    expect(screen.getByRole("button", { name: "SAVE PROFILE" }).hasAttribute("disabled")).toBe(true);
+    expect(screen.getByRole("button", { name: "CANCEL" })).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Close" })).not.toBeNull();
+  });
+
+  it("passes the submitted profile name directly to the creation handler", async () => {
+    const onCreate = vi.fn();
+    render(<ProfilesClientView {...defaultProps} onCreate={onCreate} />);
+
+    await userEvent.click(screen.getByText("Create Profile"));
+    await userEvent.type(screen.getByPlaceholderText("Profile name"), "  work  ");
+    await userEvent.click(screen.getByRole("button", { name: "SAVE PROFILE" }));
+
+    expect(onCreate).toHaveBeenCalledWith("work");
   });
 
   describe("filtering", () => {

@@ -69,7 +69,8 @@ describe("DashboardLayout", () => {
     expect(screen.queryByRole("link", { name: "Models" })).not.toBeNull();
     expect(screen.queryByRole("link", { name: "Profiles" })).not.toBeNull();
     expect(screen.queryByRole("link", { name: "Backups" })).not.toBeNull();
-    expect(screen.queryByRole("link", { name: "Diagnostics" })).not.toBeNull();
+    expect(screen.queryByRole("link", { name: "Settings" })).not.toBeNull();
+    expect(screen.queryByRole("link", { name: "Diagnostics" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Search" })).toBeNull();
     expect(screen.queryByText("Dashboard content")).not.toBeNull();
   });
@@ -116,7 +117,6 @@ describe("DashboardLayout", () => {
     expect(searchbox.getAttribute("placeholder")).toBe("Search PreSett…");
     expect(searchbox.className).toContain("bg-transparent");
     expect(searchbox.className).toContain("shadow-none");
-    expect(searchbox.className).toContain("rounded-[.4rem]");
     expect(
       screen.getByRole("button", { name: /toggle theme/i }),
     ).not.toBeNull();
@@ -134,16 +134,16 @@ describe("DashboardLayout", () => {
     expect(modelsLink.getAttribute("aria-current")).toBe("page");
   });
 
-  it("highlights the diagnostics route in the sidebar", () => {
-    mockPathname.mockReturnValue("/diagnostics");
+  it("highlights the settings route in the sidebar", () => {
+    mockPathname.mockReturnValue("/settings");
     render(
       <DashboardLayout>
         <main>Child</main>
       </DashboardLayout>,
     );
 
-    const diagnosticsLink = screen.getByRole("link", { name: "Diagnostics" });
-    expect(diagnosticsLink.getAttribute("aria-current")).toBe("page");
+    const settingsLink = screen.getByRole("link", { name: "Settings" });
+    expect(settingsLink.getAttribute("aria-current")).toBe("page");
   });
 
   it("renders Spanish navigation when locale is es", () => {
@@ -249,7 +249,7 @@ describe("DashboardLayout", () => {
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
-  it("bell click opens notification panel and close button dismisses it", async () => {
+  it("bell click opens notification panel and outside click dismisses it", async () => {
     vi.mocked(checkDiagnosticsUpdates).mockResolvedValue({ settings: { frequencyMinutes: 60 }, status: { phase: "idle" }, notice: null });
     const user = userEvent.setup();
     render(<DashboardLayout><main>Child</main></DashboardLayout>);
@@ -258,16 +258,16 @@ describe("DashboardLayout", () => {
     const bellButton = screen.getByRole("button", { name: /notifications/i });
     expect(bellButton).not.toBeNull();
 
-    // Click bell → panel opens with role=dialog
+    // Click bell → panel opens (Radix Popover)
     await user.click(bellButton);
-    const dialog = screen.getByRole("dialog", { name: /notifications/i });
-    expect(dialog).not.toBeNull();
     // Panel shows empty state initially
     expect(screen.getByText("No notifications yet.")).not.toBeNull();
 
-    // Close button dismisses the panel
-    await user.click(screen.getByRole("button", { name: /close/i }));
-    expect(screen.queryByRole("dialog")).toBeNull();
+    // Click outside dismisses the panel (Radix handles this)
+    await user.click(document.body);
+    await waitFor(() => {
+      expect(screen.queryByText("No notifications yet.")).toBeNull();
+    });
   });
 
   it("bell shows unread badge and panel marks notifications as read", async () => {
