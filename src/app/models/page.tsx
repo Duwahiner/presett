@@ -31,8 +31,8 @@ export default function ModelsPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6 scrollbar-brutal">
-        <div className="border-2 border-border bg-card p-6 shadow-[4px_4px_0_0_var(--border)]">
+      <div className="flex-1 overflow-hidden p-6 scrollbar-brutal">
+        <div className="h-full flex flex-col border-2 border-border bg-card p-6 shadow-[4px_4px_0_0_var(--border)]">
           <h2 className="mb-4 font-mono text-sm font-bold uppercase text-card-foreground">
             {t("models_cardTitle")}
           </h2>

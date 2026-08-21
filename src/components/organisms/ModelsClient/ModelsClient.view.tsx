@@ -46,7 +46,7 @@ export function ModelsClientView({
   const displayAssignments = assignments;
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col h-full min-h-0 space-y-4">
       {/* Profile Selector */}
       <div className="flex items-center gap-3 border-2 border-border bg-card p-4">
         <div className="flex h-8 w-8 items-center justify-center bg-primary/15">
@@ -123,7 +123,7 @@ export function ModelsClientView({
           </p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="flex-1 min-h-0 overflow-y-auto scrollbar-brutal space-y-3 pr-3">
           {displayAssignments.map((assignment) => (
             <AgentAssignmentRow
               key={assignment.agentKey}
