@@ -1,6 +1,6 @@
 export default function DashboardLoading() {
   return (
-    <div className="flex h-full flex-col gap-6 overflow-y-auto p-5 sm:p-7">
+    <div className="flex h-full flex-col gap-6 overflow-y-auto p-5 sm:p-7 scrollbar-brutal">
       {/* Header skeleton */}
       <div className="flex flex-wrap items-end justify-between gap-4">
         <div className="space-y-2">

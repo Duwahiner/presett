@@ -79,10 +79,10 @@ export function ModelsClientView({
           <Select.Portal>
             <Select.Positioner className="z-50">
               <Select.Popup
-                className={cn(
-                  "max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)]",
-                  "focus-visible:outline-none",
-                )}
+               className={cn(
+                   "max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal",
+                   "focus-visible:outline-none",
+                 )}
               >
                 {profiles.map((p) => (
                   <Select.Item

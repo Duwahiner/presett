@@ -11,4 +11,5 @@ export interface StatProps {
   icon: ComponentType<{ className?: string }>;
   trend?: StatTrend;
   className?: string;
+  markerClassName?: string;
 }

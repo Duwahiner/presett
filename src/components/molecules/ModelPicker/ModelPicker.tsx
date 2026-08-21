@@ -59,10 +59,10 @@ function PickerField({
         <Select.Portal>
           <Select.Positioner className="z-50">
             <Select.Popup
-              className={cn(
-                "max-h-60 min-w-[var(--anchor-width)] overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md",
-                "focus-visible:outline-none",
-              )}
+               className={cn(
+                 "max-h-60 min-w-[var(--anchor-width)] overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md scrollbar-brutal",
+                 "focus-visible:outline-none",
+               )}
             >
               {options.map((option) => (
                 <Select.Item

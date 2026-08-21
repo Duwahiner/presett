@@ -50,7 +50,7 @@ function OrchestratorPicker({
             </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
-                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)]">
+                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
                   {providers.map((p) => (
                     <Select.Item key={p} value={p} className="relative flex w-full cursor-pointer select-none items-center px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                       <Select.ItemText>{p}</Select.ItemText>
@@ -83,7 +83,7 @@ function OrchestratorPicker({
             </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
-                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)]">
+                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
                   {models.map((m) => (
                     <Select.Item key={m} value={m} className="relative flex w-full cursor-pointer select-none items-center px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                       <Select.ItemText>{m}</Select.ItemText>
@@ -116,7 +116,7 @@ function OrchestratorPicker({
             </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
-                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)]">
+                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
                   {variants.map((v) => (
                     <Select.Item key={v} value={v} className="relative flex w-full cursor-pointer select-none items-center px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                       <Select.ItemText>{v}</Select.ItemText>

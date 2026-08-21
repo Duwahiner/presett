@@ -19,7 +19,7 @@ export function NotificationPanel() {
         role="log"
         aria-live="polite"
         aria-label={t("notif_panel_title")}
-        className="max-h-[400px] overflow-y-auto p-3"
+        className="max-h-[400px] overflow-y-auto p-3 scrollbar-brutal"
       >
         {notifications.length === 0 ? (
           <p className="py-8 text-center text-sm text-muted-foreground">

@@ -33,6 +33,7 @@ describe("globals.css v2 token contract", () => {
   it("defines dark mode background as #000000 (pure black)", () => {
     // Dark mode tokens are in :root block (default dark)
     expect(css).toMatch(/--background:\s*#000000/);
+    expect(css).toMatch(/\*::-webkit-scrollbar\s*\{\s*width:\s*3px/);
   });
 
   it("defines dark mode foreground as #ffffff (pure white)", () => {
@@ -69,5 +70,9 @@ describe("globals.css v2 token contract", () => {
 
   it("defines light mode sidebar as #ffffff (white)", () => {
     expect(css).toMatch(/\.light[\s\S]*--sidebar:\s*#ffffff/);
+  });
+
+  it("uses a black scrollbar thumb in light mode", () => {
+    expect(css).toMatch(/\.light[\s\S]*--scrollbar-thumb:\s*#000000/);
   });
 });

@@ -31,7 +31,7 @@ export default function BackupsPage() {
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-6 scrollbar-brutal">
         <div className="border-2 border-border bg-card p-6 shadow-[4px_4px_0_0_var(--border)]">
           <h2 className="mb-4 font-mono text-sm font-bold uppercase text-card-foreground">
             {t("backups_cardTitle")}

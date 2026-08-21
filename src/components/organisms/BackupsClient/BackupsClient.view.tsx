@@ -76,7 +76,7 @@ export function BackupsClientView({
           <pre
             role="status"
             className={cn(
-              "mt-4 max-h-48 overflow-auto border-2 border-border bg-muted p-4 font-mono text-xs text-muted-foreground",
+              "mt-4 max-h-48 overflow-auto border-2 border-border bg-muted p-4 font-mono text-xs text-muted-foreground scrollbar-brutal",
             )}
           >
             {syncOutput}

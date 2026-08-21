@@ -30,6 +30,7 @@ function computeAuditLastSync(): string {
 }
 
 export const AUDIT_FIXTURE_LAST_SYNC = computeAuditLastSync();
+export const AUDIT_FIXTURE_GENTLE_AI_VERSION = "v0.0.0";
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
 export const AUDIT_FIXTURE_CONFIG: { assignments: DashboardAgent[]; defaultAgent: string } = {

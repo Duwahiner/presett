@@ -52,7 +52,7 @@ function ConfigSelect({
           <Select.Value placeholder={label} />
           <ChevronDown className="size-4 text-muted-foreground" aria-hidden="true" />
         </Select.Trigger>
-        <Select.Portal><Select.Positioner className="z-50"><Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)]">
+        <Select.Portal><Select.Positioner className="z-50"><Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
           {options.map((option) => <Select.Item key={option} value={option} className="flex cursor-pointer px-2 py-1.5 text-sm focus:bg-accent">{option}</Select.Item>)}
         </Select.Popup></Select.Positioner></Select.Portal>
       </Select.Root>
@@ -178,7 +178,7 @@ export function GlobalConfigClient() {
         </div>
       </header>
 
-      <div className="flex-1 space-y-6 overflow-y-auto p-6">
+      <div className="flex-1 space-y-6 overflow-y-auto p-6 scrollbar-brutal">
         {catalogUnavailable && <ErrorBanner title={t("errors_generic")} message={t("config_catalog_error")} />}
 
         <Card>

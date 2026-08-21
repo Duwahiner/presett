@@ -3,7 +3,7 @@ import type { Resources } from "./types";
 export const en: Resources = {
   "nav_dashboard": "Dashboard",
   "nav_models": "Models",
-  "nav_profiles": "Profiles",
+  "nav_profiles": "SDD Profiles",
   "nav_backups": "Backups",
   "nav_diagnostics": "Diagnostics",
   "nav_config": "Configuration",
@@ -19,6 +19,9 @@ export const en: Resources = {
   "topbar_menu_close_aria": "Close menu",
   "sidebar_group_menu": "Menu",
   "sidebar_group_workspace": "Workspace",
+  "sidebar_workspace_name": "Gentleman Stack",
+  "sidebar_workspace_preset": "full-gentleman",
+  "sidebar_gentle_ai_label": "Gentle-AI",
   "sidebar_sync_cta": "Sync configs",
   "sidebar_sync_error_message": "Configuration sync could not complete. Try again or check the backup service.",
   "sidebar_sync_success": "Configuration sync completed.",

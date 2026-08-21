@@ -2,7 +2,6 @@ import { Dashboard } from "@/components/organisms/Dashboard/Dashboard";
 import { getConfig } from "@/services/modelsApiService";
 import { listProfiles } from "@/services/profilesApiService";
 import { listBackups } from "@/services/backupsApiService";
-import { probeGentleAiVersion } from "@/services/processService";
 import type { ApiError } from "@/services/api";
 import { t } from "@/resources/resources";
 import type {
@@ -50,7 +49,6 @@ export function buildDashboardData(
   config: { assignments: DashboardAgent[] },
   profiles: { profiles: { name: string }[] },
   backups: { backups: BackupInfo[] },
-  gentleAiVersion?: string,
 ): { stats: DashboardStats; agents: DashboardAgent[] } {
   return {
     stats: {
@@ -58,7 +56,6 @@ export function buildDashboardData(
       profileCount: profiles.profiles.length,
       backupCount: backups.backups.length,
       lastSync: computeLastSync(backups.backups),
-      gentleAiVersion,
     },
     agents: config.assignments,
   };
@@ -82,11 +79,10 @@ async function fetchDashboardData(): Promise<{
   data: { stats: DashboardStats; agents: DashboardAgent[] };
   errors: ServiceErrors;
 }> {
-  const [configResult, profilesResult, backupsResult, versionResult] = await Promise.allSettled([
+  const [configResult, profilesResult, backupsResult] = await Promise.allSettled([
     getConfig(),
     listProfiles(),
     listBackups(),
-    probeGentleAiVersion(),
   ]);
 
   const errors: ServiceErrors = {};
@@ -115,13 +111,8 @@ async function fetchDashboardData(): Promise<{
     errors.backups = toErrorMessage(backupsResult.reason);
   }
 
-  const gentleAiVersion =
-    versionResult.status === "fulfilled" && versionResult.value.ok
-      ? versionResult.value.value
-      : undefined;
-
   return {
-    data: buildDashboardData(config, profiles, backups, gentleAiVersion),
+    data: buildDashboardData(config, profiles, backups),
     errors,
   };
 }

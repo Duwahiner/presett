@@ -11,8 +11,8 @@ export function ThemeProvider({ children, forcedTheme, ...props }: AuditThemePro
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme={forcedTheme ?? "system"}
-      enableSystem={!forcedTheme}
+      defaultTheme={forcedTheme ?? "dark"}
+      enableSystem={false}
       storageKey={forcedTheme ? undefined : "presett-theme"}
       forcedTheme={forcedTheme}
       {...props}

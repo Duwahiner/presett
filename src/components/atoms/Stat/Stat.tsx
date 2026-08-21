@@ -2,20 +2,23 @@ import { cn } from "@/lib/utils";
 import { ArrowUpRight, ArrowDownRight } from "lucide-react";
 import type { StatProps } from "./Stat.types";
 
-export function Stat({ label, value, icon: Icon, trend, className }: StatProps) {
+export function Stat({ label, value, icon: Icon, trend, className, markerClassName }: StatProps) {
   return (
     <div
       className={cn(
-        "relative overflow-hidden border-2 border-border bg-card p-4 text-card-foreground transition-colors",
+        "relative overflow-hidden border-2 border-border bg-card p-4 text-card-foreground transition-colors shadow-none",
         className,
       )}
     >
       <div className="flex items-start justify-between">
         <div>
-          <p className="text-xs font-medium text-muted-foreground">{label}</p>
-          <p className="mt-1.5 truncate text-2xl font-semibold tracking-tight text-card-foreground">
-            {value}
-          </p>
+            <p className="flex items-center gap-2 text-xs font-medium text-muted-foreground">
+              <span className={cn("size-2 shrink-0", markerClassName ?? "bg-primary")} aria-hidden="true" />
+              {label}
+            </p>
+            <p className="mt-2 truncate text-[26px] font-bold leading-none tracking-tight text-card-foreground">
+              {value}
+            </p>
           {trend && (
             <div className="mt-2 flex items-center gap-1 text-xs font-medium">
               {trend.positive ? (
@@ -33,9 +36,7 @@ export function Stat({ label, value, icon: Icon, trend, className }: StatProps) 
             </div>
           )}
         </div>
-        <div className="bg-primary/15 p-2">
-          <Icon className="h-5 w-5 text-primary" />
-        </div>
+        <Icon className="sr-only" aria-hidden="true" />
       </div>
     </div>
   );

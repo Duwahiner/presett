@@ -68,6 +68,42 @@ describe("Dashboard", () => {
     expect(screen.queryByLabelText("sdd-orchestrator-default")).not.toBeNull();
   });
 
+  it("renders agent and add-agent tiles with the dashboard card geometry", () => {
+    render(<Dashboard stats={defaultStats} agents={defaultAgents} />);
+
+    const agentCard = screen.getByLabelText("sdd-orchestrator-default").closest("div[class*='min-h-[188px]']");
+    const addAgentTile = screen.getByRole("link", { name: /add agent/i }).firstElementChild;
+
+    expect(agentCard?.className).toContain("border-2");
+    expect(agentCard?.className).toContain("border-border");
+    expect(agentCard?.className).toContain("p-5");
+    expect(agentCard?.className).toContain("shadow-[4px_4px_0_0_var(--foreground)]");
+    expect(agentCard?.className).not.toContain("hover:shadow-none");
+     expect(screen.getByText("Configured").className).not.toContain("rounded-full");
+     expect(screen.getByText("Configured").className).toContain("border-accent");
+     expect(screen.getByText("Configured").className).toContain("bg-transparent");
+     expect(screen.getByText("Configured").className).toContain("light:!border-black");
+     expect(screen.getByText("Configured").className).toContain("light:!bg-white");
+     expect(screen.getByText("Configured").className).toContain("light:!text-black");
+    expect(addAgentTile?.className).toContain("min-h-[188px]");
+    expect(addAgentTile?.className).toContain("border-border");
+    expect(agentCard?.parentElement?.className).toContain("scrollbar-brutal");
+    expect(agentCard?.parentElement?.className).toContain("overflow-y-auto");
+  });
+
+  it("uses black status-badge content in light mode for every agent state", () => {
+    render(
+      <Dashboard
+        stats={defaultStats}
+        agents={[...defaultAgents, { agentKey: "partial-agent", provider: "", model: "", variant: "" }]}
+      />,
+    );
+
+    expect(screen.getByText("Configured").className).toContain("light:!border-black");
+    expect(screen.getByText("Partial").className).toContain("light:!border-black");
+    expect(screen.getByText("Partial").className).toContain("light:!text-black");
+  });
+
   it("renders links to each management page", () => {
     render(<Dashboard stats={defaultStats} agents={defaultAgents} />);
 
@@ -87,17 +123,20 @@ describe("Dashboard", () => {
     expect(screen.queryByText(t("dashboard_stat_backups_label"))).not.toBeNull();
   });
 
-  it("renders Gentle-AI version card when version is provided", () => {
-    const statsWithVersion = { ...defaultStats, gentleAiVersion: "2.4.0" };
-    render(<Dashboard stats={statsWithVersion} agents={defaultAgents} />);
-
-    expect(screen.queryByText("2.4.0")).not.toBeNull();
-    expect(screen.queryByText(t("dashboard_gentle_ai_version"))).not.toBeNull();
-  });
-
-  it("does not render Gentle-AI version card when version is absent", () => {
+  it("keeps the dashboard composition grouped into framed agent and quick action panels", () => {
     render(<Dashboard stats={defaultStats} agents={defaultAgents} />);
 
-    expect(screen.queryByText(t("dashboard_gentle_ai_version"))).toBeNull();
+    expect(screen.getByRole("heading", { name: "Installed agents" }).parentElement?.parentElement?.className).toContain("border-2");
+    expect(screen.getByRole("heading", { name: "Quick Access" }).parentElement?.className).toContain("border-2");
+    expect(screen.getByText("TDD strict mode").parentElement?.className).toContain("bg-accent");
   });
+
+  it("keeps dashboard content contained instead of creating its own scroll region", () => {
+    const { container } = render(<Dashboard stats={defaultStats} agents={defaultAgents} />);
+
+    expect(container.firstElementChild?.className).toContain("min-h-0");
+    expect(container.firstElementChild?.className).toContain("overflow-hidden");
+    expect(container.firstElementChild?.className).not.toContain("overflow-y-auto");
+  });
+
 });

@@ -3,6 +3,7 @@
 @import "shadcn/tailwind.css";
 
 @custom-variant dark (&:is(.dark *));
+@custom-variant light (&:is(.light *));
 
 @theme inline {
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
@@ -90,6 +91,7 @@
   --sidebar-accent-foreground: #000000;
   --sidebar-border: #ffffff;
   --sidebar-ring: #e72286;
+  --scrollbar-thumb: #73ec8b;
 }
 
 /* V2 Light Mode — brutalist control-room tokens */
@@ -131,13 +133,76 @@
   --sidebar-accent-foreground: #000000;
   --sidebar-border: #000000;
   --sidebar-ring: #e72286;
+  --scrollbar-thumb: #000000;
 }
 
 @layer base {
   * {
     @apply border-border outline-ring/50;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+    scrollbar-width: thin;
   }
+
+  *::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 4px;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+@layer utilities {
+  .shadow-brutal {
+    box-shadow: 4px 4px 0 0 var(--foreground);
+  }
+
+  .shadow-brutal-sm {
+    box-shadow: 2px 2px 0 0 var(--foreground);
+  }
+
+  .scrollbar-brutal {
+    scrollbar-color: var(--scrollbar-thumb) transparent;
+    scrollbar-width: thin;
+  }
+
+  .scrollbar-brutal::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  .scrollbar-brutal::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-brutal::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: 4px;
+  }
+
+  .scrollbar-brutal::-webkit-scrollbar-thumb:hover {
+    background: var(--primary);
+  }
+
+  .scrollbar-brutal::-webkit-scrollbar-corner {
+    background: transparent;
   }
 }

@@ -8,7 +8,6 @@ import {
   Cpu,
   Layers,
   Archive,
-  Activity,
   Menu,
   Search,
   X,
@@ -17,6 +16,9 @@ import {
   Loader2,
   Settings,
   Bell,
+  ChevronsUpDown,
+  Sun,
+  Moon,
 } from "lucide-react";
 import { runSync } from "@/services/backupsApiService";
 import { checkDiagnosticsUpdates } from "@/services/diagnosticsApiService";
@@ -26,7 +28,7 @@ import { cn } from "@/lib/utils";
 import { t } from "@/resources/resources";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { useTheme } from "next-themes";
 import { NotificationProvider, useNotifications } from "@/contexts/NotificationContext";
 import { AuditNotificationProvider, useAuditNotifications } from "@/lib/visual-audit/audit-context";
 import { useAuditMode } from "@/lib/visual-audit/audit-context";
@@ -48,7 +50,7 @@ const workspaceItems: { key: keyof Resources; href: string; icon: React.Componen
   { key: "nav_settings", href: "/settings", icon: Settings },
 ];
 
-function DashboardLayoutInner({ children }: DashboardLayoutProps) {
+function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProps) {
   const isAuditMode = useAuditMode();
   const pathname = usePathname();
   const router = useRouter();
@@ -58,6 +60,10 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [search, setSearch] = useState("");
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [themeMounted, setThemeMounted] = useState(false);
+  const { theme, setTheme } = useTheme();
+  const darkMode = theme !== "light";
+  const isDashboard = pathname === "/";
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
   const mobileNavRef = useRef<HTMLElement | null>(null);
   const lastPushedUpdateRef = useRef<string | null>(null);
@@ -67,6 +73,10 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
   const normalNotifications = useNotifications();
   const unreadCount = isAuditMode ? auditNotifications.unreadCount : normalNotifications.unreadCount;
   const markAllRead = isAuditMode ? auditNotifications.markAllRead : normalNotifications.markAllRead;
+
+  useEffect(() => {
+    setThemeMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!mobileNavOpen) return;
@@ -158,10 +168,10 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
           aria-current={isActive ? "page" : undefined}
           onClick={onNavigate}
           className={cn(
-            "group flex items-center gap-3 px-3 py-2 font-mono text-xs font-bold uppercase transition-colors",
+            "group flex items-center gap-3 border-2 px-3 py-2 text-sm font-bold uppercase tracking-tight transition-all",
             isActive
-              ? "bg-sidebar-accent text-sidebar-accent-foreground"
-              : "text-sidebar-foreground/70 hover:bg-sidebar-accent/50 hover:text-sidebar-foreground",
+              ? "border-border bg-accent text-accent-foreground shadow-[2px_2px_0_0_var(--foreground)]"
+              : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
           )}
         >
           <Icon className="size-[18px]" />
@@ -175,45 +185,72 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
     <>
     <div className="flex h-screen w-full items-stretch overflow-hidden bg-background">
       <div className="flex h-full w-full overflow-hidden bg-card">
-      <aside className="hidden w-[260px] shrink-0 flex-col border-r border-border bg-sidebar md:flex">
-          <div className="flex h-[72px] items-center gap-2.5 px-5">
-            <div className="flex size-8 items-center justify-center bg-primary text-primary-foreground">
+        <aside className="hidden w-64 shrink-0 flex-col border-r-2 border-border bg-sidebar md:flex">
+          <div className="flex h-[74px] items-center gap-2.5 border-b-2 border-border px-5">
+            <div className="flex size-8 items-center justify-center border-2 border-border bg-primary text-primary-foreground">
               <Sparkles className="size-4" />
             </div>
-            <span className="font-mono text-sm font-bold uppercase tracking-wider text-sidebar-foreground">
-              PRESETT
+            <span className="font-mono text-[15px] font-bold uppercase tracking-tight text-foreground">
+              PreSett
             </span>
           </div>
 
-          <nav className="mt-5 flex flex-1 flex-col gap-6 overflow-y-auto px-3 pb-4">
-            <div className="flex flex-col gap-0.5">
-              <p className="px-3 pb-2 font-mono text-[11px] font-bold uppercase tracking-wider text-sidebar-foreground/70">
-                {t("sidebar_group_menu")}
+          <div className="border-b-2 border-border p-3">
+            <button
+              type="button"
+              className="flex w-full items-center gap-3 border-2 border-border bg-card px-3 py-2.5 text-left transition-all hover:shadow-brutal-sm active:translate-x-px active:translate-y-px active:shadow-none"
+            >
+              <span className="flex size-9 items-center justify-center bg-accent font-mono text-[13px] font-bold text-accent-foreground">GS</span>
+              <span className="min-w-0 flex-1">
+                <span className="block truncate text-sm font-bold text-foreground">{t("sidebar_workspace_name")}</span>
+                <span className="block truncate font-mono text-xs text-muted-foreground">{t("sidebar_workspace_preset")}</span>
+              </span>
+              <ChevronsUpDown className="size-4 text-muted-foreground" aria-hidden="true" />
+            </button>
+          </div>
+
+          <nav className="mt-4 flex flex-1 flex-col gap-6 overflow-y-auto px-3 pb-4 scrollbar-brutal">
+            <div className="flex flex-col gap-1.5">
+              <p className="px-1 pb-1 font-mono text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                [ {t("sidebar_group_menu")} ]
               </p>
               {renderNavLinks(menuItems)}
             </div>
-            <div className="flex flex-col gap-0.5">
-              <p className="px-3 pb-2 font-mono text-[11px] font-bold uppercase tracking-wider text-sidebar-foreground/70">
-                {t("sidebar_group_workspace")}
+            <div className="flex flex-col gap-1.5">
+              <p className="px-1 pb-1 font-mono text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
+                [ {t("sidebar_group_workspace")} ]
               </p>
               {renderNavLinks(workspaceItems)}
             </div>
-          </nav>
-
-          <div className="p-3">
             {!isAuditMode && (
-              <Button className="w-full gap-2" onClick={handleSync} disabled={syncing}>
+              <button
+                type="button"
+                className="mt-auto flex w-full items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--foreground)] transition-all hover:shadow-brutal active:translate-x-1 active:translate-y-1 active:shadow-none disabled:pointer-events-none disabled:opacity-50"
+                onClick={handleSync}
+                disabled={syncing}
+              >
                 {syncing
                   ? <Loader2 className="size-4 animate-spin" />
                   : <RefreshCw className="size-4" />}
                 {t("sidebar_sync_cta")}
-              </Button>
+              </button>
+            )}
+          </nav>
+
+          <div className="border-t-2 border-border p-3 light:border-black">
+            {gentleAiVersion && (
+              <div className="flex items-center justify-between gap-3 border-2 border-border bg-card px-3 py-2 light:border-black light:bg-white">
+                <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground light:text-black">
+                  {t("sidebar_gentle_ai_label")}
+                </span>
+                <span className="truncate font-mono text-xs font-bold text-foreground light:text-black">{gentleAiVersion}</span>
+              </div>
             )}
           </div>
         </aside>
 
-        <div className="flex min-w-0 flex-1 flex-col">
-          <header className="flex h-[72px] shrink-0 items-center gap-3 border-b border-border px-4 sm:px-6">
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <header className="flex h-[74px] shrink-0 items-center gap-3 border-b-2 border-border px-4 sm:px-6">
             <Button
               ref={menuButtonRef}
               variant="ghost"
@@ -228,7 +265,7 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
             </Button>
 
             <form
-              className="relative flex min-w-0 w-full max-w-lg items-center"
+              className="relative flex min-w-0 w-full max-w-2xl items-center"
               onSubmit={(e) => {
                 e.preventDefault();
                 const q = search.trim();
@@ -257,47 +294,69 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
               )}
             </form>
 
-            <div className="ml-auto flex items-center gap-1.5">
+            <div className="ml-auto flex items-center gap-2">
               <Popover open={notificationOpen} onOpenChange={(open) => {
                 setNotificationOpen(open);
                 if (open) markAllRead();
               }}>
                 <PopoverTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
+                  <button
+                    type="button"
                     aria-label={t("topbar_notifications_aria")}
                     aria-expanded={notificationOpen}
-                    className="relative"
+                    className="relative flex size-9 items-center justify-center border-2 border-border text-foreground transition-all hover:shadow-[2px_2px_0_0_var(--foreground)] active:translate-x-px active:translate-y-px active:shadow-none"
                   >
                     <Bell className="size-[18px]" />
                     {unreadCount > 0 && (
-                      <span className="absolute -right-0.5 -top-0.5 flex size-4 items-center justify-center bg-primary font-mono text-[10px] font-bold text-primary-foreground">
-                        {unreadCount > 99 ? "99+" : unreadCount}
-                      </span>
+                      <span className="absolute -right-1.5 -top-1.5 size-3 border-2 border-border bg-primary" />
                     )}
-                  </Button>
+                  </button>
                 </PopoverTrigger>
-              <PopoverContent
-                align="end"
-                sideOffset={8}
-                className="w-[380px] border-2 border-border bg-card p-0 shadow-[4px_4px_0_0_var(--border)]"
-              >
-                <NotificationPanel />
-              </PopoverContent>
+                <PopoverContent
+                  align="end"
+                  sideOffset={8}
+                  className="w-[380px] border-2 border-border bg-card p-0 shadow-[4px_4px_0_0_var(--foreground)]"
+                >
+                  <NotificationPanel />
+                </PopoverContent>
               </Popover>
 
-              {!isAuditMode && <ThemeToggle />}
+              {!isAuditMode && themeMounted && (
+                <div className="flex items-center border-2 border-border p-0.5">
+                  <button
+                    type="button"
+                    onClick={() => setTheme("light")}
+                    aria-label="Light mode"
+                    className={cn(
+                      "flex size-8 items-center justify-center transition-colors",
+                      !darkMode ? "bg-accent text-accent-foreground" : "text-muted-foreground",
+                    )}
+                  >
+                    <Sun className="size-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setTheme("dark")}
+                    aria-label="Dark mode"
+                    className={cn(
+                      "flex size-8 items-center justify-center transition-colors",
+                      darkMode ? "bg-primary text-primary-foreground" : "text-muted-foreground",
+                    )}
+                  >
+                    <Moon className="size-4" />
+                  </button>
+                </div>
+              )}
 
-              <Button
-                variant="ghost"
-                size="icon"
+              <button
+                type="button"
                 aria-label={t("topbar_account_aria")}
+                className="ml-1 flex items-center border-2 border-border p-0.5 transition-all hover:shadow-[2px_2px_0_0_var(--foreground)] active:translate-x-px active:translate-y-px active:shadow-none"
               >
-                <span className="flex size-8 items-center justify-center bg-primary font-mono text-xs font-bold text-primary-foreground">
+                <span className="flex size-8 items-center justify-center bg-primary font-mono text-[13px] font-bold text-primary-foreground">
                   PS
                 </span>
-              </Button>
+              </button>
             </div>
           </header>
 
@@ -316,7 +375,7 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
                 id="mobile-navigation"
                 ref={mobileNavRef}
                 aria-label={t("sidebar_group_menu")}
-                className="absolute left-3 right-3 top-3 max-h-[calc(100dvh-1.5rem)] overflow-y-auto border-2 border-border bg-sidebar p-3 shadow-[4px_4px_0_0_var(--border)]"
+                className="absolute left-3 right-3 top-3 max-h-[calc(100dvh-1.5rem)] overflow-y-auto border-2 border-border bg-sidebar p-3 shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal"
               >
                 <div className="mb-3 flex items-center justify-between px-1">
                   <div className="flex items-center gap-2.5">
@@ -355,7 +414,10 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
             </div>
           )}
 
-          <main className="min-h-0 flex-1 overflow-y-auto bg-background/60">
+          <main className={cn(
+            "min-h-0 flex-1 bg-background/60",
+            isDashboard ? "overflow-hidden" : "overflow-y-auto",
+          )}>
             {children}
           </main>
         </div>
@@ -365,11 +427,11 @@ function DashboardLayoutInner({ children }: DashboardLayoutProps) {
   );
 }
 
-export function DashboardLayoutView({ children }: DashboardLayoutProps) {
+export function DashboardLayoutView({ children, gentleAiVersion }: DashboardLayoutProps) {
   return (
     <AuditNotificationProvider>
       <NotificationProvider>
-        <DashboardLayoutInner>{children}</DashboardLayoutInner>
+        <DashboardLayoutInner gentleAiVersion={gentleAiVersion}>{children}</DashboardLayoutInner>
         <Toaster />
       </NotificationProvider>
     </AuditNotificationProvider>

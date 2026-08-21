@@ -19,6 +19,9 @@ export interface Resources {
   "topbar_menu_close_aria": string;
   "sidebar_group_menu": string;
   "sidebar_group_workspace": string;
+  "sidebar_workspace_name": string;
+  "sidebar_workspace_preset": string;
+  "sidebar_gentle_ai_label": string;
   "sidebar_sync_cta": string;
   "sidebar_sync_error_message": string;
   "sidebar_sync_success": string;

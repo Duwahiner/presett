@@ -4,6 +4,8 @@ import { ThemeProvider } from "@/lib/theme-provider";
 import { DashboardLayout } from "@/components/organisms/DashboardLayout/DashboardLayout";
 import { IS_VISUAL_AUDIT_MODE } from "@/lib/visual-audit";
 import { AuditModeProvider } from "@/lib/visual-audit/audit-context";
+import { AUDIT_FIXTURE_GENTLE_AI_VERSION } from "@/lib/visual-audit/fixtures";
+import { probeGentleAiVersion } from "@/services/processService";
 import "./globals.css";
 
 const inter = Inter({
@@ -24,13 +26,19 @@ export const metadata: Metadata = {
   description: "Visual configuration manager for Gentle-AI",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   const auditClass = IS_VISUAL_AUDIT_MODE ? "dark" : "";
   const existingClasses = `${inter.variable} ${jetbrainsMono.variable}`;
+  const versionResult = IS_VISUAL_AUDIT_MODE ? null : await probeGentleAiVersion();
+  const gentleAiVersion = IS_VISUAL_AUDIT_MODE
+    ? AUDIT_FIXTURE_GENTLE_AI_VERSION
+    : versionResult?.ok
+      ? versionResult.value
+      : undefined;
 
   return (
     <html
@@ -41,7 +49,7 @@ export default function RootLayout({
       <body className="font-sans antialiased">
         <ThemeProvider forcedTheme={IS_VISUAL_AUDIT_MODE ? "dark" : undefined}>
           <AuditModeProvider isAuditMode={IS_VISUAL_AUDIT_MODE}>
-            <DashboardLayout>{children}</DashboardLayout>
+            <DashboardLayout gentleAiVersion={gentleAiVersion}>{children}</DashboardLayout>
           </AuditModeProvider>
         </ThemeProvider>
       </body>

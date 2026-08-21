@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useMemo, type ReactNode } from "react";
 import type { Notification, NotificationDraft } from "@/services/notificationService";
 import { AUDIT_FIXTURE_NOTIFICATIONS } from "./fixtures";
 
@@ -40,23 +40,34 @@ export interface AuditNotificationContextValue {
   markAllRead(): void;
 }
 
+function auditPush(_draft: NotificationDraft): string {
+  return "audit-noop";
+}
+
+function auditResolve(
+  _id: string,
+  _outcome: "success" | "error",
+  _message: string,
+): void {}
+
+function auditDismiss(_id: string): void {}
+
+function auditMarkAllRead(): void {}
+
+const AUDIT_NOTIFICATION_VALUE: AuditNotificationContextValue = {
+  notifications: AUDIT_FIXTURE_NOTIFICATIONS,
+  unreadCount: 0,
+  push: auditPush,
+  resolve: auditResolve,
+  dismiss: auditDismiss,
+  markAllRead: auditMarkAllRead,
+};
+
 const AuditNotificationContext = createContext<AuditNotificationContextValue | null>(null);
 
 export function AuditNotificationProvider({ children }: { children: ReactNode }) {
-  const value = useMemo<AuditNotificationContextValue>(
-    () => ({
-      notifications: AUDIT_FIXTURE_NOTIFICATIONS,
-      unreadCount: 0,
-      push: useCallback((_draft: NotificationDraft): string => "audit-noop", []),
-      resolve: useCallback((_id: string, _outcome: "success" | "error", _message: string) => {}, []),
-      dismiss: useCallback((_id: string) => {}, []),
-      markAllRead: useCallback(() => {}, []),
-    }),
-    [],
-  );
-
   return (
-    <AuditNotificationContext.Provider value={value}>
+    <AuditNotificationContext.Provider value={AUDIT_NOTIFICATION_VALUE}>
       {children}
     </AuditNotificationContext.Provider>
   );
