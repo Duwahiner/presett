@@ -120,6 +120,10 @@ export function ModelsClient() {
     setSyncing(true);
     try {
       await runSync();
+      // Reload config to reflect any changes from sync
+      const config = await getConfig();
+      setAssignments(config.assignments);
+      setOriginalAssignments(config.assignments);
       onSuccess(t("models_syncSuccess"));
     } catch (cause) {
       onError(t("models_syncNow"), cause instanceof Error ? cause.message : String(cause));
