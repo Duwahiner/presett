@@ -74,15 +74,24 @@ export async function readOpenCodeConfigSafe(
   configDir: string = DEFAULT_OPEN_CODE_CONFIG_DIR,
 ): Promise<Result<OpenCodeConfig>> {
   let raw: string;
+  let filePath = join(configDir, "opencode.json");
+  
+  // Try to read .jsonc first (opencode CLI prefers it)
   try {
-    raw = await readFile(join(configDir, "opencode.json"), "utf-8");
-  } catch (cause) {
-    return err({
-      code: "FILE_MISSING",
-      message: "opencode.json not found",
-      file: join(configDir, "opencode.json"),
-      cause,
-    });
+    raw = await readFile(join(configDir, "opencode.jsonc"), "utf-8");
+    filePath = join(configDir, "opencode.jsonc");
+  } catch {
+    // Fall back to .json
+    try {
+      raw = await readFile(filePath, "utf-8");
+    } catch (cause) {
+      return err({
+        code: "FILE_MISSING",
+        message: "opencode.json or opencode.jsonc not found",
+        file: filePath,
+        cause,
+      });
+    }
   }
 
   return parseOpenCodeConfigSafe(raw);
@@ -122,15 +131,19 @@ export async function writeOpenCodeConfig(
   backupDir: string,
   fileName: string = "opencode.json",
 ): Promise<Result<void>> {
-  if (fileName.endsWith(".jsonc")) {
-    return err({
-      code: "JSONC_NOT_SUPPORTED",
-      message: "PreSett refuses to write JSONC files",
-    });
+  // If writing to .json but .jsonc exists, write to .jsonc instead (opencode CLI prefers it)
+  let actualFileName = fileName;
+  if (fileName === "opencode.json") {
+    try {
+      await access(join(configDir, "opencode.jsonc"));
+      actualFileName = "opencode.jsonc";
+    } catch {
+      // .jsonc doesn't exist, use .json
+    }
   }
 
-  const targetPath = join(configDir, fileName);
-  const tmpPath = join(configDir, `${fileName}.presett-tmp`);
+  const targetPath = join(configDir, actualFileName);
+  const tmpPath = join(configDir, `${actualFileName}.presett-tmp`);
 
   const backupResult = await createPreWriteBackup(targetPath, backupDir);
   if (!backupResult.ok) {
@@ -144,7 +157,7 @@ export async function writeOpenCodeConfig(
     await rm(tmpPath, { force: true, recursive: true });
     return err({
       code: "ATOMIC_WRITE_FAILED",
-      message: "Failed to atomically write opencode.json",
+      message: `Failed to atomically write ${actualFileName}`,
       cause,
     });
   }
