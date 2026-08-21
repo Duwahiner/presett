@@ -48,9 +48,9 @@ function PickerField({
         <Select.Trigger
           aria-label={label}
           className={cn(
-            "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
+            "flex h-9 w-full items-center justify-between border-2 border-border bg-transparent px-3 py-1 text-sm transition-colors",
             "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-            "disabled:cursor-not-allowed disabled:opacity-50",
+            "disabled:cursor-not-allowed disabled:opacity-50 light:border-black",
           )}
         >
           <Select.Value placeholder={placeholder} />
@@ -60,8 +60,8 @@ function PickerField({
           <Select.Positioner className="z-50">
             <Select.Popup
                className={cn(
-                 "max-h-60 min-w-[var(--anchor-width)] overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md scrollbar-brutal",
-                 "focus-visible:outline-none",
+                 "max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal",
+                 "focus-visible:outline-none light:border-black",
                )}
             >
               {options.map((option) => (
