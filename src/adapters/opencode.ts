@@ -131,35 +131,47 @@ export async function writeOpenCodeConfig(
   backupDir: string,
   fileName: string = "opencode.json",
 ): Promise<Result<void>> {
-  // If writing to .json but .jsonc exists, write to .jsonc instead (opencode CLI prefers it)
-  let actualFileName = fileName;
+  // Write to both .json and .jsonc if both exist (keep them in sync)
+  const filesToWrite: string[] = [fileName];
+  
   if (fileName === "opencode.json") {
     try {
       await access(join(configDir, "opencode.jsonc"));
-      actualFileName = "opencode.jsonc";
+      filesToWrite.push("opencode.jsonc");
     } catch {
-      // .jsonc doesn't exist, use .json
+      // .jsonc doesn't exist, only write to .json
+    }
+  } else if (fileName === "opencode.jsonc") {
+    try {
+      await access(join(configDir, "opencode.json"));
+      filesToWrite.push("opencode.json");
+    } catch {
+      // .json doesn't exist, only write to .jsonc
     }
   }
 
-  const targetPath = join(configDir, actualFileName);
-  const tmpPath = join(configDir, `${actualFileName}.presett-tmp`);
+  const jsonContent = JSON.stringify(config, null, 2);
+  
+  for (const file of filesToWrite) {
+    const targetPath = join(configDir, file);
+    const tmpPath = join(configDir, `${file}.presett-tmp`);
 
-  const backupResult = await createPreWriteBackup(targetPath, backupDir);
-  if (!backupResult.ok) {
-    return backupResult;
-  }
+    const backupResult = await createPreWriteBackup(targetPath, backupDir);
+    if (!backupResult.ok) {
+      return backupResult;
+    }
 
-  try {
-    await writeFile(tmpPath, JSON.stringify(config, null, 2));
-    await rename(tmpPath, targetPath);
-  } catch (cause) {
-    await rm(tmpPath, { force: true, recursive: true });
-    return err({
-      code: "ATOMIC_WRITE_FAILED",
-      message: `Failed to atomically write ${actualFileName}`,
-      cause,
-    });
+    try {
+      await writeFile(tmpPath, jsonContent);
+      await rename(tmpPath, targetPath);
+    } catch (cause) {
+      await rm(tmpPath, { force: true, recursive: true });
+      return err({
+        code: "ATOMIC_WRITE_FAILED",
+        message: `Failed to atomically write ${file}`,
+        cause,
+      });
+    }
   }
 
   await prunePreWriteBackups(backupDir, 20);
