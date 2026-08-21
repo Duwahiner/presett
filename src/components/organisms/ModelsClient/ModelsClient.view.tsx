@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AgentAssignmentRow } from "@/components/molecules/AgentAssignmentRow/AgentAssignmentRow";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
-import { ListingControls } from "@/components/molecules/ListingControls/ListingControls";
+
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
 import { t } from "@/resources/resources";
 import type { ModelsClientViewProps } from "./ModelsClient.types";
@@ -29,11 +29,6 @@ export function ModelsClientView({
   onSwitchProfile,
   onSync,
   onReset,
-  derivedAssignments,
-  controls,
-  controlsState,
-  onControlsChange,
-  onControlsClear,
 }: ModelsClientViewProps) {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
@@ -48,8 +43,7 @@ export function ModelsClientView({
 
   if (error) return <ErrorBanner title={t("models_loadError")} message={error} />;
 
-  const displayAssignments = derivedAssignments ?? assignments;
-  const hasControls = controls && controlsState && onControlsChange && onControlsClear;
+  const displayAssignments = assignments;
 
   return (
     <div className="space-y-4">
@@ -115,38 +109,19 @@ export function ModelsClientView({
         />
       )}
 
-      {/* Listing Controls */}
-      {hasControls && (
-        <ListingControls
-          config={controls}
-          state={controlsState}
-          onChange={onControlsChange}
-          onClear={onControlsClear}
-          resultCount={displayAssignments.length}
-        />
-      )}
+
 
       {/* Agent Assignments */}
       {assignments.length === 0 && displayAssignments.length === 0 ? (
-        hasControls ? (
-          <ListingEmptyState variant="no-data" entity="models" />
-        ) : (
-          <div className="flex flex-col items-center justify-center border-2 border-border bg-card p-8 text-center">
-            <div className="flex h-10 w-10 items-center justify-center bg-primary/15">
-              <AlertCircle className="h-5 w-5 text-primary" aria-hidden="true" />
-            </div>
-            <h4 className="mt-4 font-mono text-sm font-bold uppercase text-card-foreground">{t("models_emptyAssignmentsTitle")}</h4>
-            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-              {t("models_emptyAssignmentsDesc")}
-            </p>
+        <div className="flex flex-col items-center justify-center border-2 border-border bg-card p-8 text-center">
+          <div className="flex h-10 w-10 items-center justify-center bg-primary/15">
+            <AlertCircle className="h-5 w-5 text-primary" aria-hidden="true" />
           </div>
-        )
-      ) : displayAssignments.length === 0 ? (
-        <ListingEmptyState
-          variant="no-matches"
-          entity="models"
-          onClear={onControlsClear}
-        />
+          <h4 className="mt-4 font-mono text-sm font-bold uppercase text-card-foreground">{t("models_emptyAssignmentsTitle")}</h4>
+          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+            {t("models_emptyAssignmentsDesc")}
+          </p>
+        </div>
       ) : (
         <div className="space-y-3">
           {displayAssignments.map((assignment) => (
