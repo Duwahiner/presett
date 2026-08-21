@@ -86,7 +86,11 @@ export function ModelsClient() {
     setSaving(agentKey);
     try {
       await saveAssignment({ agentKey, ...assignment });
+      // Update both assignments and originalAssignments to keep them in sync
       setAssignments((prev) =>
+        prev.map((a) => (a.agentKey === agentKey ? { ...a, ...assignment } : a)),
+      );
+      setOriginalAssignments((prev) =>
         prev.map((a) => (a.agentKey === agentKey ? { ...a, ...assignment } : a)),
       );
       onSuccess(t("models_assignmentSaved"));
