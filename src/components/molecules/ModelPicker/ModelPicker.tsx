@@ -149,12 +149,14 @@ export function ModelPicker({
         />
       </div>
 
-      <Button
+      <button
+        type="button"
         disabled={disabled || !isValid}
         onClick={() => onConfirm({ provider, model, variant })}
+        className="flex items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-white light:!text-black light:shadow-[4px_4px_0_0_#000000]"
       >
         {t("modelPicker_save")}
-      </Button>
+      </button>
     </div>
   );
 }
