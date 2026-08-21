@@ -141,22 +141,32 @@ export function ModelsClientView({
 
       {/* Action Buttons */}
       <div className="flex items-center gap-2 pt-4">
-        <Button variant="outline" onClick={onSync} disabled={syncing}>
+        <button
+          type="button"
+          onClick={onSync}
+          disabled={syncing}
+          className="flex items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] active:translate-x-1 active:translate-y-1 active:shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-white light:!text-black light:shadow-[4px_4px_0_0_#000000]"
+        >
           {syncing ? (
-            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <RefreshCw className="mr-1.5 h-4 w-4" />
+            <RefreshCw className="h-4 w-4" />
           )}
           {t("models_syncNow")}
-        </Button>
-        <Button variant="ghost" onClick={() => setResetDialogOpen(true)} disabled={resetting || assignments.length === 0}>
+        </button>
+        <button
+          type="button"
+          onClick={() => setResetDialogOpen(true)}
+          disabled={resetting || assignments.length === 0}
+          className="flex items-center justify-center gap-2 border-2 border-border bg-card px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] active:translate-x-1 active:translate-y-1 active:shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-white light:!text-black light:shadow-[4px_4px_0_0_#000000]"
+        >
           {resetting ? (
-            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <RotateCcw className="mr-1.5 h-4 w-4" />
+            <RotateCcw className="h-4 w-4" />
           )}
           {t("models_resetAll")}
-        </Button>
+        </button>
       </div>
 
       {/* Reset Confirmation Dialog */}
