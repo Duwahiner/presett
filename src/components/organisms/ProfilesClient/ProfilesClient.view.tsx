@@ -135,17 +135,16 @@ function OrchestratorPicker({
         </div>
       </div>
 
-      {!hideButton && (
-        <button
-          type="button"
-          onClick={() => onChange(value)}
-          disabled={!isAssigned}
-          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
-        >
-          <Check className="h-3.5 w-3.5" aria-hidden="true" />
-          {t("profiles_saveAssignment")}
-        </button>
-      )}
+       {!hideButton && (
+         <button
+           type="button"
+           onClick={() => onChange(value)}
+           disabled={!isAssigned}
+           className="flex cursor-pointer items-center justify-center border-2 border-border bg-card p-2 text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black"
+         >
+           <Check className="h-3.5 w-3.5" aria-hidden="true" />
+         </button>
+       )}
     </div>
   );
 }
@@ -273,14 +272,13 @@ export function ProfilesClientView({
                     </h4>
                   </div>
                   <button
-                    type="button"
-                    onClick={() => onEditAssignmentChange("orchestrator", editAssignments["orchestrator"] ?? { provider: "", model: "", variant: "" })}
-                    disabled={!editAssignments["orchestrator"]?.provider}
-                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black whitespace-nowrap"
-                  >
-                    <Check className="h-3.5 w-3.5" aria-hidden="true" />
-                    {t("profiles_saveAssignment")}
-                  </button>
+                     type="button"
+                     onClick={() => onEditAssignmentChange("orchestrator", editAssignments["orchestrator"] ?? { provider: "", model: "", variant: "" })}
+                     disabled={!editAssignments["orchestrator"]?.provider}
+                     className="flex cursor-pointer items-center justify-center border-2 border-border bg-card p-2 text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black"
+                    >
+                      <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>
                 </div>
                 <OrchestratorPicker
                   catalog={catalog}
