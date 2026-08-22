@@ -147,14 +147,14 @@ export function ProfilesClient() {
     setProfiles(data.profiles);
   }
 
-  async function handleCreate(name: string) {
+  async function handleCreate(name: string, assignment?: { provider: string; model: string; variant: string }) {
     if (isAuditMode) return; // Deny writes in audit mode
     const nameToCreate = name.trim();
     if (!nameToCreate) return;
     setPendingAction("create");
 
     const assignments: Record<string, { provider: string; model: string; variant: string }> = {
-      [`sdd-orchestrator-${nameToCreate}`]: newAssignments["orchestrator"] ?? { provider: "", model: "", variant: "" },
+      [`sdd-orchestrator-${nameToCreate}`]: assignment ?? newAssignments["orchestrator"] ?? { provider: "", model: "", variant: "" },
     };
 
     for (const phase of SDD_PHASES) {
