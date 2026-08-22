@@ -50,7 +50,7 @@ export function CreateProfilePanel({
   }
 
   return (
-    <div className="mx-3 mb-6 border-2 border-dashed border-border bg-card/30 p-6">
+    <div className="mb-6 border-2 border-dashed border-border bg-card/30 p-6">
       {/* Header */}
       <div className="mb-6 flex items-start gap-3">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15">
