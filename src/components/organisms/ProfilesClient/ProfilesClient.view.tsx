@@ -305,42 +305,42 @@ export function ProfilesClientView({
                 </div>
 
                 <div className="flex shrink-0 gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <button
+                    type="button"
                     onClick={() => onEditStart(profile.name)}
                     aria-label={t("profiles_edit")}
+                    className="flex items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                   >
                     <Pencil className="h-4 w-4" aria-hidden="true" />
                     {t("profiles_edit")}
-                  </Button>
+                  </button>
                   {!profile.active && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                    <button
+                      type="button"
                       onClick={() => onSwitch(profile.name)}
                       disabled={pendingAction === `switch:${profile.name}`}
+                      className="flex items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                     >
                       {pendingAction === `switch:${profile.name}` && (
                         <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                       )}
                       {t("profiles_switch")}
-                    </Button>
+                    </button>
                   )}
                   {profile.name ? (
-                    <Button
-                      variant="destructive"
-                      size="sm"
+                    <button
+                      type="button"
                       onClick={() => onDeleteStart(profile.name)}
                       aria-label={t("profiles_delete")}
                       disabled={pendingAction === `delete:${profile.name}`}
+                      className="flex items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                     >
                       {pendingAction === `delete:${profile.name}` ? (
                         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                       ) : (
                         <Trash2 className="h-4 w-4" aria-hidden="true" />
                       )}
-                    </Button>
+                    </button>
                   ) : null}
                 </div>
               </div>
