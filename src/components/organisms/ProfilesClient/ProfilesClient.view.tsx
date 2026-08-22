@@ -287,7 +287,7 @@ export function ProfilesClientView({
                     type="button"
                     onClick={onEditSave}
                     disabled={!editAssignments["orchestrator"]?.provider || pendingAction === "edit"}
-                    className="flex items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-white light:!text-black light:shadow-[4px_4px_0_0_#000000]"
+                    className="flex items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
                   >
                     {pendingAction === "edit" && (
                       <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
