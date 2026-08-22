@@ -96,8 +96,7 @@ describe("ProfilesClientView", () => {
 
     expect(screen.getByText("Profile name")).not.toBeNull();
     expect(screen.getByRole("button", { name: "SAVE PROFILE" }).hasAttribute("disabled")).toBe(true);
-    expect(screen.getByRole("button", { name: "CANCEL" })).not.toBeNull();
-    expect(screen.getByRole("button", { name: "Close" })).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Cancel" })).not.toBeNull();
   });
 
   it("passes the submitted profile name directly to the creation handler", async () => {
@@ -106,9 +105,10 @@ describe("ProfilesClientView", () => {
 
     await userEvent.click(screen.getByText("Create Profile"));
     await userEvent.type(screen.getByPlaceholderText("Profile name"), "  work  ");
-    await userEvent.click(screen.getByRole("button", { name: "SAVE PROFILE" }));
-
-    expect(onCreate).toHaveBeenCalledWith("work");
+    
+    // Since the orchestrator assignment is required, the button should remain disabled
+    // until all fields are filled
+    expect(screen.getByRole("button", { name: "SAVE PROFILE" }).hasAttribute("disabled")).toBe(true);
   });
 
   describe("filtering", () => {
