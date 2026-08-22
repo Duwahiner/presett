@@ -100,7 +100,7 @@ export function CreateProfileModal({
             type="button"
             aria-label="Close"
             onClick={onClose}
-            className="p-1 text-muted-foreground transition-colors hover:text-foreground"
+            className="cursor-pointer p-1 text-muted-foreground transition-colors hover:text-foreground"
           >
             <X className="size-4" />
           </button>
@@ -135,7 +135,7 @@ export function CreateProfileModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex items-center justify-center gap-2 border-2 border-border bg-card px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+              className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
             >
               CANCEL
             </button>

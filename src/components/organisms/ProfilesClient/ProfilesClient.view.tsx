@@ -140,7 +140,7 @@ function OrchestratorPicker({
           type="button"
           onClick={() => onChange(value)}
           disabled={!isAssigned}
-          className="flex items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
         >
           <Check className="h-3.5 w-3.5" aria-hidden="true" />
           {t("profiles_saveAssignment")}
@@ -218,7 +218,7 @@ export function ProfilesClientView({
           type="button"
           variant="outline"
           onClick={() => { setModalKey((k) => k + 1); setShowForm(true); }}
-          className="group flex w-full items-center justify-center gap-3 border-2 border-dashed border-primary/30 bg-primary/5 p-5 transition-all hover:border-primary/60 hover:bg-primary/10"
+          className="group flex w-full cursor-pointer items-center justify-center gap-3 border-2 border-dashed border-primary/30 bg-primary/5 p-5 transition-all hover:border-primary/60 hover:bg-primary/10"
           aria-label={t("profiles_create_title")}
         >
           <span className="flex h-9 w-9 items-center justify-center bg-primary/15 text-primary transition-transform group-hover:bg-primary/20">
@@ -276,7 +276,7 @@ export function ProfilesClientView({
                     type="button"
                     onClick={() => onEditAssignmentChange("orchestrator", editAssignments["orchestrator"] ?? { provider: "", model: "", variant: "" })}
                     disabled={!editAssignments["orchestrator"]?.provider}
-                    className="flex items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black whitespace-nowrap"
+                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black whitespace-nowrap"
                   >
                     <Check className="h-3.5 w-3.5" aria-hidden="true" />
                     {t("profiles_saveAssignment")}
@@ -293,7 +293,7 @@ export function ProfilesClientView({
                     type="button"
                     onClick={onEditSave}
                     disabled={!editAssignments["orchestrator"]?.provider || pendingAction === "edit"}
-                    className="flex items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
+                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
                   >
                     {pendingAction === "edit" && (
                       <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -303,7 +303,7 @@ export function ProfilesClientView({
                   <button
                     type="button"
                     onClick={onEditCancel}
-                    className="flex items-center justify-center gap-2 border-2 border-border bg-card px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                   >
                     {t("backups_cancel")}
                   </button>
@@ -340,9 +340,9 @@ export function ProfilesClientView({
                     type="button"
                     onClick={() => onEditStart(profile.name)}
                     aria-label={t("profiles_edit")}
-                    className="flex items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                   >
-                    <Pencil className="h-4 w-4" aria-hidden="true" />
+                    <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                     {t("profiles_edit")}
                   </button>
                   {!profile.active && (
@@ -350,12 +350,12 @@ export function ProfilesClientView({
                       type="button"
                       onClick={() => onSwitch(profile.name)}
                       disabled={pendingAction === `switch:${profile.name}`}
-                      className="flex items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
-                    >
-                      {pendingAction === `switch:${profile.name}` && (
-                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                      )}
-                      {t("profiles_switch")}
+                       className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                     >
+                       {pendingAction === `switch:${profile.name}` && (
+                         <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                       )}
+                       {t("profiles_switch")}
                     </button>
                   )}
                   {profile.name ? (
@@ -364,14 +364,14 @@ export function ProfilesClientView({
                       onClick={() => onDeleteStart(profile.name)}
                       aria-label={t("profiles_delete")}
                       disabled={pendingAction === `delete:${profile.name}`}
-                      className="flex items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
-                    >
-                      {pendingAction === `delete:${profile.name}` ? (
-                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                      ) : (
-                        <Trash2 className="h-4 w-4" aria-hidden="true" />
-                      )}
-                    </button>
+                       className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                     >
+                       {pendingAction === `delete:${profile.name}` ? (
+                         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                       ) : (
+                         <Trash2 className="h-4 w-4" aria-hidden="true" />
+                       )}
+                     </button>
                   ) : null}
                 </div>
               </div>
