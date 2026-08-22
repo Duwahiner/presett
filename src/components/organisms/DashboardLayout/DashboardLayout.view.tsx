@@ -250,7 +250,7 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
         </aside>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <header className="flex h-[74px] shrink-0 items-center gap-3 px-4 sm:px-6">
+          <header className="flex h-[74px] shrink-0 items-center gap-3 border-b-2 border-border px-4 sm:px-6">
             <Button
               ref={menuButtonRef}
               variant="ghost"
