@@ -62,9 +62,9 @@ export function ModelsClientView({
           <Select.Trigger
             aria-label={t("models_activeProfile")}
             className={cn(
-              "flex h-9 w-full max-w-[200px] items-center justify-between border border-input bg-transparent px-3 py-1 text-sm transition-colors",
+              "flex h-9 w-full max-w-[200px] items-center justify-between border-2 border-border bg-transparent px-3 py-1 text-sm transition-colors",
               "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-              "disabled:cursor-not-allowed disabled:opacity-50",
+              "disabled:cursor-not-allowed disabled:opacity-50 light:border-black",
             )}
           >
             <Select.Value />
