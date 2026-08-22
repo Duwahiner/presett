@@ -78,16 +78,16 @@ export function AgentAssignmentRow({
           </div>
         </div>
 
-        <Button
-          variant="ghost"
-          size="sm"
+        <button
+          type="button"
           aria-label={t("agentAssignment_edit")}
           aria-expanded={isEditing}
           disabled={disabled}
           onClick={() => setIsEditing((prev) => !prev)}
+          className="flex cursor-pointer items-center justify-center border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
         >
-          <Pencil className="h-4 w-4" aria-hidden="true" />
-        </Button>
+          {t("agentAssignment_edit")}
+        </button>
       </div>
 
       {isEditing && (
