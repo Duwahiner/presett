@@ -37,7 +37,7 @@ export default function ProfilesPage() {
 
       <div className="flex-1 overflow-y-auto p-6 scrollbar-brutal">
         <div className="border-2 border-border bg-card shadow-[4px_4px_0_0_var(--border)]">
-          <div className="flex items-center justify-between border-b-2 border-border px-6 py-4">
+          <div className="flex items-center justify-between px-6 py-4">
             <h2 className="font-mono text-sm font-bold uppercase text-card-foreground">
               {t("profiles_cardTitle")}
             </h2>
