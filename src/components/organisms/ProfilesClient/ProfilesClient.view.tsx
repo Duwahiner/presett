@@ -19,10 +19,12 @@ function OrchestratorPicker({
   catalog,
   value,
   onChange,
+  hideButton,
 }: {
   catalog: ModelCatalog;
   value: { provider: string; model: string; variant: string };
   onChange: (v: { provider: string; model: string; variant: string }) => void;
+  hideButton?: boolean;
 }) {
   const providers = Object.keys(catalog);
   const models = Object.keys(catalog[value.provider] ?? {});
@@ -130,15 +132,17 @@ function OrchestratorPicker({
         </div>
       </div>
 
-      <button
-        type="button"
-        onClick={() => onChange(value)}
-        disabled={!isAssigned}
-        className="flex items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
-      >
-        <Check className="h-3.5 w-3.5" aria-hidden="true" />
-        {t("profiles_saveAssignment")}
-      </button>
+      {!hideButton && (
+        <button
+          type="button"
+          onClick={() => onChange(value)}
+          disabled={!isAssigned}
+          className="flex items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+        >
+          <Check className="h-3.5 w-3.5" aria-hidden="true" />
+          {t("profiles_saveAssignment")}
+        </button>
+      )}
     </div>
   );
 }
@@ -255,16 +259,28 @@ export function ProfilesClientView({
           >
             {editingProfile === profile.name ? (
               <div className="w-full space-y-4">
-                <div className="flex items-center gap-2">
-                  <Pencil className="h-4 w-4 text-primary" />
-                  <h4 className="font-mono text-sm font-bold uppercase text-card-foreground">
-                    {t("profiles_editTitle")} {profile.displayName}
-                  </h4>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <Pencil className="h-4 w-4 text-primary" />
+                    <h4 className="font-mono text-sm font-bold uppercase text-card-foreground">
+                      {t("profiles_editTitle")} {profile.displayName}
+                    </h4>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onEditAssignmentChange("orchestrator", editAssignments["orchestrator"] ?? { provider: "", model: "", variant: "" })}
+                    disabled={!editAssignments["orchestrator"]?.provider}
+                    className="flex items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black whitespace-nowrap"
+                  >
+                    <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                    {t("profiles_saveAssignment")}
+                  </button>
                 </div>
                 <OrchestratorPicker
                   catalog={catalog}
                   value={editAssignments["orchestrator"] ?? { provider: "", model: "", variant: "" }}
                   onChange={(a) => onEditAssignmentChange("orchestrator", a)}
+                  hideButton={true}
                 />
                 <div className="flex gap-2">
                   <button
