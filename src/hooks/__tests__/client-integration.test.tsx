@@ -28,7 +28,8 @@ vi.mock("@/components/organisms/ProfilesClient/ProfilesClient.view", () => ({
     onAssignmentChange,
     onCreate,
     onSwitch,
-    onDelete,
+    onDeleteStart,
+    onDeleteConfirm,
     onEditStart,
     onEditSave,
   }: ProfilesClientViewProps) => (
@@ -36,7 +37,8 @@ vi.mock("@/components/organisms/ProfilesClient/ProfilesClient.view", () => ({
       <button onClick={() => onAssignmentChange("orchestrator", { provider: "openai", model: "gpt-5", variant: "high" })}>Prepare create</button>
       <button onClick={() => void onCreate("new")}>Create profile</button>
       <button onClick={() => void onSwitch("work")}>Switch profile</button>
-      <button onClick={() => void onDelete("work")}>Delete profile</button>
+      <button onClick={() => void onDeleteStart("work")}>Delete profile</button>
+      <button onClick={() => void onDeleteConfirm()}>Confirm delete</button>
       <button onClick={() => onEditStart("work")}>Start update</button>
       {editingProfile && <button onClick={() => void onEditSave()}>Update profile</button>}
     </>

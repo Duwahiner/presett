@@ -86,6 +86,7 @@ export function ProfilesClient() {
   const [editAssignments, setEditAssignments] = useState<
     Record<string, { provider: string; model: string; variant: string }>
   >({});
+  const [deleteConfirmProfile, setDeleteConfirmProfile] = useState<string | null>(null);
   const { onError, onSuccess } = useNotificationToasts();
 
   // Filter/sort state — mount-local, cleared on unmount
@@ -188,19 +189,28 @@ export function ProfilesClient() {
     }
   }
 
-  async function handleDelete(name: string) {
+  function handleDeleteStart(name: string) {
     if (isAuditMode) return; // Deny writes in audit mode
-    if (!confirm(t("profiles_deleteConfirm", { name }))) return;
-    setPendingAction(`delete:${name}`);
+    setDeleteConfirmProfile(name);
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteConfirmProfile) return;
+    setPendingAction(`delete:${deleteConfirmProfile}`);
     try {
-      await deleteProfile(name);
+      await deleteProfile(deleteConfirmProfile);
       await refresh();
       onSuccess(t("profiles_deleteSuccess"));
     } catch (cause) {
       onError(t("profiles_deleteError"), cause instanceof Error ? cause.message : String(cause));
     } finally {
       setPendingAction(null);
+      setDeleteConfirmProfile(null);
     }
+  }
+
+  function handleDeleteCancel() {
+    setDeleteConfirmProfile(null);
   }
 
   function handleEditStart(name: string) {
@@ -244,7 +254,10 @@ export function ProfilesClient() {
       }
       onCreate={handleCreate}
       onSwitch={handleSwitch}
-      onDelete={handleDelete}
+      onDeleteStart={handleDeleteStart}
+      onDeleteConfirm={handleDeleteConfirm}
+      onDeleteCancel={handleDeleteCancel}
+      deleteConfirmProfile={deleteConfirmProfile}
       editingProfile={editingProfile}
       editAssignments={editAssignments}
       onEditStart={handleEditStart}

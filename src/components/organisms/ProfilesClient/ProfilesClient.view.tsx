@@ -8,6 +8,7 @@ import { Badge } from "@/components/atoms/Badge/Badge";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
 import { ListingControls } from "@/components/molecules/ListingControls/ListingControls";
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { t } from "@/resources/resources";
 import type { ProfilesClientViewProps } from "./ProfilesClient.types";
 import type { ModelCatalog } from "@/components/molecules/ModelPicker/ModelPicker";
@@ -152,7 +153,10 @@ export function ProfilesClientView({
   onAssignmentChange,
   onCreate,
   onSwitch,
-  onDelete,
+  onDeleteStart,
+  onDeleteConfirm,
+  onDeleteCancel,
+  deleteConfirmProfile,
   editingProfile,
   editAssignments,
   onEditStart,
@@ -193,6 +197,22 @@ export function ProfilesClientView({
         onSubmit={onCreate}
         onClose={() => setShowForm(false)}
       />
+
+      {/* Delete Profile Confirmation Dialog */}
+      {deleteConfirmProfile && (
+        <ConfirmDialog
+          open={Boolean(deleteConfirmProfile)}
+          onOpenChange={(open) => {
+            if (!open) onDeleteCancel();
+          }}
+          title={t("profiles_deleteConfirm", { name: deleteConfirmProfile })}
+          description=""
+          confirmLabel={t("profiles_delete")}
+          cancelLabel={t("backups_cancel")}
+          variant="warning"
+          onConfirm={onDeleteConfirm}
+        />
+      )}
 
       {/* Create Profile Trigger */}
       <Button
@@ -311,7 +331,7 @@ export function ProfilesClientView({
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => onDelete(profile.name)}
+                      onClick={() => onDeleteStart(profile.name)}
                       aria-label={t("profiles_delete")}
                       disabled={pendingAction === `delete:${profile.name}`}
                     >
