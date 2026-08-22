@@ -135,7 +135,7 @@ export function CreateProfileModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+              className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
             >
               CANCEL
             </button>
