@@ -173,12 +173,12 @@ export function ProfilesClientView({
   controls,
   controlsState,
   onControlsChange,
-  onControlsClear,
-  showForm,
-  setShowForm,
-  modalKey,
-  setModalKey,
-}: ProfilesClientViewProps & {
+   onControlsClear,
+   showForm,
+   setShowForm,
+   modalKey,
+   setModalKey,
+ }: ProfilesClientViewProps & {
   showForm?: boolean;
   setShowForm?: (show: boolean) => void;
   modalKey?: number;

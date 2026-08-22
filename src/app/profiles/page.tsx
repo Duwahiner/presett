@@ -15,26 +15,32 @@ export default function ProfilesPage() {
   return (
     <div className="flex h-full flex-col">
       <div className="px-8 py-6">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center bg-primary/15">
-              <Layers className="h-5 w-5 text-primary" aria-hidden="true" />
-            </div>
-            <div>
-              <div className="flex items-center gap-3">
-                <h1 className="font-mono text-xl font-bold uppercase tracking-wider text-card-foreground">
-                  {t("profiles_title")}
-                </h1>
-                <Badge variant="success" pulsing>
-                  {t("profiles_status_badge")}
-                </Badge>
-              </div>
-              <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
-                {t("profiles_header_description")}
-              </p>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 items-center justify-center bg-primary/15">
+            <Layers className="h-5 w-5 text-primary" aria-hidden="true" />
           </div>
-          {!showForm && (
+          <div>
+            <div className="flex items-center gap-3">
+              <h1 className="font-mono text-xl font-bold uppercase tracking-wider text-card-foreground">
+                {t("profiles_title")}
+              </h1>
+              <Badge variant="success" pulsing>
+                {t("profiles_status_badge")}
+              </Badge>
+            </div>
+            <p className="mt-1 max-w-2xl text-sm text-muted-foreground">
+              {t("profiles_header_description")}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto p-6 scrollbar-brutal">
+        <div className="border-2 border-border bg-card shadow-[4px_4px_0_0_var(--border)]">
+          <div className="flex items-center justify-between border-b-2 border-border px-6 py-4">
+            <h2 className="font-mono text-sm font-bold uppercase text-card-foreground">
+              {t("profiles_cardTitle")}
+            </h2>
             <button
               type="button"
               onClick={() => { setModalKey((k) => k + 1); setShowForm(true); }}
@@ -44,16 +50,10 @@ export default function ProfilesPage() {
               <Plus className="h-3.5 w-3.5" aria-hidden="true" />
               {t("profiles_create_title")}
             </button>
-          )}
-        </div>
-      </div>
-
-      <div className="flex-1 overflow-y-auto p-6 scrollbar-brutal">
-        <div className="border-2 border-border bg-card p-6 shadow-[4px_4px_0_0_var(--border)]">
-          <h2 className="mb-4 font-mono text-sm font-bold uppercase text-card-foreground">
-            {t("profiles_cardTitle")}
-          </h2>
-          <ProfilesClient showForm={showForm} setShowForm={setShowForm} modalKey={modalKey} setModalKey={setModalKey} />
+          </div>
+          <div className="p-6">
+            <ProfilesClient showForm={showForm} setShowForm={setShowForm} modalKey={modalKey} setModalKey={setModalKey} />
+          </div>
         </div>
       </div>
     </div>
