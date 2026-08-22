@@ -168,7 +168,7 @@ export function GlobalConfigClient() {
 
   return (
     <main className="flex h-full flex-col">
-      <header className="border-b border-border bg-card">
+      <header className="bg-card">
         <div className="flex items-start gap-3 px-8 py-6">
           <span className="flex size-10 shrink-0 items-center justify-center bg-primary/15 text-primary"><Settings2 className="size-5" aria-hidden="true" /></span>
           <div className="min-w-0 flex-1">
