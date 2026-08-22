@@ -186,7 +186,7 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
     <div className="flex h-screen w-full items-stretch overflow-hidden bg-background">
       <div className="flex h-full w-full overflow-hidden bg-card">
         <aside className="hidden w-64 shrink-0 flex-col border-r-2 border-border bg-sidebar md:flex">
-          <div className="flex h-[74px] items-center gap-2.5 border-b-2 border-border px-5">
+          <div className="flex h-[74px] items-center gap-2.5 px-5">
             <div className="flex size-8 items-center justify-center border-2 border-border bg-primary text-primary-foreground">
               <Sparkles className="size-4" />
             </div>
@@ -250,7 +250,7 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
         </aside>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <header className="flex h-[74px] shrink-0 items-center gap-3 border-b-2 border-border px-4 sm:px-6">
+          <header className="flex h-[74px] shrink-0 items-center gap-3 px-4 sm:px-6">
             <Button
               ref={menuButtonRef}
               variant="ghost"
