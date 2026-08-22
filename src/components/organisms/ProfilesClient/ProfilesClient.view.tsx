@@ -195,34 +195,21 @@ export function ProfilesClientView({
       />
 
       {/* Create Profile Trigger */}
-      <div className="space-y-6 px-0">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => { setModalKey((k) => k + 1); setShowForm(true); }}
-          className="group flex w-full items-center justify-center gap-3 border-2 border-dashed border-primary/30 bg-primary/5 p-5 transition-all hover:border-primary/60 hover:bg-primary/10"
-          aria-label={t("profiles_create_title")}
-        >
-          <span className="flex h-9 w-9 items-center justify-center bg-primary/15 text-primary transition-transform group-hover:bg-primary/20">
-            <Plus className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <div className="text-left">
-            <span className="block font-mono text-sm font-bold uppercase text-primary">{t("profiles_create_title")}</span>
-            <span className="block text-xs text-muted-foreground">{t("profiles_create_description")}</span>
-          </div>
-        </Button>
-
-        {/* Profile List Controls */}
-        {controls && controlsState && onControlsChange && onControlsClear && (
-          <ListingControls
-            config={controls}
-            state={controlsState}
-            onChange={onControlsChange}
-            onClear={onControlsClear}
-            resultCount={visibleProfiles.length}
-          />
-        )}
-      </div>
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => { setModalKey((k) => k + 1); setShowForm(true); }}
+        className="group flex w-full items-center justify-center gap-3 border-2 border-dashed border-primary/30 bg-primary/5 p-5 transition-all hover:border-primary/60 hover:bg-primary/10"
+        aria-label={t("profiles_create_title")}
+      >
+        <span className="flex h-9 w-9 items-center justify-center bg-primary/15 text-primary transition-transform group-hover:bg-primary/20">
+          <Plus className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div className="text-left">
+          <span className="block font-mono text-sm font-bold uppercase text-primary">{t("profiles_create_title")}</span>
+          <span className="block text-xs text-muted-foreground">{t("profiles_create_description")}</span>
+        </div>
+      </Button>
 
       {/* Scrollable Profile List */}
       <div className="flex-1 min-h-0 overflow-y-auto scrollbar-brutal">
