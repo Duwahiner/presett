@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Pencil, Plus, Trash2, UserCircle, Sparkles, Check, Info, RotateCcw, ChevronDown } from "lucide-react";
+import { Loader2, Pencil, Trash2, UserCircle, Sparkles, Check, Info, RotateCcw, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/atoms/Badge/Badge";
@@ -174,9 +174,22 @@ export function ProfilesClientView({
   controlsState,
   onControlsChange,
   onControlsClear,
-}: ProfilesClientViewProps) {
-  const [showForm, setShowForm] = useState(false);
-  const [modalKey, setModalKey] = useState(0);
+  showForm,
+  setShowForm,
+  modalKey,
+  setModalKey,
+}: ProfilesClientViewProps & {
+  showForm?: boolean;
+  setShowForm?: (show: boolean) => void;
+  modalKey?: number;
+  setModalKey?: (fn: (k: number) => number) => void;
+}) {
+  const [internalShowForm, setInternalShowForm] = useState(false);
+  const [internalModalKey, setInternalModalKey] = useState(0);
+  const activeShowForm = showForm ?? internalShowForm;
+  const activeSetShowForm = setShowForm ?? setInternalShowForm;
+  const activeModalKey = modalKey ?? internalModalKey;
+  const activeSetModalKey = setModalKey ?? setInternalModalKey;
   const visibleProfiles = derivedProfiles ?? profiles;
   const isFiltered = Boolean(controlsState && (controlsState.search.length > 0 || Object.keys(controlsState.activeFilters).length > 0));
   const showNoData = profiles.length === 0;
@@ -211,28 +224,16 @@ export function ProfilesClientView({
         />
       )}
 
-      {!showForm && (
-        <button
-          type="button"
-          onClick={() => { setModalKey((k) => k + 1); setShowForm(true); }}
-          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
-          aria-label={t("profiles_create_title")}
-        >
-          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-          {t("profiles_create_title")}
-        </button>
-      )}
-
       {/* Scrollable Profile List */}
       <div className="flex-1 min-h-0 overflow-y-auto scrollbar-brutal">
         {/* Create Profile Panel */}
         <CreateProfilePanel
-          key={modalKey}
-          open={showForm}
+          key={activeModalKey}
+          open={activeShowForm}
           pendingAction={pendingAction}
           catalog={catalog}
           onSubmit={onCreate}
-          onCancel={() => setShowForm(false)}
+          onCancel={() => activeSetShowForm(false)}
         />
 
         {showNoData && (
