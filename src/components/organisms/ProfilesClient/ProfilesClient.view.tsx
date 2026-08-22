@@ -212,22 +212,15 @@ export function ProfilesClientView({
       )}
 
       {!showForm && (
-        /* Create Profile Trigger */
-        <Button
+        <button
           type="button"
-          variant="outline"
           onClick={() => { setModalKey((k) => k + 1); setShowForm(true); }}
-          className="group flex w-full cursor-pointer items-center justify-center gap-3 border-2 border-dashed border-primary/30 bg-primary/5 p-5 transition-all hover:border-primary/60 hover:bg-primary/10"
+          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
           aria-label={t("profiles_create_title")}
         >
-          <span className="flex h-9 w-9 items-center justify-center bg-primary/15 text-primary transition-transform group-hover:bg-primary/20">
-            <Plus className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <div className="text-left">
-            <span className="block font-mono text-sm font-bold uppercase text-primary">{t("profiles_create_title")}</span>
-            <span className="block text-xs text-muted-foreground">{t("profiles_create_description")}</span>
-          </div>
-        </Button>
+          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
+          {t("profiles_create_title")}
+        </button>
       )}
 
       {/* Scrollable Profile List */}
