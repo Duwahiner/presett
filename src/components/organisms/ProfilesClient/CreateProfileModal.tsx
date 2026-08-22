@@ -132,15 +132,23 @@ export function CreateProfileModal({
           </div>
 
           <div className="mt-6 flex items-center justify-end gap-3">
-            <Button type="button" variant="outline" onClick={onClose}>
+            <button
+              type="button"
+              onClick={onClose}
+              className="flex items-center justify-center gap-2 border-2 border-border bg-card px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+            >
               CANCEL
-            </Button>
-            <Button type="submit" disabled={!canSubmit}>
+            </button>
+            <button
+              type="submit"
+              disabled={!canSubmit}
+              className="flex items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-white light:!text-black light:shadow-[4px_4px_0_0_#000000]"
+            >
               {pendingAction === "create" && (
-                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden="true" />
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
               )}
               {t("profiles_save_profile")}
-            </Button>
+            </button>
           </div>
         </form>
       </div>
