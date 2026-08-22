@@ -140,7 +140,7 @@ function OrchestratorPicker({
           type="button"
           onClick={() => onChange(value)}
           disabled={!isAssigned}
-          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black whitespace-nowrap"
         >
           <Check className="h-3.5 w-3.5" aria-hidden="true" />
           {t("profiles_saveAssignment")}
@@ -364,7 +364,7 @@ export function ProfilesClientView({
                       onClick={() => onDeleteStart(profile.name)}
                       aria-label={t("profiles_delete")}
                       disabled={pendingAction === `delete:${profile.name}`}
-                       className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                       className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black whitespace-nowrap"
                      >
                        {pendingAction === `delete:${profile.name}` ? (
                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
