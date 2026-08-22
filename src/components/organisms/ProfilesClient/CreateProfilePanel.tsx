@@ -84,7 +84,7 @@ export function CreateProfilePanel({
             onChange={(e) => setName(e.target.value)}
             aria-invalid={nameError}
             aria-describedby={nameError ? "profile-name-error" : undefined}
-            className="border-2 border-primary light:border-primary"
+            className="border-2 border-border focus-visible:border-primary light:border-black light:focus-visible:border-primary"
           />
           {nameError && (
             <p id="profile-name-error" className="text-xs font-medium text-destructive">
