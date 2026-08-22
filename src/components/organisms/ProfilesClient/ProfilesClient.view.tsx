@@ -39,11 +39,11 @@ function OrchestratorPicker({
             value={value.provider || null}
             onValueChange={(v) => onChange({ provider: v ?? "", model: "", variant: "" })}
           >
-            <Select.Trigger
+             <Select.Trigger
               aria-label={t("modelPicker_provider")}
               className={cn(
-                "flex h-9 w-full items-center justify-between border border-input bg-transparent px-3 py-1 text-sm transition-colors",
-                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                "flex h-9 w-full items-center justify-between border-2 border-border bg-transparent px-3 py-1 text-sm transition-colors",
+                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring light:border-black",
               )}
             >
               <Select.Value placeholder={t("modelPicker_provider")} />
@@ -71,12 +71,12 @@ function OrchestratorPicker({
             onValueChange={(v) => onChange({ ...value, model: v ?? "", variant: "" })}
             disabled={!value.provider}
           >
-            <Select.Trigger
+             <Select.Trigger
               aria-label={t("modelPicker_model")}
               className={cn(
-                "flex h-9 w-full items-center justify-between border border-input bg-transparent px-3 py-1 text-sm transition-colors",
+                "flex h-9 w-full items-center justify-between border-2 border-border bg-transparent px-3 py-1 text-sm transition-colors",
                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                "disabled:cursor-not-allowed disabled:opacity-50",
+                "disabled:cursor-not-allowed disabled:opacity-50 light:border-black",
               )}
             >
               <Select.Value placeholder={t("modelPicker_model")} />
@@ -104,12 +104,12 @@ function OrchestratorPicker({
             onValueChange={(v) => onChange({ ...value, variant: v ?? "" })}
             disabled={!value.model}
           >
-            <Select.Trigger
+             <Select.Trigger
               aria-label={t("modelPicker_variant")}
               className={cn(
-                "flex h-9 w-full items-center justify-between border border-input bg-transparent px-3 py-1 text-sm transition-colors",
+                "flex h-9 w-full items-center justify-between border-2 border-border bg-transparent px-3 py-1 text-sm transition-colors",
                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                "disabled:cursor-not-allowed disabled:opacity-50",
+                "disabled:cursor-not-allowed disabled:opacity-50 light:border-black",
               )}
             >
               <Select.Value placeholder={t("modelPicker_variant")} />
@@ -184,7 +184,7 @@ export function ProfilesClientView({
   if (error) return <ErrorBanner title={t("profiles_loadError")} message={error} />;
 
   return (
-    <div className="space-y-6">
+    <div className="flex flex-col h-full min-h-0">
       {/* Create Profile Modal */}
       <CreateProfileModal
         key={modalKey}
@@ -195,46 +195,50 @@ export function ProfilesClientView({
       />
 
       {/* Create Profile Trigger */}
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => { setModalKey((k) => k + 1); setShowForm(true); }}
-        className="group flex w-full items-center justify-center gap-3 border-2 border-dashed border-primary/30 bg-primary/5 p-5 transition-all hover:border-primary/60 hover:bg-primary/10"
-        aria-label={t("profiles_create_title")}
-      >
-        <span className="flex h-9 w-9 items-center justify-center bg-primary/15 text-primary transition-transform group-hover:bg-primary/20">
-          <Plus className="h-5 w-5" aria-hidden="true" />
-        </span>
-        <div className="text-left">
-          <span className="block font-mono text-sm font-bold uppercase text-primary">{t("profiles_create_title")}</span>
-          <span className="block text-xs text-muted-foreground">{t("profiles_create_description")}</span>
-        </div>
-      </Button>
+      <div className="space-y-6 px-0">
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => { setModalKey((k) => k + 1); setShowForm(true); }}
+          className="group flex w-full items-center justify-center gap-3 border-2 border-dashed border-primary/30 bg-primary/5 p-5 transition-all hover:border-primary/60 hover:bg-primary/10"
+          aria-label={t("profiles_create_title")}
+        >
+          <span className="flex h-9 w-9 items-center justify-center bg-primary/15 text-primary transition-transform group-hover:bg-primary/20">
+            <Plus className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div className="text-left">
+            <span className="block font-mono text-sm font-bold uppercase text-primary">{t("profiles_create_title")}</span>
+            <span className="block text-xs text-muted-foreground">{t("profiles_create_description")}</span>
+          </div>
+        </Button>
 
-      {/* Profile List */}
-      {controls && controlsState && onControlsChange && onControlsClear && (
-        <ListingControls
-          config={controls}
-          state={controlsState}
-          onChange={onControlsChange}
-          onClear={onControlsClear}
-          resultCount={visibleProfiles.length}
-        />
-      )}
+        {/* Profile List Controls */}
+        {controls && controlsState && onControlsChange && onControlsClear && (
+          <ListingControls
+            config={controls}
+            state={controlsState}
+            onChange={onControlsChange}
+            onClear={onControlsClear}
+            resultCount={visibleProfiles.length}
+          />
+        )}
+      </div>
 
-      {showNoData && (
-        <ListingEmptyState variant="no-data" entity="profiles" />
-      )}
+      {/* Scrollable Profile List */}
+      <div className="flex-1 min-h-0 overflow-y-auto scrollbar-brutal">
+        {showNoData && (
+          <ListingEmptyState variant="no-data" entity="profiles" />
+        )}
 
-      {showNoMatch && (
-        <ListingEmptyState
-          variant="no-matches"
-          entity="profiles"
-          onClear={onControlsClear}
-        />
-      )}
+        {showNoMatch && (
+          <ListingEmptyState
+            variant="no-matches"
+            entity="profiles"
+            onClear={onControlsClear}
+          />
+        )}
 
-      <div className="space-y-3">
+        <div className="space-y-3 pr-3">
         {visibleProfiles.map((profile) => (
           <div
             key={profile.name}
@@ -336,6 +340,7 @@ export function ProfilesClientView({
             )}
           </div>
         ))}
+        </div>
       </div>
     </div>
   );
