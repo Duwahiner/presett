@@ -145,7 +145,7 @@ export function ModelsClientView({
           type="button"
           onClick={onSync}
           disabled={syncing}
-          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
+          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
         >
           {syncing ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -158,7 +158,7 @@ export function ModelsClientView({
           type="button"
           onClick={() => setResetDialogOpen(true)}
           disabled={resetting || assignments.length === 0}
-          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-card light:!text-black light:shadow-[4px_4px_0_0_#000000]"
+          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-card light:!text-black light:shadow-[4px_4px_0_0_#000000]"
         >
           {resetting ? (
             <Loader2 className="h-4 w-4 animate-spin" />
