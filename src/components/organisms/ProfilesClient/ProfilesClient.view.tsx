@@ -248,7 +248,7 @@ export function ProfilesClientView({
           />
         )}
 
-        <div className="space-y-3 pr-3">
+        <div className="space-y-3">
         {visibleProfiles.map((profile) => (
           <div
             key={profile.name}
