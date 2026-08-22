@@ -130,15 +130,15 @@ function OrchestratorPicker({
         </div>
       </div>
 
-      <Button
-        variant="outline"
-        size="sm"
+      <button
+        type="button"
         onClick={() => onChange(value)}
         disabled={!isAssigned}
+        className="flex items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
       >
-        <Check className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+        <Check className="h-3.5 w-3.5" aria-hidden="true" />
         {t("profiles_saveAssignment")}
-      </Button>
+      </button>
     </div>
   );
 }
