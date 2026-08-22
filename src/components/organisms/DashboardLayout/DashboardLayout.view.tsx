@@ -198,7 +198,7 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
           <div className="border-b-2 border-border p-3">
             <button
               type="button"
-              className="flex w-full cursor-pointer items-center gap-3 border-2 border-border bg-card px-3 py-2.5 text-left transition-all hover:shadow-brutal-sm active:translate-x-px active:translate-y-px active:shadow-none"
+              className="flex w-full cursor-pointer items-center gap-3 border-2 border-border bg-card px-3 py-2.5 text-left transition-all hover:shadow-none-sm active:translate-x-px active:translate-y-px active:shadow-none"
             >
               <span className="flex size-9 items-center justify-center bg-accent font-mono text-[13px] font-bold text-accent-foreground">GS</span>
               <span className="min-w-0 flex-1">
@@ -225,7 +225,7 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
             {!isAuditMode && (
               <button
                 type="button"
-                className="mt-auto flex w-full cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--foreground)] transition-all hover:shadow-brutal active:translate-x-1 active:translate-y-1 active:shadow-none disabled:pointer-events-none disabled:opacity-50"
+                className="mt-auto flex w-full cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--foreground)] transition-all hover:shadow-none active:translate-x-1 active:translate-y-1 active:shadow-none disabled:pointer-events-none disabled:opacity-50"
                 onClick={handleSync}
                 disabled={syncing}
               >
@@ -304,7 +304,7 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
                     type="button"
                     aria-label={t("topbar_notifications_aria")}
                     aria-expanded={notificationOpen}
-                    className="relative flex cursor-pointer size-9 items-center justify-center border-2 border-border text-foreground transition-all hover:shadow-[2px_2px_0_0_var(--foreground)] active:translate-x-px active:translate-y-px active:shadow-none"
+                    className="relative flex cursor-pointer size-9 items-center justify-center border-2 border-border text-foreground transition-all hover:shadow-none active:translate-x-px active:translate-y-px active:shadow-none"
                   >
                     <Bell className="size-[18px]" />
                     {unreadCount > 0 && (
@@ -351,7 +351,7 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
               <button
                 type="button"
                 aria-label={t("topbar_account_aria")}
-                className="ml-1 flex cursor-pointer items-center border-2 border-border p-0.5 transition-all hover:shadow-[2px_2px_0_0_var(--foreground)] active:translate-x-px active:translate-y-px active:shadow-none"
+                className="ml-1 flex cursor-pointer items-center border-2 border-border p-0.5 transition-all hover:shadow-none active:translate-x-px active:translate-y-px active:shadow-none"
               >
                 <span className="flex size-8 items-center justify-center bg-primary font-mono text-[13px] font-bold text-primary-foreground">
                   PS
