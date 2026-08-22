@@ -267,15 +267,24 @@ export function ProfilesClientView({
                   onChange={(a) => onEditAssignmentChange("orchestrator", a)}
                 />
                 <div className="flex gap-2">
-                  <Button onClick={onEditSave} disabled={!editAssignments["orchestrator"]?.provider || pendingAction === "edit"}>
+                  <button
+                    type="button"
+                    onClick={onEditSave}
+                    disabled={!editAssignments["orchestrator"]?.provider || pendingAction === "edit"}
+                    className="flex items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-white light:!text-black light:shadow-[4px_4px_0_0_#000000]"
+                  >
                     {pendingAction === "edit" && (
-                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                     )}
                     {t("profiles_save")}
-                  </Button>
-                  <Button variant="outline" onClick={onEditCancel}>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onEditCancel}
+                    className="flex items-center justify-center gap-2 border-2 border-border bg-card px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                  >
                     {t("backups_cancel")}
-                  </Button>
+                  </button>
                 </div>
               </div>
             ) : (
