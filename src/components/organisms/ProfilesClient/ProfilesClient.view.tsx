@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Pencil, Plus, Trash2, UserCircle, Sparkles, Check, Info, RotateCcw } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2, UserCircle, Sparkles, Check, Info, RotateCcw, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/atoms/Badge/Badge";
@@ -43,14 +43,15 @@ function OrchestratorPicker({
             onValueChange={(v) => onChange({ provider: v ?? "", model: "", variant: "" })}
           >
              <Select.Trigger
-              aria-label={t("modelPicker_provider")}
-              className={cn(
-                "flex h-9 w-full items-center justify-between border-2 border-border bg-transparent px-3 py-1 text-sm transition-colors",
-                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring light:border-black",
-              )}
-            >
-              <Select.Value placeholder={t("modelPicker_provider")} />
-            </Select.Trigger>
+               aria-label={t("modelPicker_provider")}
+               className={cn(
+                 "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring light:border-black light:bg-white",
+               )}
+             >
+               <Select.Value placeholder={t("modelPicker_provider")} />
+               <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+             </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
                 <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
@@ -75,15 +76,16 @@ function OrchestratorPicker({
             disabled={!value.provider}
           >
              <Select.Trigger
-              aria-label={t("modelPicker_model")}
-              className={cn(
-                "flex h-9 w-full items-center justify-between border-2 border-border bg-transparent px-3 py-1 text-sm transition-colors",
-                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                "disabled:cursor-not-allowed disabled:opacity-50 light:border-black",
-              )}
-            >
-              <Select.Value placeholder={t("modelPicker_model")} />
-            </Select.Trigger>
+               aria-label={t("modelPicker_model")}
+               className={cn(
+                 "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                 "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white",
+               )}
+             >
+               <Select.Value placeholder={t("modelPicker_model")} />
+               <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+             </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
                 <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
@@ -108,15 +110,16 @@ function OrchestratorPicker({
             disabled={!value.model}
           >
              <Select.Trigger
-              aria-label={t("modelPicker_variant")}
-              className={cn(
-                "flex h-9 w-full items-center justify-between border-2 border-border bg-transparent px-3 py-1 text-sm transition-colors",
-                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                "disabled:cursor-not-allowed disabled:opacity-50 light:border-black",
-              )}
-            >
-              <Select.Value placeholder={t("modelPicker_variant")} />
-            </Select.Trigger>
+               aria-label={t("modelPicker_variant")}
+               className={cn(
+                 "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                 "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white",
+               )}
+             >
+               <Select.Value placeholder={t("modelPicker_variant")} />
+               <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+             </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
                 <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
