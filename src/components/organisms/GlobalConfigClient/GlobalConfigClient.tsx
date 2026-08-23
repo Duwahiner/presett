@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Check, ChevronDown, Loader2, Settings2, Sparkles } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+
 import { Input } from "@/components/ui/input";
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -190,7 +190,15 @@ export function GlobalConfigClient() {
           <div className="space-y-1.5"><label htmlFor="config-language" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("config_language")}</label><Select.Root value={language} onValueChange={(value) => setLanguage((value ?? "en") as Locale)} disabled={saving !== null}><Select.Trigger id="config-language" className="flex h-9 w-full items-center justify-between border border-input bg-transparent px-3 py-1 text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"><Select.Value /></Select.Trigger><Select.Portal><Select.Positioner className="z-50"><Select.Popup className="min-w-[var(--anchor-width)] border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)]"><Select.Item value="en" className="flex cursor-pointer px-2 py-1.5 text-sm focus:bg-accent">English</Select.Item><Select.Item value="es" className="flex cursor-pointer px-2 py-1.5 text-sm focus:bg-accent">Español</Select.Item></Select.Popup></Select.Positioner></Select.Portal></Select.Root></div>
           <div className="space-y-1.5"><label htmlFor="config-persona" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("config_persona")}</label><Input id="config-persona" value={persona} onChange={(event) => setPersona(event.target.value)} disabled={saving !== null} className="font-mono" /></div>
         </CardContent>
-        <CardFooter><Button className="w-full sm:w-auto" onClick={saveGentle} disabled={saving !== null}>{saving === "gentle-ai" && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}{t("config_gentle_save")}</Button></CardFooter>
+        <CardFooter><button
+          type="button"
+          onClick={saveGentle}
+          disabled={saving !== null}
+          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
+        >
+          {saving === "gentle-ai" && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+          {t("config_gentle_save")}
+        </button></CardFooter>
         </Card>
 
         <Card>
@@ -201,7 +209,15 @@ export function GlobalConfigClient() {
           <ConfigSelect id="config-model" label={t("config_model")} value={model} options={models} disabled={saving !== null || catalogUnavailable || !provider} error={fieldErrors.model} onChange={(value) => { setModel(value); setVariant(""); setFieldErrors((errors) => ({ ...errors, model: undefined, variant: undefined })); }} />
           <ConfigSelect id="config-variant" label={t("config_variant")} value={variant} options={variants} disabled={saving !== null || catalogUnavailable || !model} error={fieldErrors.variant} onChange={(value) => { setVariant(value); setFieldErrors((errors) => ({ ...errors, variant: undefined })); }} />
         </CardContent>
-        <CardFooter><Button className="w-full sm:w-auto" onClick={saveOpenCode} disabled={saving !== null || catalogUnavailable}>{saving === "opencode" && <Loader2 className="size-4 animate-spin" aria-hidden="true" />}{t("config_opencode_save")}</Button></CardFooter>
+        <CardFooter><button
+          type="button"
+          onClick={saveOpenCode}
+          disabled={saving !== null || catalogUnavailable}
+          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
+        >
+          {saving === "opencode" && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+          {t("config_opencode_save")}
+        </button></CardFooter>
         </Card>
       </div>
     </main>
