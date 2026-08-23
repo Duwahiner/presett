@@ -47,12 +47,12 @@ function ConfigSelect({
   return (
     <div className="space-y-1.5">
       <label htmlFor={id} className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{label}</label>
-      <Select.Root value={value || null} onValueChange={(next) => onChange(next ?? "")} disabled={disabled}>
-        <Select.Trigger id={id} aria-invalid={Boolean(error)} aria-describedby={error ? errorId : undefined} className="flex h-9 w-full items-center justify-between border border-input bg-transparent px-3 py-1 text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50">
-          <Select.Value placeholder={label} />
-          <ChevronDown className="size-4 text-muted-foreground" aria-hidden="true" />
-        </Select.Trigger>
-        <Select.Portal><Select.Positioner className="z-50"><Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
+       <Select.Root value={value || null} onValueChange={(next) => onChange(next ?? "")} disabled={disabled}>
+         <Select.Trigger id={id} aria-invalid={Boolean(error)} aria-describedby={error ? errorId : undefined} className="flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors focus-visible:outline-none focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white light:text-black light:focus-visible:border-primary">
+           <Select.Value placeholder={label} />
+           <ChevronDown className="size-4 text-muted-foreground" aria-hidden="true" />
+         </Select.Trigger>
+         <Select.Portal><Select.Positioner className="z-50"><Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:shadow-[4px_4px_0_0_#000000]">
           {options.map((option) => <Select.Item key={option} value={option} className="flex cursor-pointer px-2 py-1.5 text-sm focus:bg-accent">{option}</Select.Item>)}
         </Select.Popup></Select.Positioner></Select.Portal>
       </Select.Root>
@@ -187,7 +187,7 @@ export function GlobalConfigClient() {
           <Badge variant="outline" className="text-muted-foreground">{t("config_gentle_status")}</Badge>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5"><label htmlFor="config-language" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("config_language")}</label><Select.Root value={language} onValueChange={(value) => setLanguage((value ?? "en") as Locale)} disabled={saving !== null}><Select.Trigger id="config-language" className="flex h-9 w-full items-center justify-between border border-input bg-transparent px-3 py-1 text-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"><Select.Value /></Select.Trigger><Select.Portal><Select.Positioner className="z-50"><Select.Popup className="min-w-[var(--anchor-width)] border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)]"><Select.Item value="en" className="flex cursor-pointer px-2 py-1.5 text-sm focus:bg-accent">English</Select.Item><Select.Item value="es" className="flex cursor-pointer px-2 py-1.5 text-sm focus:bg-accent">Español</Select.Item></Select.Popup></Select.Positioner></Select.Portal></Select.Root></div>
+          <div className="space-y-1.5"><label htmlFor="config-language" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("config_language")}</label><Select.Root value={language} onValueChange={(value) => setLanguage((value ?? "en") as Locale)} disabled={saving !== null}><Select.Trigger id="config-language" className="flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors focus-visible:outline-none focus-visible:border-primary disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white light:text-black light:focus-visible:border-primary"><Select.Value /></Select.Trigger><Select.Portal><Select.Positioner className="z-50"><Select.Popup className="min-w-[var(--anchor-width)] border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] light:border-black light:bg-white light:shadow-[4px_4px_0_0_#000000]"><Select.Item value="en" className="flex cursor-pointer px-2 py-1.5 text-sm focus:bg-accent">English</Select.Item><Select.Item value="es" className="flex cursor-pointer px-2 py-1.5 text-sm focus:bg-accent">Español</Select.Item></Select.Popup></Select.Positioner></Select.Portal></Select.Root></div>
           <div className="space-y-1.5"><label htmlFor="config-persona" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">{t("config_persona")}</label><Input id="config-persona" value={persona} onChange={(event) => setPersona(event.target.value)} disabled={saving !== null} className="font-mono" /></div>
         </CardContent>
         <CardFooter><button

@@ -42,20 +42,20 @@ function OrchestratorPicker({
             value={value.provider || null}
             onValueChange={(v) => onChange({ provider: v ?? "", model: "", variant: "" })}
           >
-             <Select.Trigger
-               aria-label={t("modelPicker_provider")}
-               className={cn(
-                 "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
-                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring light:border-black light:bg-white",
-               )}
-             >
+              <Select.Trigger
+                aria-label={t("modelPicker_provider")}
+                className={cn(
+                  "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+                  "focus-visible:outline-none focus-visible:border-primary light:border-black light:bg-white light:text-black light:focus-visible:border-primary",
+                )}
+              >
                <Select.Value placeholder={t("modelPicker_provider")} />
                <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
              </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
-                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
-                  {providers.map((p) => (
+                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
+                   {providers.map((p) => (
                     <Select.Item key={p} value={p} className="relative flex w-full cursor-pointer select-none items-center px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                       <Select.ItemText>{p}</Select.ItemText>
                     </Select.Item>
@@ -75,21 +75,21 @@ function OrchestratorPicker({
             onValueChange={(v) => onChange({ ...value, model: v ?? "", variant: "" })}
             disabled={!value.provider}
           >
-             <Select.Trigger
-               aria-label={t("modelPicker_model")}
-               className={cn(
-                 "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
-                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                 "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white",
-               )}
-             >
+              <Select.Trigger
+                aria-label={t("modelPicker_model")}
+                className={cn(
+                  "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+                  "focus-visible:outline-none focus-visible:border-primary",
+                  "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white light:text-black light:focus-visible:border-primary",
+                )}
+              >
                <Select.Value placeholder={t("modelPicker_model")} />
                <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
              </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
-                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
-                  {models.map((m) => (
+                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
+                   {models.map((m) => (
                     <Select.Item key={m} value={m} className="relative flex w-full cursor-pointer select-none items-center px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                       <Select.ItemText>{m}</Select.ItemText>
                     </Select.Item>
@@ -109,21 +109,21 @@ function OrchestratorPicker({
             onValueChange={(v) => onChange({ ...value, variant: v ?? "" })}
             disabled={!value.model}
           >
-             <Select.Trigger
-               aria-label={t("modelPicker_variant")}
-               className={cn(
-                 "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
-                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                 "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white",
-               )}
-             >
+              <Select.Trigger
+                aria-label={t("modelPicker_variant")}
+                className={cn(
+                  "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+                  "focus-visible:outline-none focus-visible:border-primary",
+                  "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white light:text-black light:focus-visible:border-primary",
+                )}
+              >
                <Select.Value placeholder={t("modelPicker_variant")} />
                <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
              </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
-                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
-                  {variants.map((v) => (
+                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
+                   {variants.map((v) => (
                     <Select.Item key={v} value={v} className="relative flex w-full cursor-pointer select-none items-center px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                       <Select.ItemText>{v}</Select.ItemText>
                     </Select.Item>
