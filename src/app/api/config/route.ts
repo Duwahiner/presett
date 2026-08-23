@@ -19,6 +19,8 @@ import {
   globalConfigPatchSchema,
   validateModelAssignment,
 } from "@/lib/validators";
+import { readFile, writeFile } from "node:fs/promises";
+import { homedir } from "node:os";
 
 export const dynamic = "force-dynamic";
 
@@ -37,6 +39,37 @@ function backupDir(): string {
   );
 }
 function gentleAiDir(): string { return process.env.PRESETT_TEST_GENTLE_AI_DIR ?? join(process.env.HOME ?? "", ".gentle-ai"); }
+
+function opencodeStateDir(): string {
+  return process.env.PRESETT_TEST_OPENCODE_STATE_DIR ?? join(homedir(), ".local", "state", "opencode");
+}
+
+/**
+ * OpenCode variant preference file updater
+ * 
+ * OpenCode v2 ignores `agent.variant` in opencode.json (GitHub issue #28803).
+ * Instead, it resolves variants from `~/.local/state/opencode/model.json`.
+ * Priority order: CLI flag → model.json → session DB → agent.config
+ * 
+ * We write to model.json to ensure the variant takes effect immediately.
+ * If OpenCode fixes #28803 and gives priority to agent.variant, this
+ * function becomes redundant but harmless — the variant will be set in
+ * both places (opencode.json agent config AND model.json preferences).
+ */
+async function updateOpenCodeVariantPreference(modelRef: string, variant: string): Promise<void> {
+  const modelJsonPath = join(opencodeStateDir(), "model.json");
+  try {
+    const raw = await readFile(modelJsonPath, "utf-8");
+    const data = JSON.parse(raw) as Record<string, unknown>;
+    const variants = (data.variant as Record<string, string> | undefined) ?? {};
+    variants[modelRef] = variant;
+    data.variant = variants;
+    await writeFile(modelJsonPath, JSON.stringify(data, null, 2));
+  } catch {
+    // If file doesn't exist or is malformed, create it
+    await writeFile(modelJsonPath, JSON.stringify({ variant: { [modelRef]: variant } }, null, 2));
+  }
+}
 
 export async function GET() {
   const configResult = await readOpenCodeConfigSafe(configDir());
@@ -96,7 +129,33 @@ export async function PATCH(request: Request) {
   }
 
   const result = await writeOpenCodeConfig(configDir(), { ...existing.value, agent: { ...existing.value.agent, [parsed.data.agentKey]: { ...agent, model: parsed.data.model, variant: parsed.data.variant } } }, backupDir());
-  return result.ok ? NextResponse.json({ ok: true }) : NextResponse.json(buildSafeError("Configuration could not be saved"), { status: 500 });
+  if (!result.ok) return NextResponse.json(buildSafeError("Configuration could not be saved"), { status: 500 });
+
+  // Update OpenCode's variant preference file (required for variant to take effect)
+  await updateOpenCodeVariantPreference(parsed.data.model, parsed.data.variant);
+
+  // Also update Gentle-AI's state.json with model_assignments
+  const { provider: patchProvider, model: patchModel } = splitModelRef(parsed.data.model);
+  const stateResult = await readStateJsonSafe(gentleAiDir());
+  if (stateResult.ok) {
+    const existingState = stateResult.value;
+    const modelAssignments = ((existingState as unknown) as Record<string, unknown>).model_assignments as Record<string, { provider_id: string; model_id: string; effort: string }> | undefined;
+    const updatedAssignments = {
+      ...(modelAssignments ?? {}),
+      [parsed.data.agentKey]: {
+        provider_id: patchProvider,
+        model_id: patchModel,
+        effort: parsed.data.variant,
+      },
+    };
+    await writeGentleAiConfig(
+      gentleAiDir(),
+      { ...existingState, model_assignments: updatedAssignments },
+      backupDir(),
+    );
+  }
+
+  return NextResponse.json({ ok: true });
 }
 
 export async function OPTIONS() {
@@ -153,6 +212,29 @@ export async function PUT(request: Request) {
           ? 503
           : 500;
     return NextResponse.json({ error: result.error }, { status });
+  }
+
+  // Update OpenCode's variant preference file (required for variant to take effect)
+  await updateOpenCodeVariantPreference(`${body.provider}/${body.model}`, body.variant);
+
+  // Also update Gentle-AI's state.json with model_assignments
+  const stateResult = await readStateJsonSafe(gentleAiDir());
+  if (stateResult.ok) {
+    const existingState = stateResult.value;
+    const modelAssignments = ((existingState as unknown) as Record<string, unknown>).model_assignments as Record<string, { provider_id: string; model_id: string; effort: string }> | undefined;
+    const updatedAssignments = {
+      ...(modelAssignments ?? {}),
+      [body.agentKey]: {
+        provider_id: body.provider,
+        model_id: body.model,
+        effort: body.variant,
+      },
+    };
+    await writeGentleAiConfig(
+      gentleAiDir(),
+      { ...existingState, model_assignments: updatedAssignments },
+      backupDir(),
+    );
   }
 
   return NextResponse.json({ ok: true });

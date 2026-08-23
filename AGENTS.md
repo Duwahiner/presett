@@ -1,5 +1,15 @@
 # Project Agent Rules — presett
 
+<!-- gentle-ai:orchestrator-config -->
+## Orchestrator Response Language
+
+The SDD orchestrator for this project is configured to respond in **English only**, regardless of the input language. This configuration is stored in `~/.gentle-ai/state.json` with `language: "en"` and is enforced through this project's agent rules.
+
+**Rule**: The orchestrator MUST respond in English, matching the configured language in the workspace settings (PreSett UI: Espacio de Trabajo > Idioma de Respuesta). Do not match the user's input language.
+
+This ensures consistent, professional communication in development workflows and prevents context-switching between languages in a single session.
+<!-- /gentle-ai:orchestrator-config -->
+
 ## Checkout and Worktree Policy
 
 - By default, work sequentially in a single checkout.
