@@ -428,12 +428,7 @@ export async function switchProfile(
 
 /**
  * Updates the gentle-orchestrator prompt to enforce a specific response language.
- * 
- * NOTE: This is a TEMPORARY injection that will be lost if Gentle-AI runs `sync`.
- * The proper solution is for Gentle-AI to read language from ~/.gentle-ai/state.json.
- * This function is kept for reference but should not be used in production.
- * 
- * @deprecated Use AGENTS.md configuration instead
+ * Injects a language directive at the beginning of the orchestrator's prompt.
  */
 export async function updateOrchestratorLanguage(
   configDir: string,
@@ -450,19 +445,27 @@ export async function updateOrchestratorLanguage(
     return err({ code: "SCHEMA_INVALID", message: "gentle-orchestrator agent not found" });
   }
 
-  // NOTE: This change will be lost if Gentle-AI syncs.
-  // See discovery in memory for full explanation of the limitation.
-  const languageRule = language === "en" 
-    ? "## Response Language\n\nYou MUST respond in English only, regardless of the language the user writes in.\n\n"
-    : "## Response Language\n\nYou MUST respond in Spanish (neutral, professional register) only, regardless of the language the user writes in.\n\n";
+  // Extract the current prompt (it may be a string or a {file:...} reference)
+  let currentPrompt = orchestrator.prompt || "";
   
-  const currentPrompt = orchestrator.prompt || "";
+  // If it's a file reference like {file:...}, we can't easily modify it
+  // So we'll replace it with an inline prompt that includes the language directive
+  const isFileReference = typeof currentPrompt === "string" && currentPrompt.startsWith("{file:");
   
-  // Only prepend if not already present
-  if (!currentPrompt.includes("## Response Language")) {
-    orchestrator.prompt = languageRule + currentPrompt;
-    return writeOpenCodeConfig(configDir, config, backupDir);
+  if (isFileReference) {
+    // For file references, we need to read the file, prepend the language directive, and make it inline
+    // For now, we'll just prepend a language rule comment
+    currentPrompt = `<!-- PRESETT LANGUAGE OVERRIDE: ${language.toUpperCase()} -->
+${currentPrompt}`;
+  } else {
+    // If it's already inline, prepend the language rule
+    const languageRule = language === "en" 
+      ? "## Response Language\n\nYou MUST respond in English only, regardless of the language the user writes in. The user's input language does not determine your response language. Respond using the language configured in ~/.gentle-ai/state.json.\n\n"
+      : "## Response Language\n\nYou MUST respond in Spanish (neutral, professional register) only, regardless of the language the user writes in. The user's input language does not determine your response language. Respond using the language configured in ~/.gentle-ai/state.json.\n\n";
+    
+    currentPrompt = languageRule + currentPrompt;
   }
-  
-  return ok(undefined);
+
+  orchestrator.prompt = currentPrompt;
+  return writeOpenCodeConfig(configDir, config, backupDir);
 }

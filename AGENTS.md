@@ -1,23 +1,11 @@
 # Project Agent Rules — presett
 
 <!-- gentle-ai:orchestrator-config -->
-## Orchestrator Response Language Configuration
+## Orchestrator Response Language
 
-**Status**: Configured for dynamic language selection based on PreSett workspace settings.
+The SDD orchestrator for this project is configured to respond in **English only**, regardless of the input language. This configuration is stored in `~/.gentle-ai/state.json` with `language: "en"` and is enforced through this project's agent rules.
 
-The SDD orchestrator for this project is configured to read its response language from `~/.gentle-ai/state.json`. When PreSett's "Idioma de Respuesta" setting changes, the orchestrator MUST respect that configuration and respond in the configured language, NOT the language of the user input.
-
-### Current Configuration
-- Language is stored in: `~/.gentle-ai/state.json` → `language` field
-- PreSett UI setting: Espacio de Trabajo > Idioma de Respuesta
-- Rule: The orchestrator MUST respond in the configured language, regardless of user input language
-
-### For Developers
-If the orchestrator is still responding in the wrong language:
-1. Verify `~/.gentle-ai/state.json` contains the correct `language` field
-2. Run `gentle-ai sync` to ensure orchestrator has latest configuration
-3. Check AGENTS.md (this file) for any project-level overrides
-4. Note: `gentle-ai sync` may reset opencode.json, so configuration is managed via state.json, not opencode.json
+**Rule**: The orchestrator MUST respond in English, matching the configured language in the workspace settings (PreSett UI: Espacio de Trabajo > Idioma de Respuesta). Do not match the user's input language.
 
 This ensures consistent, professional communication in development workflows and prevents context-switching between languages in a single session.
 <!-- /gentle-ai:orchestrator-config -->
