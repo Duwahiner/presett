@@ -6,8 +6,6 @@ import { DEFAULT_OPEN_CODE_CONFIG_DIR } from "@/adapters/opencode";
 import { DEFAULT_MODEL_CACHE_DIR } from "@/services/modelCacheService";
 import { defaultPresettDir } from "@/lib/paths";
 import { buildSafeError, requireMutationOrigin } from "@/lib/localApiSecurity";
-import { readGentleAiConfigSafe, writeGentleAiConfig } from "@/adapters/gentle-ai";
-import { readStateJsonSafe } from "@/services/stateService";
 
 export const dynamic = "force-dynamic";
 
@@ -25,8 +23,6 @@ function backupDir(): string {
     join(defaultPresettDir(), "backups")
   );
 }
-
-function gentleAiDir(): string { return process.env.PRESETT_TEST_GENTLE_AI_DIR ?? join(process.env.HOME ?? "", ".gentle-ai"); }
 
 export async function OPTIONS() {
   return new NextResponse(null, {
@@ -79,26 +75,6 @@ export async function PUT(
           ? 503
           : 500;
     return NextResponse.json({ error: result.error }, { status });
-  }
-
-  // Also update Gentle-AI's state.json with model_assignments
-  const stateResult = await readStateJsonSafe(gentleAiDir());
-  if (stateResult.ok) {
-    const existingState = stateResult.value;
-    const modelAssignments = ((existingState as unknown) as Record<string, unknown>).model_assignments as Record<string, { provider_id: string; model_id: string; effort: string }> | undefined;
-    const updatedAssignments = { ...(modelAssignments ?? {}) };
-    for (const [agentKey, assignment] of Object.entries(body.assignments)) {
-      updatedAssignments[agentKey] = {
-        provider_id: assignment.provider,
-        model_id: assignment.model,
-        effort: assignment.variant,
-      };
-    }
-    await writeGentleAiConfig(
-      gentleAiDir(),
-      { ...existingState, model_assignments: updatedAssignments },
-      backupDir(),
-    );
   }
 
   return NextResponse.json({ ok: true });

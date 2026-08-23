@@ -10,7 +10,7 @@ export interface GentleAiConfig { persona?: string; language?: Locale; [key: str
 export async function readGentleAiConfigSafe(dir: string): Promise<Result<GentleAiConfig>> {
   try {
     const value = JSON.parse(await readFile(join(dir, "state.json"), "utf8")) as GentleAiConfig;
-    return ok(value);
+    return ok({ persona: value.persona, language: value.language });
   } catch (cause) {
     return err({ code: "FILE_MISSING", message: "state.json not found", cause });
   }

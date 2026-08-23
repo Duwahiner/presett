@@ -142,7 +142,6 @@ export interface Resources {
   "modelPicker_model": string;
   "modelPicker_variant": string;
   "modelPicker_save": string;
-  "modelPicker_variant_note": string;
   "agentAssignment_unset": string;
   "agentAssignment_edit": string;
   "errors_generic": string;
@@ -212,7 +211,6 @@ export interface Resources {
   "config_opencode_save": string;
   "config_opencode_saved": string;
   "config_opencode_error": string;
-  "config_opencode_variant_note": string;
   "config_field_required": string;
   "search_title": string;
   "search_status_badge": string;

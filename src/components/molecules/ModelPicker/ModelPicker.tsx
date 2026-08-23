@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { Check, ChevronDown, Info } from "lucide-react";
+import { Check, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -106,13 +106,9 @@ export function ModelPicker({
     () => Object.keys(catalog[provider] ?? {}),
     [catalog, provider],
   );
-  const catalogVariants = useMemo(
+  const variants = useMemo(
     () => catalog[provider]?.[model] ?? [],
     [catalog, provider, model],
-  );
-  const variants = useMemo(
-    () => catalogVariants.length > 0 ? catalogVariants : variant ? [variant] : [],
-    [catalogVariants, variant],
   );
 
   const isValid = provider && model && variant;
@@ -153,20 +149,14 @@ export function ModelPicker({
         />
       </div>
 
-      <div className="space-y-2">
-        <button
-          type="button"
-          disabled={disabled || !isValid}
-          onClick={() => onConfirm({ provider, model, variant })}
-          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-white light:!text-black light:shadow-[4px_4px_0_0_#000000]"
-        >
-          {t("modelPicker_save")}
-        </button>
-        <div className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
-          <Info className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-          <span>{t("modelPicker_variant_note")}</span>
-        </div>
-      </div>
+      <button
+        type="button"
+        disabled={disabled || !isValid}
+        onClick={() => onConfirm({ provider, model, variant })}
+        className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-white light:!text-black light:shadow-[4px_4px_0_0_#000000]"
+      >
+        {t("modelPicker_save")}
+      </button>
     </div>
   );
 }

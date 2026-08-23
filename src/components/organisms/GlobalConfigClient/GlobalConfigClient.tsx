@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, ChevronDown, Info, Loader2, Settings2, Sparkles } from "lucide-react";
+import { Check, ChevronDown, Loader2, Settings2, Sparkles } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
 import { Input } from "@/components/ui/input";
@@ -160,8 +160,7 @@ export function GlobalConfigClient() {
   const gentleConfigured = Boolean(language);
   const providers = Object.keys(catalog);
   const models = Object.keys(catalog[provider] ?? {});
-  const catalogVariants = catalog[provider]?.[model] ?? [];
-  const variants = catalogVariants.length > 0 ? catalogVariants : variant ? [variant] : [];
+  const variants = catalog[provider]?.[model] ?? [];
   const openCodeConfigured = Boolean(agentKey && provider && model && variant);
   const isConfigured = gentleConfigured && openCodeConfigured;
 
@@ -169,7 +168,7 @@ export function GlobalConfigClient() {
 
   return (
     <main className="flex h-full flex-col">
-      <header className="border-b border-border bg-card">
+      <header>
         <div className="flex items-start gap-3 px-8 py-6">
           <span className="flex size-10 shrink-0 items-center justify-center bg-primary/15 text-primary"><Settings2 className="size-5" aria-hidden="true" /></span>
           <div className="min-w-0 flex-1">
@@ -210,21 +209,15 @@ export function GlobalConfigClient() {
           <ConfigSelect id="config-model" label={t("config_model")} value={model} options={models} disabled={saving !== null || catalogUnavailable || !provider} error={fieldErrors.model} onChange={(value) => { setModel(value); setVariant(""); setFieldErrors((errors) => ({ ...errors, model: undefined, variant: undefined })); }} />
           <ConfigSelect id="config-variant" label={t("config_variant")} value={variant} options={variants} disabled={saving !== null || catalogUnavailable || !model} error={fieldErrors.variant} onChange={(value) => { setVariant(value); setFieldErrors((errors) => ({ ...errors, variant: undefined })); }} />
         </CardContent>
-        <CardFooter className="flex-col items-start gap-3">
-          <button
-            type="button"
-            onClick={saveOpenCode}
-            disabled={saving !== null || catalogUnavailable}
-            className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
-          >
-            {saving === "opencode" && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-            {t("config_opencode_save")}
-          </button>
-          <div className="mt-3 flex items-start gap-2 text-xs text-muted-foreground">
-            <Info className="mt-0.5 size-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
-            <span>{t("config_opencode_variant_note")}</span>
-          </div>
-        </CardFooter>
+        <CardFooter><button
+          type="button"
+          onClick={saveOpenCode}
+          disabled={saving !== null || catalogUnavailable}
+          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
+        >
+          {saving === "opencode" && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+          {t("config_opencode_save")}
+        </button></CardFooter>
         </Card>
       </div>
     </main>
