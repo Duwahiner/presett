@@ -30,7 +30,7 @@ export function Badge({
       className={cn("inline-flex items-center gap-1.5", className)}
     >
       {pulsing && (
-        <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-current" />
+        <span className="h-1.5 w-1.5 animate-pulse bg-current" />
       )}
       {children}
     </UIBadge>
