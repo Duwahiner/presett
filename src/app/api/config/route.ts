@@ -6,6 +6,7 @@ import {
   splitModelRef,
   updateModelAssignment,
   writeOpenCodeConfig,
+  updateOrchestratorLanguage,
 } from "@/adapters/opencode";
 import { readModelCacheSafe } from "@/services/modelCacheService";
 import { DEFAULT_OPEN_CODE_CONFIG_DIR } from "@/adapters/opencode";
@@ -106,7 +107,14 @@ export async function PATCH(request: Request) {
   if (parsed.data.domain === "gentle-ai") {
     const existing = await readStateJsonSafe(gentleAiDir());
     const result = await writeGentleAiConfig(gentleAiDir(), { ...(existing.ok ? existing.value : {}), language: parsed.data.language, persona: parsed.data.persona }, backupDir());
-    return result.ok ? NextResponse.json({ ok: true }) : NextResponse.json(buildSafeError("Configuration could not be saved"), { status: 500 });
+    if (!result.ok) return NextResponse.json(buildSafeError("Configuration could not be saved"), { status: 500 });
+    
+    // Also update the orchestrator prompt to enforce the configured language
+    if (parsed.data.language) {
+      await updateOrchestratorLanguage(configDir(), parsed.data.language, backupDir());
+    }
+    
+    return NextResponse.json({ ok: true });
   }
   const existing = await readOpenCodeConfigSafe(configDir());
   if (!existing.ok) return NextResponse.json(buildSafeError("OpenCode configuration unavailable"), { status: 503 });
