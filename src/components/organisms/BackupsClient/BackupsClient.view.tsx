@@ -12,7 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/atoms/Badge/Badge";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
-import { ListingControls } from "@/components/molecules/ListingControls/ListingControls";
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
 import { DeleteBackupModal } from "@/components/organisms/DeleteBackupModal";
 import { cn } from "@/lib/utils";
@@ -83,16 +82,6 @@ export function BackupsClientView({
           </pre>
         )}
       </div>
-
-      {!showNoData && (
-        <ListingControls
-          config={controls.config}
-          state={controls.state}
-          onChange={onControlsChange}
-          onClear={onClearControls}
-          resultCount={resultCount}
-        />
-      )}
 
       {showNoData ? (
         <ListingEmptyState variant="no-data" entity="backups" />
