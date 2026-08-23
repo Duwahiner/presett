@@ -51,7 +51,7 @@ export function AgentAssignmentRow({
   const prefixColor = useMemo(() => getAgentPrefixColor(agentKey), [agentKey]);
 
   return (
-    <div className="border-2 border-border bg-card p-4 transition-colors hover:border-border/80 hover:bg-accent/40">
+    <div className="border-2 border-border bg-card p-4 transition-colors hover:border-border hover:bg-muted">
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center bg-primary/15">
