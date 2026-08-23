@@ -21,6 +21,7 @@ import {
   validateModelAssignment,
 } from "@/lib/validators";
 import { readFile, writeFile } from "node:fs/promises";
+import { execSync } from "node:child_process";
 import { homedir } from "node:os";
 
 export const dynamic = "force-dynamic";
@@ -43,6 +44,18 @@ function gentleAiDir(): string { return process.env.PRESETT_TEST_GENTLE_AI_DIR ?
 
 function opencodeStateDir(): string {
   return process.env.PRESETT_TEST_OPENCODE_STATE_DIR ?? join(homedir(), ".local", "state", "opencode");
+}
+
+/**
+ * Run gentle-ai sync to apply persona changes to the orchestrator
+ */
+async function syncGentleAi(): Promise<void> {
+  try {
+    execSync("gentle-ai sync", { stdio: "pipe" });
+  } catch (error) {
+    // If sync fails, log but don't block the response
+    console.error("gentle-ai sync failed:", error);
+  }
 }
 
 /**
@@ -106,13 +119,21 @@ export async function PATCH(request: Request) {
   }
   if (parsed.data.domain === "gentle-ai") {
     const existing = await readStateJsonSafe(gentleAiDir());
-    const result = await writeGentleAiConfig(gentleAiDir(), { ...(existing.ok ? existing.value : {}), language: parsed.data.language, persona: parsed.data.persona }, backupDir());
+    
+    // Map language to persona: en -> neutral (English), es -> gentleman (Spanish/Rioplatense)
+    let targetPersona = parsed.data.persona || "gentleman";
+    if (parsed.data.language === "en") {
+      targetPersona = "neutral"; // Neutral persona responds in English
+    } else if (parsed.data.language === "es") {
+      targetPersona = "gentleman"; // Gentleman persona uses Spanish (Rioplatense)
+    }
+    
+    const result = await writeGentleAiConfig(gentleAiDir(), { ...(existing.ok ? existing.value : {}), language: parsed.data.language, persona: targetPersona }, backupDir());
     if (!result.ok) return NextResponse.json(buildSafeError("Configuration could not be saved"), { status: 500 });
     
-    // Also update the orchestrator prompt to enforce the configured language
-    if (parsed.data.language) {
-      await updateOrchestratorLanguage(configDir(), parsed.data.language, backupDir());
-    }
+    // Sync Gentle-AI to apply the persona change to the orchestrator
+    // This ensures the new persona (and thus language) takes effect
+    await syncGentleAi();
     
     return NextResponse.json({ ok: true });
   }
