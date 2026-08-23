@@ -252,7 +252,7 @@ export function ProfilesClientView({
         {visibleProfiles.map((profile) => (
           <div
             key={profile.name}
-            className={`relative border-2 border-border bg-card p-4 transition-colors hover:border-border/80 hover:bg-accent/40`}
+            className={`relative border-2 border-border bg-card p-4 transition-colors hover:border-border hover:bg-muted`}
           >
             {editingProfile === profile.name ? (
               <div className="w-full space-y-4">
