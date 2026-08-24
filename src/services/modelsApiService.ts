@@ -19,12 +19,45 @@ export interface CatalogResponse {
   catalog: ModelCatalog;
 }
 
+const CLIENT_CATALOG_CACHE_TTL_MS = 30_000;
+
+let cachedCatalogResponse: CatalogResponse | null = null;
+let catalogFetchedAt = 0;
+let catalogRequest: Promise<CatalogResponse> | null = null;
+
 export async function getConfig(): Promise<ConfigResponse> {
   return get("/config");
 }
 
-export async function getCatalog(): Promise<CatalogResponse> {
-  return get("/models");
+export function clearModelCatalogCache(): void {
+  cachedCatalogResponse = null;
+  catalogFetchedAt = 0;
+  catalogRequest = null;
+}
+
+export async function getCatalog(options?: { forceRefresh?: boolean }): Promise<CatalogResponse> {
+  const forceRefresh = options?.forceRefresh === true;
+  const now = Date.now();
+
+  if (!forceRefresh && cachedCatalogResponse && now - catalogFetchedAt < CLIENT_CATALOG_CACHE_TTL_MS) {
+    return cachedCatalogResponse;
+  }
+
+  if (!forceRefresh && catalogRequest) {
+    return catalogRequest;
+  }
+
+  catalogRequest = get<CatalogResponse>("/models")
+    .then((response) => {
+      cachedCatalogResponse = response;
+      catalogFetchedAt = Date.now();
+      return response;
+    })
+    .finally(() => {
+      catalogRequest = null;
+    });
+
+  return catalogRequest;
 }
 
 export async function saveAssignment(payload: {

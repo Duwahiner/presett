@@ -13,6 +13,7 @@ export interface Profile {
 export interface ProfilesClientViewProps {
   profiles: Profile[];
   catalog: ModelCatalog;
+  catalogLoading: boolean;
   loading: boolean;
   error: string | null;
   pendingAction: string | null;

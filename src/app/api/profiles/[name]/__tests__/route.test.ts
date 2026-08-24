@@ -3,6 +3,7 @@ import { mkdtemp, writeFile, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { OPTIONS, PUT, DELETE as DELETE_HANDLER } from "../route";
+import { clearServerModelCatalogCache } from "@/services/modelCatalogService";
 
 function updateProfileRequest(origin?: string): Request {
   const request = new Request("http://localhost/api/profiles/custom", {
@@ -28,23 +29,30 @@ function deleteProfileRequest(origin?: string): Request {
 describe("/api/profiles/[name]", () => {
   let tempDir = "";
   let cacheDir = "";
+  let verboseFile = "";
 
   beforeEach(async () => {
+    clearServerModelCatalogCache();
     tempDir = await mkdtemp(join(tmpdir(), "presett-profile-name-"));
     cacheDir = await mkdtemp(join(tmpdir(), "presett-profile-name-cache-"));
+    verboseFile = join(cacheDir, "opencode-models-verbose.txt");
     process.env.PRESETT_TEST_CONFIG_DIR = tempDir;
     process.env.PRESETT_TEST_MODEL_CACHE_DIR = cacheDir;
     process.env.PRESETT_TEST_BACKUP_DIR = join(tempDir, "backups");
+    process.env.PRESETT_TEST_OPENCODE_MODELS_FILE = verboseFile;
     await writeFile(
       join(cacheDir, "model-variants.json"),
       JSON.stringify({ openai: { "gpt-4": ["low", "high"] } }),
     );
+    await writeFile(verboseFile, "");
   });
 
   afterEach(async () => {
+    clearServerModelCatalogCache();
     delete process.env.PRESETT_TEST_CONFIG_DIR;
     delete process.env.PRESETT_TEST_MODEL_CACHE_DIR;
     delete process.env.PRESETT_TEST_BACKUP_DIR;
+    delete process.env.PRESETT_TEST_OPENCODE_MODELS_FILE;
     await rm(tempDir, { recursive: true, force: true });
     await rm(cacheDir, { recursive: true, force: true });
   });

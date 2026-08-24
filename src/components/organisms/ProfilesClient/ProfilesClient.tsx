@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { listProfiles, createProfile, switchProfile, deleteProfile, updateProfile } from "@/services/profilesApiService";
-import { getCatalog } from "@/services/modelsApiService";
+import { clearModelCatalogCache, getCatalog } from "@/services/modelsApiService";
 import { t } from "@/resources/resources";
 import { useNotificationToasts } from "@/hooks/useNotificationToasts";
 import type { ModelCatalog } from "@/components/molecules/ModelPicker/ModelPicker";
@@ -86,6 +86,7 @@ export function ProfilesClient({
   const isAuditMode = useAuditMode();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [catalog, setCatalog] = useState<ModelCatalog>({});
+  const [catalogLoading, setCatalogLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
@@ -130,25 +131,44 @@ export function ProfilesClient({
       // Short-circuit to fixtures
       setProfiles(AUDIT_FIXTURE_PROFILES.profiles);
       setCatalog(AUDIT_FIXTURE_CATALOG);
+      setCatalogLoading(false);
       setLoading(false);
       return;
     }
 
-    async function load() {
+    let mounted = true;
+
+    async function loadCatalog(forceRefresh = false) {
+      if (mounted) setCatalogLoading(true);
       try {
-        const [profilesData, catalogData] = await Promise.all([
-          listProfiles(),
-          getCatalog(),
-        ]);
-        setProfiles(profilesData.profiles);
+        const catalogData = await getCatalog(forceRefresh ? { forceRefresh: true } : undefined);
+        if (!mounted) return;
         setCatalog(catalogData.catalog);
-      } catch (cause) {
-        setError(cause instanceof Error ? cause.message : String(cause));
+      } catch {
+        if (!mounted) return;
+        setCatalog({});
       } finally {
-        setLoading(false);
+        if (mounted) setCatalogLoading(false);
       }
     }
-    load();
+
+    async function load() {
+      try {
+        const profilesData = await listProfiles();
+        if (!mounted) return;
+        setProfiles(profilesData.profiles);
+      } catch (cause) {
+        if (!mounted) return;
+        setError(cause instanceof Error ? cause.message : String(cause));
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    }
+    void load();
+    void loadCatalog();
+    return () => {
+      mounted = false;
+    };
   }, [isAuditMode]);
 
   async function refresh() {
@@ -190,6 +210,7 @@ export function ProfilesClient({
     setPendingAction(`switch:${name}`);
     try {
       await switchProfile(name);
+      clearModelCatalogCache();
       await refresh();
       onSuccess(t("profiles_switchSuccess"));
     } catch (cause) {
@@ -255,6 +276,7 @@ export function ProfilesClient({
     <ProfilesClientView
       profiles={profiles}
       catalog={catalog}
+      catalogLoading={catalogLoading}
       loading={loading}
       error={error}
       pendingAction={pendingAction}

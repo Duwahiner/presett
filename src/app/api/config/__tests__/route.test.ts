@@ -3,6 +3,7 @@ import { mkdtemp, writeFile, mkdir, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { GET, OPTIONS, PATCH, PUT } from "../route";
+import { clearServerModelCatalogCache } from "@/services/modelCatalogService";
 
 function updateConfigRequest(origin?: string): Request {
   const request = new Request("http://localhost/api/config", {
@@ -30,22 +31,29 @@ describe("GET /api/config", () => {
   let tempDir = "";
   let cacheDir = "";
   let gentleAiDir = "";
+  let verboseFile = "";
 
   beforeEach(async () => {
+    clearServerModelCatalogCache();
     tempDir = await mkdtemp(join(tmpdir(), "presett-config-"));
     cacheDir = await mkdtemp(join(tmpdir(), "presett-config-cache-"));
     gentleAiDir = await mkdtemp(join(tmpdir(), "presett-gentle-ai-"));
+    verboseFile = join(cacheDir, "opencode-models-verbose.txt");
     process.env.PRESETT_TEST_CONFIG_DIR = tempDir;
     process.env.PRESETT_TEST_MODEL_CACHE_DIR = cacheDir;
     process.env.PRESETT_TEST_BACKUP_DIR = join(tempDir, "backups");
     process.env.PRESETT_TEST_GENTLE_AI_DIR = gentleAiDir;
+    process.env.PRESETT_TEST_OPENCODE_MODELS_FILE = verboseFile;
+    await writeFile(verboseFile, "");
   });
 
   afterEach(async () => {
+    clearServerModelCatalogCache();
     delete process.env.PRESETT_TEST_CONFIG_DIR;
     delete process.env.PRESETT_TEST_MODEL_CACHE_DIR;
     delete process.env.PRESETT_TEST_BACKUP_DIR;
     delete process.env.PRESETT_TEST_GENTLE_AI_DIR;
+    delete process.env.PRESETT_TEST_OPENCODE_MODELS_FILE;
     await rm(tempDir, { recursive: true, force: true });
     await rm(cacheDir, { recursive: true, force: true });
     await rm(gentleAiDir, { recursive: true, force: true });
@@ -140,13 +148,13 @@ describe("GET /api/config", () => {
     expect(await readFile(join(tempDir, "opencode.json"), "utf8")).toBe(original);
   });
 
-  it("blocks OpenCode saves when the model catalog is unavailable", async () => {
+  it("rejects unknown OpenCode models when only configured assignments are available", async () => {
     const original = JSON.stringify({ agent: { main: { model: "openai/old", variant: "low" } } });
     await writeFile(join(tempDir, "opencode.json"), original);
 
     const response = await PATCH(patchRequest({ domain: "opencode", agentKey: "main", model: "openai/new", variant: "high" }));
 
-    expect(response.status).toBe(503);
+    expect(response.status).toBe(400);
     expect(await readFile(join(tempDir, "opencode.json"), "utf8")).toBe(original);
   });
 

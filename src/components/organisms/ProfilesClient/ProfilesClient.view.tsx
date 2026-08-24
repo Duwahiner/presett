@@ -152,6 +152,7 @@ function OrchestratorPicker({
 export function ProfilesClientView({
   profiles,
   catalog,
+  catalogLoading,
   loading,
   error,
   pendingAction,
@@ -197,7 +198,7 @@ export function ProfilesClientView({
 
   if (loading) {
     return (
-      <div className="flex items-center gap-3 border-2 border-border bg-card p-8 text-muted-foreground">
+      <div className="flex min-h-[240px] items-center justify-center gap-3 border-2 border-border bg-card p-8 text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
         <span>{t("profiles_loading")}</span>
       </div>
@@ -208,6 +209,13 @@ export function ProfilesClientView({
 
   return (
     <div className="flex flex-col h-full min-h-0">
+      {catalogLoading && (
+        <div className="mb-4 flex items-center justify-center gap-3 border-2 border-border bg-card p-4 text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
+          <span>{t("models_validationMessage")}</span>
+        </div>
+      )}
+
       {/* Delete Profile Confirmation Dialog */}
       {deleteConfirmProfile && (
         <ConfirmDialog

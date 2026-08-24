@@ -7,13 +7,13 @@ import {
   updateModelAssignment,
   writeOpenCodeConfig,
 } from "@/adapters/opencode";
-import { readModelCacheSafe } from "@/services/modelCacheService";
 import { DEFAULT_OPEN_CODE_CONFIG_DIR } from "@/adapters/opencode";
 import { DEFAULT_MODEL_CACHE_DIR } from "@/services/modelCacheService";
 import { defaultPresettDir } from "@/lib/paths";
 import { buildSafeError, requireMutationOrigin } from "@/lib/localApiSecurity";
 import { readGentleAiConfigSafe, writeGentleAiConfig } from "@/adapters/gentle-ai";
 import { readStateJsonSafe } from "@/services/stateService";
+import { loadMergedModelCatalogSafe } from "@/services/modelCatalogService";
 import {
   buildModelCache,
   globalConfigPatchSchema,
@@ -80,7 +80,11 @@ export async function PATCH(request: Request) {
   const agent = existing.value.agent[parsed.data.agentKey];
   if (!agent) return NextResponse.json(buildSafeError("Unknown OpenCode agent"), { status: 400 });
 
-  const cacheResult = await readModelCacheSafe(cacheDir());
+  const cacheResult = await loadMergedModelCatalogSafe({
+    cacheDir: cacheDir(),
+    openCodeConfigDir: configDir(),
+    gentleAiDir: gentleAiDir(),
+  });
   if (!cacheResult.ok) {
     return NextResponse.json(buildSafeError("Model catalog unavailable"), { status: 503 });
   }
@@ -125,7 +129,11 @@ export async function PUT(request: Request) {
     variant: string;
   };
 
-  const cacheResult = await readModelCacheSafe(cacheDir());
+  const cacheResult = await loadMergedModelCatalogSafe({
+    cacheDir: cacheDir(),
+    openCodeConfigDir: configDir(),
+    gentleAiDir: gentleAiDir(),
+  });
   if (!cacheResult.ok) {
     return NextResponse.json(
       { error: cacheResult.error },

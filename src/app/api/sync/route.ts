@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { runGentleAiSync } from "@/services/processService";
 import { buildSafeError, requireMutationOrigin } from "@/lib/localApiSecurity";
+import { clearServerModelCatalogCache } from "@/services/modelCatalogService";
 
 export const dynamic = "force-dynamic";
 
@@ -33,6 +34,8 @@ export async function POST(request: Request) {
     const status = result.error.code === "FILE_MISSING" ? 503 : 500;
     return NextResponse.json({ error: result.error }, { status });
   }
+
+  clearServerModelCatalogCache();
 
   return NextResponse.json(result.value);
 }

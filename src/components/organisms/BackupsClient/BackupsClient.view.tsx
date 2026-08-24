@@ -16,6 +16,7 @@ import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/List
 import { DeleteBackupModal } from "@/components/organisms/DeleteBackupModal";
 import { cn } from "@/lib/utils";
 import { t } from "@/resources/resources";
+import { getBytes, formatDate } from "@/utils/formatting";
 import type { BackupsClientViewProps } from "./BackupsClient.types";
 
 export function BackupsClientView({
@@ -54,8 +55,8 @@ export function BackupsClientView({
   const showNoMatches = backups.length > 0 && derivedBackups.length === 0;
 
   return (
-    <div className="space-y-6">
-      <div className="border-2 border-border bg-card p-6 shadow-[4px_4px_0_0_var(--border)]">
+    <div className="flex h-full min-h-0 flex-col gap-6">
+      <div className="flex-shrink-0 border-2 border-border bg-card p-6 shadow-[4px_4px_0_0_var(--border)]">
         <div className="mb-4 flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center bg-primary/15">
             <RefreshCw className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -85,16 +86,17 @@ export function BackupsClientView({
             {syncOutput}
           </pre>
         )}
-      </div>
+       </div>
 
-      {showNoData ? (
-        <ListingEmptyState variant="no-data" entity="backups" />
-      ) : showNoMatches ? (
-        <ListingEmptyState variant="no-matches" entity="backups" onClear={onClearControls} />
-      ) : (
-        <div className="relative space-y-0">
-          <div className="absolute left-4 top-4 bottom-4 w-px bg-border" aria-hidden="true" />
-          <div className="space-y-3">
+       <div className="min-h-0 flex-1 overflow-y-auto pr-4 scrollbar-brutal">
+       {showNoData ? (
+         <ListingEmptyState variant="no-data" entity="backups" />
+       ) : showNoMatches ? (
+         <ListingEmptyState variant="no-matches" entity="backups" onClear={onClearControls} />
+       ) : (
+         <div className="relative space-y-0">
+           <div className="absolute left-4 top-4 bottom-4 w-px bg-border" aria-hidden="true" />
+           <div className="space-y-3">
             {derivedBackups.map((backup) => (
               <div
                 key={backup.id}
@@ -118,11 +120,11 @@ export function BackupsClientView({
                       {t("backups_source")}: {backup.source}
                     </span>
                     <span>
-                      {backup.fileCount} {t("backups_files")}
-                    </span>
-                    <span>{backup.size} bytes</span>
+                       {backup.fileCount} {t("backups_files")}
+                     </span>
+                     <span>{getBytes(backup.size)}</span>
                   </div>
-                  <p className="mt-1 font-mono text-xs text-muted-foreground/70">{backup.timestamp}</p>
+                   <p className="mt-1 font-mono text-xs text-muted-foreground/70">{formatDate(backup.timestamp)}</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button
                       type="button"
@@ -171,10 +173,11 @@ export function BackupsClientView({
             ))}
           </div>
         </div>
-      )}
+       )}
+       </div>
 
-      {deleteConfirmId && (
-        <DeleteBackupModal
+       {deleteConfirmId && (
+         <DeleteBackupModal
           backupName={deleteConfirmId}
           onConfirm={onDeleteConfirm}
           onCancel={onDeleteCancel}
