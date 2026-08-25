@@ -416,7 +416,9 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
             "min-h-0 flex-1 bg-background/60",
             isDashboard ? "overflow-hidden" : "overflow-y-auto",
           )}>
-            {children}
+            <div key={pathname} className="page-transition h-full">
+              {children}
+            </div>
           </main>
         </div>
       </div>
