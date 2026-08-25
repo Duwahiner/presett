@@ -9,6 +9,8 @@ import type { ModelCatalog } from "@/components/molecules/ModelPicker/ModelPicke
 import { ProfilesClientView } from "./ProfilesClient.view";
 import type { Profile } from "./ProfilesClient.types";
 import type { ListingControlsConfig, ListingControlsState } from "@/components/molecules/ListingControls/ListingControls.types";
+import { useAuditMode } from "@/lib/visual-audit/audit-context";
+import { AUDIT_FIXTURE_PROFILES, AUDIT_FIXTURE_CATALOG } from "@/lib/visual-audit/fixtures";
 
 const SDD_PHASES = [
   "init", "propose", "spec", "design", "tasks",
@@ -71,12 +73,12 @@ export function filterAndSortProfiles(
 }
 
 export function ProfilesClient() {
+  const isAuditMode = useAuditMode();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [catalog, setCatalog] = useState<ModelCatalog>({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
-  const [newName, setNewName] = useState("");
   const [newAssignments, setNewAssignments] = useState<
     Record<string, { provider: string; model: string; variant: string }>
   >({});
@@ -84,6 +86,7 @@ export function ProfilesClient() {
   const [editAssignments, setEditAssignments] = useState<
     Record<string, { provider: string; model: string; variant: string }>
   >({});
+  const [deleteConfirmProfile, setDeleteConfirmProfile] = useState<string | null>(null);
   const { onError, onSuccess } = useNotificationToasts();
 
   // Filter/sort state — mount-local, cleared on unmount
@@ -113,6 +116,14 @@ export function ProfilesClient() {
   }
 
   useEffect(() => {
+    if (isAuditMode) {
+      // Short-circuit to fixtures
+      setProfiles(AUDIT_FIXTURE_PROFILES.profiles);
+      setCatalog(AUDIT_FIXTURE_CATALOG);
+      setLoading(false);
+      return;
+    }
+
     async function load() {
       try {
         const [profilesData, catalogData] = await Promise.all([
@@ -128,31 +139,32 @@ export function ProfilesClient() {
       }
     }
     load();
-  }, []);
+  }, [isAuditMode]);
 
   async function refresh() {
+    if (isAuditMode) return;
     const data = await listProfiles();
     setProfiles(data.profiles);
   }
 
-  async function handleCreate(e: React.FormEvent) {
-    e.preventDefault();
-    if (!newName) return;
+  async function handleCreate(name: string) {
+    if (isAuditMode) return; // Deny writes in audit mode
+    const nameToCreate = name.trim();
+    if (!nameToCreate) return;
     setPendingAction("create");
 
     const assignments: Record<string, { provider: string; model: string; variant: string }> = {
-      [`sdd-orchestrator-${newName}`]: newAssignments["orchestrator"] ?? { provider: "", model: "", variant: "" },
+      [`sdd-orchestrator-${nameToCreate}`]: newAssignments["orchestrator"] ?? { provider: "", model: "", variant: "" },
     };
 
     for (const phase of SDD_PHASES) {
       if (newAssignments[phase]?.provider) {
-        assignments[`sdd-${phase}-${newName}`] = newAssignments[phase];
+        assignments[`sdd-${phase}-${nameToCreate}`] = newAssignments[phase];
       }
     }
 
     try {
-      await createProfile({ name: newName, assignments });
-      setNewName("");
+      await createProfile({ name: nameToCreate, assignments });
       setNewAssignments({});
       await refresh();
       onSuccess(t("profiles_createSuccess"));
@@ -164,6 +176,7 @@ export function ProfilesClient() {
   }
 
   async function handleSwitch(name: string) {
+    if (isAuditMode) return; // Deny writes in audit mode
     setPendingAction(`switch:${name}`);
     try {
       await switchProfile(name);
@@ -176,26 +189,38 @@ export function ProfilesClient() {
     }
   }
 
-  async function handleDelete(name: string) {
-    if (!confirm(t("profiles_deleteConfirm", { name }))) return;
-    setPendingAction(`delete:${name}`);
+  function handleDeleteStart(name: string) {
+    if (isAuditMode) return; // Deny writes in audit mode
+    setDeleteConfirmProfile(name);
+  }
+
+  async function handleDeleteConfirm() {
+    if (!deleteConfirmProfile) return;
+    setPendingAction(`delete:${deleteConfirmProfile}`);
     try {
-      await deleteProfile(name);
+      await deleteProfile(deleteConfirmProfile);
       await refresh();
       onSuccess(t("profiles_deleteSuccess"));
     } catch (cause) {
       onError(t("profiles_deleteError"), cause instanceof Error ? cause.message : String(cause));
     } finally {
       setPendingAction(null);
+      setDeleteConfirmProfile(null);
     }
   }
 
+  function handleDeleteCancel() {
+    setDeleteConfirmProfile(null);
+  }
+
   function handleEditStart(name: string) {
+    if (isAuditMode) return; // Deny writes in audit mode
     setEditingProfile(name);
     setEditAssignments({});
   }
 
   async function handleEditSave() {
+    if (isAuditMode) return; // Deny writes in audit mode
     if (!editingProfile) return;
     setPendingAction("edit");
     try {
@@ -223,15 +248,16 @@ export function ProfilesClient() {
       loading={loading}
       error={error}
       pendingAction={pendingAction}
-      newName={newName}
       newAssignments={newAssignments}
-      onNewNameChange={setNewName}
       onAssignmentChange={(key, assignment) =>
         setNewAssignments((prev) => ({ ...prev, [key]: assignment }))
       }
       onCreate={handleCreate}
       onSwitch={handleSwitch}
-      onDelete={handleDelete}
+      onDeleteStart={handleDeleteStart}
+      onDeleteConfirm={handleDeleteConfirm}
+      onDeleteCancel={handleDeleteCancel}
+      deleteConfirmProfile={deleteConfirmProfile}
       editingProfile={editingProfile}
       editAssignments={editAssignments}
       onEditStart={handleEditStart}

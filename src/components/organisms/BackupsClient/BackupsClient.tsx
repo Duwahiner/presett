@@ -15,6 +15,8 @@ import { filterAndSortBackups } from "./filterAndSortBackups";
 import { BackupsClientView } from "./BackupsClient.view";
 import type { BackupInfo } from "./BackupsClient.types";
 import type { ListingControlsState } from "@/components/molecules/ListingControls/ListingControls.types";
+import { useAuditMode } from "@/lib/visual-audit/audit-context";
+import { AUDIT_FIXTURE_BACKUPS } from "@/lib/visual-audit/fixtures";
 
 const CONTROLS_CONFIG = {
   search: { placeholder: "listing_search_placeholder" as const, ariaLabel: "listing_search_aria" as const },
@@ -44,6 +46,7 @@ const INITIAL_CONTROLS: ListingControlsState = {
 };
 
 export function BackupsClient() {
+  const isAuditMode = useAuditMode();
   const [backups, setBackups] = useState<BackupInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -51,7 +54,6 @@ export function BackupsClient() {
   const [syncing, setSyncing] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
-  const [restoreConfirmId, setRestoreConfirmId] = useState<string | null>(null);
   const [controls, setControls] = useState<ListingControlsState>(INITIAL_CONTROLS);
   const { onError, onSuccess } = useNotificationToasts();
 
@@ -61,6 +63,7 @@ export function BackupsClient() {
   );
 
   async function refresh() {
+    if (isAuditMode) return;
     try {
       const data = await listBackups();
       setBackups(data.backups);
@@ -70,6 +73,13 @@ export function BackupsClient() {
   }
 
   useEffect(() => {
+    if (isAuditMode) {
+      // Short-circuit to fixtures
+      setBackups(AUDIT_FIXTURE_BACKUPS.backups);
+      setLoading(false);
+      return;
+    }
+
     async function load() {
       try {
         const data = await listBackups();
@@ -81,7 +91,7 @@ export function BackupsClient() {
       }
     }
     load();
-  }, []);
+  }, [isAuditMode]);
 
   function handleControlsChange(next: Partial<ListingControlsState>) {
     setControls((prev) => ({ ...prev, ...next }));
@@ -92,6 +102,7 @@ export function BackupsClient() {
   }
 
   async function handleSync() {
+    if (isAuditMode) return; // Deny writes in audit mode
     setSyncing(true);
     setSyncOutput(t("backups_sync_running"));
     try {
@@ -110,6 +121,7 @@ export function BackupsClient() {
   }
 
   async function handlePin(id: string) {
+    if (isAuditMode) return; // Deny writes in audit mode
     setPendingAction(`pin:${id}`);
     try {
       await pinBackup(id);
@@ -123,6 +135,7 @@ export function BackupsClient() {
   }
 
   async function handleUnpin(id: string) {
+    if (isAuditMode) return; // Deny writes in audit mode
     setPendingAction(`unpin:${id}`);
     try {
       await unpinBackup(id);
@@ -136,6 +149,7 @@ export function BackupsClient() {
   }
 
   async function handleDeleteConfirm() {
+    if (isAuditMode) return; // Deny writes in audit mode
     if (!deleteConfirmId) return;
     setPendingAction(`delete:${deleteConfirmId}`);
     try {
@@ -150,18 +164,17 @@ export function BackupsClient() {
     }
   }
 
-  async function handleRestoreConfirm() {
-    if (!restoreConfirmId) return;
-    setPendingAction(`restore:${restoreConfirmId}`);
+  async function handleRestore(id: string, name: string) {
+    if (isAuditMode) return; // Deny writes in audit mode
+    setPendingAction(`restore:${id}`);
     try {
-      await restoreBackup(restoreConfirmId, { confirmed: true });
+      await restoreBackup(id, { confirmed: true });
       await refresh();
-      onSuccess(t("backups_restore_success"));
+      onSuccess(t("backups_restore_success", { name }));
     } catch (cause) {
       onError(t("backups_restore"), cause instanceof Error ? cause.message : String(cause));
     } finally {
       setPendingAction(null);
-      setRestoreConfirmId(null);
     }
   }
 
@@ -179,16 +192,13 @@ export function BackupsClient() {
       onControlsChange={handleControlsChange}
       onClearControls={handleClearControls}
       onSync={handleSync}
-      onRestore={setRestoreConfirmId}
+      onRestore={handleRestore}
       onPin={handlePin}
       onUnpin={handleUnpin}
       onDelete={setDeleteConfirmId}
       deleteConfirmId={deleteConfirmId}
-      restoreConfirmId={restoreConfirmId}
       onDeleteConfirm={handleDeleteConfirm}
       onDeleteCancel={() => setDeleteConfirmId(null)}
-      onRestoreConfirm={handleRestoreConfirm}
-      onRestoreCancel={() => setRestoreConfirmId(null)}
     />
   );
 }

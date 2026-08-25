@@ -74,15 +74,24 @@ export async function readOpenCodeConfigSafe(
   configDir: string = DEFAULT_OPEN_CODE_CONFIG_DIR,
 ): Promise<Result<OpenCodeConfig>> {
   let raw: string;
+  let filePath = join(configDir, "opencode.json");
+  
+  // Try to read .jsonc first (opencode CLI prefers it)
   try {
-    raw = await readFile(join(configDir, "opencode.json"), "utf-8");
-  } catch (cause) {
-    return err({
-      code: "FILE_MISSING",
-      message: "opencode.json not found",
-      file: join(configDir, "opencode.json"),
-      cause,
-    });
+    raw = await readFile(join(configDir, "opencode.jsonc"), "utf-8");
+    filePath = join(configDir, "opencode.jsonc");
+  } catch {
+    // Fall back to .json
+    try {
+      raw = await readFile(filePath, "utf-8");
+    } catch (cause) {
+      return err({
+        code: "FILE_MISSING",
+        message: "opencode.json or opencode.jsonc not found",
+        file: filePath,
+        cause,
+      });
+    }
   }
 
   return parseOpenCodeConfigSafe(raw);
@@ -122,31 +131,47 @@ export async function writeOpenCodeConfig(
   backupDir: string,
   fileName: string = "opencode.json",
 ): Promise<Result<void>> {
-  if (fileName.endsWith(".jsonc")) {
-    return err({
-      code: "JSONC_NOT_SUPPORTED",
-      message: "PreSett refuses to write JSONC files",
-    });
+  // Write to both .json and .jsonc if both exist (keep them in sync)
+  const filesToWrite: string[] = [fileName];
+  
+  if (fileName === "opencode.json") {
+    try {
+      await access(join(configDir, "opencode.jsonc"));
+      filesToWrite.push("opencode.jsonc");
+    } catch {
+      // .jsonc doesn't exist, only write to .json
+    }
+  } else if (fileName === "opencode.jsonc") {
+    try {
+      await access(join(configDir, "opencode.json"));
+      filesToWrite.push("opencode.json");
+    } catch {
+      // .json doesn't exist, only write to .jsonc
+    }
   }
 
-  const targetPath = join(configDir, fileName);
-  const tmpPath = join(configDir, `${fileName}.presett-tmp`);
+  const jsonContent = JSON.stringify(config, null, 2);
+  
+  for (const file of filesToWrite) {
+    const targetPath = join(configDir, file);
+    const tmpPath = join(configDir, `${file}.presett-tmp`);
 
-  const backupResult = await createPreWriteBackup(targetPath, backupDir);
-  if (!backupResult.ok) {
-    return backupResult;
-  }
+    const backupResult = await createPreWriteBackup(targetPath, backupDir);
+    if (!backupResult.ok) {
+      return backupResult;
+    }
 
-  try {
-    await writeFile(tmpPath, JSON.stringify(config, null, 2));
-    await rename(tmpPath, targetPath);
-  } catch (cause) {
-    await rm(tmpPath, { force: true, recursive: true });
-    return err({
-      code: "ATOMIC_WRITE_FAILED",
-      message: "Failed to atomically write opencode.json",
-      cause,
-    });
+    try {
+      await writeFile(tmpPath, jsonContent);
+      await rename(tmpPath, targetPath);
+    } catch (cause) {
+      await rm(tmpPath, { force: true, recursive: true });
+      return err({
+        code: "ATOMIC_WRITE_FAILED",
+        message: `Failed to atomically write ${file}`,
+        cause,
+      });
+    }
   }
 
   await prunePreWriteBackups(backupDir, 20);

@@ -9,6 +9,13 @@ import type {
   DashboardAgent,
 } from "@/components/organisms/Dashboard/Dashboard.types";
 import type { BackupInfo } from "@/services/backupsApiService";
+import { IS_VISUAL_AUDIT_MODE } from "@/lib/visual-audit";
+import {
+  AUDIT_FIXTURE_CONFIG,
+  AUDIT_FIXTURE_PROFILES,
+  AUDIT_FIXTURE_BACKUPS,
+  AUDIT_FIXTURE_LAST_SYNC,
+} from "@/lib/visual-audit/fixtures";
 
 function relativeTime(timestamp: string): string {
   const diff = Date.now() - new Date(timestamp).getTime();
@@ -137,6 +144,17 @@ function ErrorFallback({ message }: { message: string }) {
 }
 
 export default async function HomePage() {
+  // In audit mode, bypass live API and use deterministic fixtures
+  if (IS_VISUAL_AUDIT_MODE) {
+    const stats: DashboardStats = {
+      modelCount: AUDIT_FIXTURE_CONFIG.assignments.length,
+      profileCount: AUDIT_FIXTURE_PROFILES.profiles.length,
+      backupCount: AUDIT_FIXTURE_BACKUPS.backups.length,
+      lastSync: AUDIT_FIXTURE_LAST_SYNC,
+    };
+    return <Dashboard stats={stats} agents={AUDIT_FIXTURE_CONFIG.assignments} />;
+  }
+
   let result: {
     data: { stats: DashboardStats; agents: DashboardAgent[] };
     errors: ServiceErrors;

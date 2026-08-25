@@ -24,7 +24,7 @@ export default function DiagnosticsPage() {
           </div>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-6"><DiagnosticsClient /></div>
+      <div className="flex-1 overflow-y-auto p-6 scrollbar-brutal"><DiagnosticsClient /></div>
     </div>
   );
 }

@@ -48,9 +48,9 @@ function PickerField({
         <Select.Trigger
           aria-label={label}
           className={cn(
-            "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
+            "flex h-9 w-full items-center justify-between border-2 border-border bg-transparent px-3 py-1 text-sm transition-colors",
             "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-            "disabled:cursor-not-allowed disabled:opacity-50",
+            "disabled:cursor-not-allowed disabled:opacity-50 light:border-black",
           )}
         >
           <Select.Value placeholder={placeholder} />
@@ -59,10 +59,10 @@ function PickerField({
         <Select.Portal>
           <Select.Positioner className="z-50">
             <Select.Popup
-              className={cn(
-                "max-h-60 min-w-[var(--anchor-width)] overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md",
-                "focus-visible:outline-none",
-              )}
+               className={cn(
+                 "max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal",
+                 "focus-visible:outline-none light:border-black",
+               )}
             >
               {options.map((option) => (
                 <Select.Item
@@ -149,12 +149,14 @@ export function ModelPicker({
         />
       </div>
 
-      <Button
+      <button
+        type="button"
         disabled={disabled || !isValid}
         onClick={() => onConfirm({ provider, model, variant })}
+        className="flex items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-white light:!text-black light:shadow-[4px_4px_0_0_#000000]"
       >
         {t("modelPicker_save")}
-      </Button>
+      </button>
     </div>
   );
 }

@@ -51,10 +51,10 @@ export function AgentAssignmentRow({
   const prefixColor = useMemo(() => getAgentPrefixColor(agentKey), [agentKey]);
 
   return (
-    <div className="rounded-xl border border-border bg-card p-4 backdrop-blur-sm transition-colors hover:border-border/80 hover:bg-accent/40">
+    <div className="border-2 border-border bg-card p-4 transition-colors hover:border-border/80 hover:bg-accent/40">
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center bg-primary/15">
             <Bot className="h-4 w-4 text-primary" aria-hidden="true" />
           </div>
           <div className="min-w-0">
@@ -63,15 +63,15 @@ export function AgentAssignmentRow({
               <span>{suffix}</span>
             </h4>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+              <span className="inline-flex border-2 border-border px-1.5 font-mono text-[10px] font-bold uppercase text-foreground light:border-black light:text-black">
                 {provider}
               </span>
               <span className="text-muted-foreground/50">/</span>
-              <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+              <span className="inline-flex border-2 border-border px-1.5 font-mono text-[10px] font-bold uppercase text-foreground light:border-black light:text-black">
                 {model || t("agentAssignment_unset")}
               </span>
               <span className="text-muted-foreground/50">/</span>
-              <span className="inline-flex rounded-full bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
+              <span className="inline-flex border-2 border-border px-1.5 font-mono text-[10px] font-bold uppercase text-foreground light:border-black light:text-black">
                 {variant || t("agentAssignment_unset")}
               </span>
             </div>

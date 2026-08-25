@@ -74,11 +74,8 @@ function renderView(overrides: Partial<ComponentProps<typeof BackupsClientView>>
     onUnpin: vi.fn(),
     onDelete: vi.fn(),
     deleteConfirmId: null,
-    restoreConfirmId: null,
     onDeleteConfirm: vi.fn(),
     onDeleteCancel: vi.fn(),
-    onRestoreConfirm: vi.fn(),
-    onRestoreCancel: vi.fn(),
     ...overrides,
   };
 
@@ -97,7 +94,7 @@ describe("BackupsClientView", () => {
     await user.click(screen.getByRole("button", { name: "Restore" }));
 
     expect(onDelete).toHaveBeenCalledWith("backup-1");
-    expect(onRestore).toHaveBeenCalledWith("backup-1");
+    expect(onRestore).toHaveBeenCalledWith("backup-1", "manual");
   });
 
   it("confirms the selected delete operation", async () => {
@@ -105,7 +102,8 @@ describe("BackupsClientView", () => {
     const user = userEvent.setup();
     renderView({ deleteConfirmId: "backup-1", onDeleteConfirm });
 
-    await user.click(screen.getByRole("button", { name: "Delete" }));
+    // DeleteBackupModal renders with "DELETE" button (uppercase per spec)
+    await user.click(screen.getByRole("button", { name: "DELETE" }));
 
     expect(onDeleteConfirm).toHaveBeenCalledOnce();
   });

@@ -30,14 +30,11 @@ export interface BackupsClientViewProps {
   onControlsChange: (next: Partial<ListingControlsState>) => void;
   onClearControls: () => void;
   onSync: () => void;
-  onRestore: (id: string) => void;
+  onRestore: (id: string, name: string) => void;
   onPin: (id: string) => void;
   onUnpin: (id: string) => void;
   onDelete: (id: string) => void;
   deleteConfirmId: string | null;
-  restoreConfirmId: string | null;
   onDeleteConfirm: () => void;
   onDeleteCancel: () => void;
-  onRestoreConfirm: () => void;
-  onRestoreCancel: () => void;
 }

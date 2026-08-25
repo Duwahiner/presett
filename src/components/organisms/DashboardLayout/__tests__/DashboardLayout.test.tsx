@@ -67,11 +67,35 @@ describe("DashboardLayout", () => {
 
     expect(screen.queryByRole("link", { name: "Dashboard" })).not.toBeNull();
     expect(screen.queryByRole("link", { name: "Models" })).not.toBeNull();
-    expect(screen.queryByRole("link", { name: "Profiles" })).not.toBeNull();
+    expect(screen.queryByRole("link", { name: "SDD Profiles" })).not.toBeNull();
     expect(screen.queryByRole("link", { name: "Backups" })).not.toBeNull();
-    expect(screen.queryByRole("link", { name: "Diagnostics" })).not.toBeNull();
+    expect(screen.queryByRole("link", { name: "Settings" })).not.toBeNull();
+    expect(screen.queryByText("Agents")).toBeNull();
+    expect(screen.queryByText("Sync Activity")).toBeNull();
+    expect(screen.queryByText("Permissions")).toBeNull();
+    expect(screen.queryByRole("link", { name: "Diagnostics" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Search" })).toBeNull();
     expect(screen.queryByText("Dashboard content")).not.toBeNull();
+    expect(screen.getByText("Gentleman Stack")).not.toBeNull();
+    expect(screen.getByText("full-gentleman")).not.toBeNull();
+  });
+
+  it("renders the compact Gentle-AI version below the Sync Configs CTA in the sidebar footer", () => {
+    render(
+      <DashboardLayout gentleAiVersion="v2.4.0">
+        <main>Child</main>
+      </DashboardLayout>,
+    );
+
+    const version = screen.getByText("v2.4.0");
+    const versionCard = version.parentElement;
+    const syncButton = screen.getByRole("button", { name: /sync configs/i });
+
+    expect(screen.getByText("Gentle-AI")).not.toBeNull();
+    expect(versionCard?.className).toContain("border-2");
+    expect(versionCard?.className).toContain("border-border");
+    expect(versionCard?.className).toContain("bg-card");
+    expect(versionCard?.compareDocumentPosition(syncButton)).toBe(Node.DOCUMENT_POSITION_PRECEDING);
   });
 
   it("redirects topbar searches to the global search page", async () => {
@@ -116,10 +140,29 @@ describe("DashboardLayout", () => {
     expect(searchbox.getAttribute("placeholder")).toBe("Search PreSett…");
     expect(searchbox.className).toContain("bg-transparent");
     expect(searchbox.className).toContain("shadow-none");
-    expect(searchbox.className).toContain("rounded-[.4rem]");
-    expect(
-      screen.getByRole("button", { name: /toggle theme/i }),
-    ).not.toBeNull();
+    const topbar = searchbox.closest("header");
+    expect(topbar?.className).toContain("h-[74px]");
+    expect(topbar?.className).toContain("border-b-2");
+    expect(topbar?.className).toContain("sm:px-6");
+    expect(screen.getByRole("button", { name: "Light mode" })).not.toBeNull();
+    expect(screen.getByRole("button", { name: "Dark mode" })).not.toBeNull();
+  });
+
+  it("keeps the Dashboard shell fixed without scrolling the shared main region", () => {
+    render(<DashboardLayout><div>Dashboard content</div></DashboardLayout>);
+
+    const main = screen.getByText("Dashboard content").closest("main");
+    expect(main?.className).toContain("min-h-0");
+    expect(main?.className).toContain("overflow-hidden");
+    expect(main?.className).not.toContain("overflow-y-auto");
+  });
+
+  it("keeps non-Dashboard routes scrollable inside the shared main region", () => {
+    mockPathname.mockReturnValue("/models");
+    render(<DashboardLayout><div>Models content</div></DashboardLayout>);
+
+    const main = screen.getByText("Models content").closest("main");
+    expect(main?.className).toContain("overflow-y-auto");
   });
 
   it("highlights the active route in the sidebar", () => {
@@ -132,30 +175,32 @@ describe("DashboardLayout", () => {
 
     const modelsLink = screen.getByRole("link", { name: "Models" });
     expect(modelsLink.getAttribute("aria-current")).toBe("page");
+    expect(modelsLink.className).toContain("shadow-[2px_2px_0_0_var(--foreground)]");
   });
 
-  it("highlights the diagnostics route in the sidebar", () => {
-    mockPathname.mockReturnValue("/diagnostics");
+  it("highlights the settings route in the sidebar", () => {
+    mockPathname.mockReturnValue("/settings");
     render(
       <DashboardLayout>
         <main>Child</main>
       </DashboardLayout>,
     );
 
-    const diagnosticsLink = screen.getByRole("link", { name: "Diagnostics" });
-    expect(diagnosticsLink.getAttribute("aria-current")).toBe("page");
+    const settingsLink = screen.getByRole("link", { name: "Settings" });
+    expect(settingsLink.getAttribute("aria-current")).toBe("page");
   });
 
   it("renders Spanish navigation when locale is es", () => {
     setLocale("es");
     render(
-      <DashboardLayout>
+      <DashboardLayout gentleAiVersion="v2.4.0">
         <main>Child</main>
       </DashboardLayout>,
     );
 
     expect(screen.getByRole("link", { name: "Panel de control" })).not.toBeNull();
     expect(screen.getByRole("link", { name: "Modelos" })).not.toBeNull();
+    expect(screen.getByText("Gentle-AI")).not.toBeNull();
   });
 
   it("opens and closes the mobile navigation drawer", async () => {
@@ -249,7 +294,7 @@ describe("DashboardLayout", () => {
     expect(screen.queryByRole("alert")).toBeNull();
   });
 
-  it("bell click opens notification panel and close button dismisses it", async () => {
+  it("bell click opens notification panel and outside click dismisses it", async () => {
     vi.mocked(checkDiagnosticsUpdates).mockResolvedValue({ settings: { frequencyMinutes: 60 }, status: { phase: "idle" }, notice: null });
     const user = userEvent.setup();
     render(<DashboardLayout><main>Child</main></DashboardLayout>);
@@ -258,16 +303,16 @@ describe("DashboardLayout", () => {
     const bellButton = screen.getByRole("button", { name: /notifications/i });
     expect(bellButton).not.toBeNull();
 
-    // Click bell → panel opens with role=dialog
+    // Click bell → panel opens (Radix Popover)
     await user.click(bellButton);
-    const dialog = screen.getByRole("dialog", { name: /notifications/i });
-    expect(dialog).not.toBeNull();
     // Panel shows empty state initially
     expect(screen.getByText("No notifications yet.")).not.toBeNull();
 
-    // Close button dismisses the panel
-    await user.click(screen.getByRole("button", { name: /close/i }));
-    expect(screen.queryByRole("dialog")).toBeNull();
+    // Click outside dismisses the panel (Radix handles this)
+    await user.click(document.body);
+    await waitFor(() => {
+      expect(screen.queryByText("No notifications yet.")).toBeNull();
+    });
   });
 
   it("bell shows unread badge and panel marks notifications as read", async () => {
@@ -280,9 +325,9 @@ describe("DashboardLayout", () => {
     const user = userEvent.setup();
     render(<DashboardLayout><main>Child</main></DashboardLayout>);
 
-    // Bell shows unread badge
+    // Bell shows unread badge indicator
     const bellButton = screen.getByRole("button", { name: /notifications/i });
-    expect(screen.getByText("1")).not.toBeNull();
+    expect(bellButton.querySelector(".bg-primary")).not.toBeNull();
 
     // Open panel → notification appears
     await user.click(bellButton);
@@ -290,7 +335,7 @@ describe("DashboardLayout", () => {
 
     // Panel marks all as read → badge clears
     await waitFor(() => {
-      expect(screen.queryByText("1")).toBeNull();
+      expect(bellButton.querySelector(".bg-primary")).toBeNull();
     });
   });
 
@@ -301,6 +346,10 @@ describe("DashboardLayout", () => {
 
     // Click sync button → creates in-progress notification
     const syncButton = screen.getByRole("button", { name: /sync/i });
+    expect(syncButton.className).toContain("shadow-[4px_4px_0_0_var(--foreground)]");
+    expect(syncButton.className).toContain("active:translate-x-1");
+    expect(syncButton.className).toContain("active:translate-y-1");
+    expect(syncButton.className).toContain("active:shadow-none");
     await user.click(syncButton);
 
     // Panel shows in-progress spinner entry

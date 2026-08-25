@@ -16,13 +16,14 @@ export interface ProfilesClientViewProps {
   loading: boolean;
   error: string | null;
   pendingAction: string | null;
-  newName: string;
   newAssignments: Record<string, { provider: string; model: string; variant: string }>;
-  onNewNameChange: (name: string) => void;
   onAssignmentChange: (key: string, assignment: { provider: string; model: string; variant: string }) => void;
-  onCreate: (e: React.FormEvent) => void;
+  onCreate: (name: string) => void;
   onSwitch: (name: string) => void;
-  onDelete: (name: string) => void;
+  onDeleteStart: (name: string) => void;
+  onDeleteConfirm: () => void;
+  onDeleteCancel: () => void;
+  deleteConfirmProfile: string | null;
   editingProfile: string | null;
   editAssignments: Record<string, { provider: string; model: string; variant: string }>;
   onEditStart: (name: string) => void;

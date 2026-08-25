@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AgentAssignmentRow } from "@/components/molecules/AgentAssignmentRow/AgentAssignmentRow";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
-import { ListingControls } from "@/components/molecules/ListingControls/ListingControls";
+
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
 import { t } from "@/resources/resources";
 import type { ModelsClientViewProps } from "./ModelsClient.types";
@@ -29,17 +29,12 @@ export function ModelsClientView({
   onSwitchProfile,
   onSync,
   onReset,
-  derivedAssignments,
-  controls,
-  controlsState,
-  onControlsChange,
-  onControlsClear,
 }: ModelsClientViewProps) {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   if (loading) {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-8 text-muted-foreground shadow-sm">
+      <div className="flex items-center gap-3 border-2 border-border bg-card p-8 text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
         <span>{t("models_loading")}</span>
       </div>
@@ -48,14 +43,13 @@ export function ModelsClientView({
 
   if (error) return <ErrorBanner title={t("models_loadError")} message={error} />;
 
-  const displayAssignments = derivedAssignments ?? assignments;
-  const hasControls = controls && controlsState && onControlsChange && onControlsClear;
+  const displayAssignments = assignments;
 
   return (
-    <div className="space-y-4">
+    <div className="flex flex-col h-full min-h-0 space-y-4">
       {/* Profile Selector */}
-      <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-4 shadow-sm">
-        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+      <div className="flex items-center gap-3 border-2 border-border bg-card p-4">
+        <div className="flex h-8 w-8 items-center justify-center bg-primary/15">
           <UserCircle className="h-4 w-4 text-primary" />
         </div>
         <div className="flex-1">
@@ -68,9 +62,9 @@ export function ModelsClientView({
           <Select.Trigger
             aria-label={t("models_activeProfile")}
             className={cn(
-              "flex h-9 w-full max-w-[200px] items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors",
+              "flex h-9 w-full max-w-[200px] items-center justify-between border-2 border-border bg-transparent px-3 py-1 text-sm transition-colors",
               "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-              "disabled:cursor-not-allowed disabled:opacity-50",
+              "disabled:cursor-not-allowed disabled:opacity-50 light:border-black",
             )}
           >
             <Select.Value />
@@ -79,17 +73,17 @@ export function ModelsClientView({
           <Select.Portal>
             <Select.Positioner className="z-50">
               <Select.Popup
-                className={cn(
-                  "max-h-60 min-w-[var(--anchor-width)] overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md",
-                  "focus-visible:outline-none",
-                )}
+               className={cn(
+                   "max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal",
+                   "focus-visible:outline-none",
+                 )}
               >
                 {profiles.map((p) => (
                   <Select.Item
                     key={p.name}
                     value={p.name}
                     className={cn(
-                      "relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none",
+                      "relative flex w-full cursor-pointer select-none items-center px-2 py-1.5 text-sm outline-none",
                       "focus:bg-accent focus:text-accent-foreground",
                     )}
                   >
@@ -115,40 +109,21 @@ export function ModelsClientView({
         />
       )}
 
-      {/* Listing Controls */}
-      {hasControls && (
-        <ListingControls
-          config={controls}
-          state={controlsState}
-          onChange={onControlsChange}
-          onClear={onControlsClear}
-          resultCount={displayAssignments.length}
-        />
-      )}
+
 
       {/* Agent Assignments */}
       {assignments.length === 0 && displayAssignments.length === 0 ? (
-        hasControls ? (
-          <ListingEmptyState variant="no-data" entity="models" />
-        ) : (
-          <div className="flex flex-col items-center justify-center rounded-xl border border-border bg-card/40 p-12 text-center">
-            <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-              <AlertCircle className="h-7 w-7 text-primary" aria-hidden="true" />
-            </div>
-            <h4 className="mt-4 font-semibold text-card-foreground">{t("models_emptyAssignmentsTitle")}</h4>
-            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-              {t("models_emptyAssignmentsDesc")}
-            </p>
+        <div className="flex flex-col items-center justify-center border-2 border-border bg-card p-8 text-center">
+          <div className="flex h-10 w-10 items-center justify-center bg-primary/15">
+            <AlertCircle className="h-5 w-5 text-primary" aria-hidden="true" />
           </div>
-        )
-      ) : displayAssignments.length === 0 ? (
-        <ListingEmptyState
-          variant="no-matches"
-          entity="models"
-          onClear={onControlsClear}
-        />
+          <h4 className="mt-4 font-mono text-sm font-bold uppercase text-card-foreground">{t("models_emptyAssignmentsTitle")}</h4>
+          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+            {t("models_emptyAssignmentsDesc")}
+          </p>
+        </div>
       ) : (
-        <div className="space-y-3">
+        <div className="flex-1 min-h-0 overflow-y-auto scrollbar-brutal space-y-3 pr-3">
           {displayAssignments.map((assignment) => (
             <AgentAssignmentRow
               key={assignment.agentKey}
@@ -166,22 +141,32 @@ export function ModelsClientView({
 
       {/* Action Buttons */}
       <div className="flex items-center gap-2 pt-4">
-        <Button variant="outline" onClick={onSync} disabled={syncing}>
+        <button
+          type="button"
+          onClick={onSync}
+          disabled={syncing}
+          className="flex items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-white light:!text-black light:shadow-[4px_4px_0_0_#000000]"
+        >
           {syncing ? (
-            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <RefreshCw className="mr-1.5 h-4 w-4" />
+            <RefreshCw className="h-4 w-4" />
           )}
           {t("models_syncNow")}
-        </Button>
-        <Button variant="ghost" onClick={() => setResetDialogOpen(true)} disabled={resetting || assignments.length === 0}>
+        </button>
+        <button
+          type="button"
+          onClick={() => setResetDialogOpen(true)}
+          disabled={resetting || assignments.length === 0}
+          className="flex items-center justify-center gap-2 border-2 border-border bg-card px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--border)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-white light:!text-black light:shadow-[4px_4px_0_0_#000000]"
+        >
           {resetting ? (
-            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <RotateCcw className="mr-1.5 h-4 w-4" />
+            <RotateCcw className="h-4 w-4" />
           )}
           {t("models_resetAll")}
-        </Button>
+        </button>
       </div>
 
       {/* Reset Confirmation Dialog */}

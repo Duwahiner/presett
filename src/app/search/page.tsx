@@ -22,7 +22,7 @@ export default function SearchPage() {
           </div>
         </div>
       </div>
-      <div className="flex-1 overflow-y-auto p-6"><SearchClient /></div>
+      <div className="flex-1 overflow-y-auto p-6 scrollbar-brutal"><SearchClient /></div>
     </div>
   );
 }

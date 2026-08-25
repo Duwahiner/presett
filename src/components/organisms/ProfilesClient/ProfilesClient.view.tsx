@@ -4,15 +4,16 @@ import { useState } from "react";
 import { Loader2, Pencil, Plus, Trash2, UserCircle, Sparkles, Check, Info, RotateCcw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/atoms/Badge/Badge";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
 import { ListingControls } from "@/components/molecules/ListingControls/ListingControls";
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { t } from "@/resources/resources";
 import type { ProfilesClientViewProps } from "./ProfilesClient.types";
 import type { ModelCatalog } from "@/components/molecules/ModelPicker/ModelPicker";
 import { Select } from "@/components/ui/select";
+import { CreateProfileModal } from "./CreateProfileModal";
 
 function OrchestratorPicker({
   catalog,
@@ -39,20 +40,20 @@ function OrchestratorPicker({
             value={value.provider || null}
             onValueChange={(v) => onChange({ provider: v ?? "", model: "", variant: "" })}
           >
-            <Select.Trigger
+             <Select.Trigger
               aria-label={t("modelPicker_provider")}
               className={cn(
-                "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm transition-colors",
-                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                "flex h-9 w-full items-center justify-between border-2 border-border bg-transparent px-3 py-1 text-sm transition-colors",
+                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring light:border-black",
               )}
             >
               <Select.Value placeholder={t("modelPicker_provider")} />
             </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
-                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
                   {providers.map((p) => (
-                    <Select.Item key={p} value={p} className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
+                    <Select.Item key={p} value={p} className="relative flex w-full cursor-pointer select-none items-center px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                       <Select.ItemText>{p}</Select.ItemText>
                     </Select.Item>
                   ))}
@@ -71,21 +72,21 @@ function OrchestratorPicker({
             onValueChange={(v) => onChange({ ...value, model: v ?? "", variant: "" })}
             disabled={!value.provider}
           >
-            <Select.Trigger
+             <Select.Trigger
               aria-label={t("modelPicker_model")}
               className={cn(
-                "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm transition-colors",
+                "flex h-9 w-full items-center justify-between border-2 border-border bg-transparent px-3 py-1 text-sm transition-colors",
                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                "disabled:cursor-not-allowed disabled:opacity-50",
+                "disabled:cursor-not-allowed disabled:opacity-50 light:border-black",
               )}
             >
               <Select.Value placeholder={t("modelPicker_model")} />
             </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
-                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
                   {models.map((m) => (
-                    <Select.Item key={m} value={m} className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
+                    <Select.Item key={m} value={m} className="relative flex w-full cursor-pointer select-none items-center px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                       <Select.ItemText>{m}</Select.ItemText>
                     </Select.Item>
                   ))}
@@ -104,21 +105,21 @@ function OrchestratorPicker({
             onValueChange={(v) => onChange({ ...value, variant: v ?? "" })}
             disabled={!value.model}
           >
-            <Select.Trigger
+             <Select.Trigger
               aria-label={t("modelPicker_variant")}
               className={cn(
-                "flex h-9 w-full items-center justify-between rounded-md border border-input bg-transparent px-3 py-1 text-sm transition-colors",
+                "flex h-9 w-full items-center justify-between border-2 border-border bg-transparent px-3 py-1 text-sm transition-colors",
                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                "disabled:cursor-not-allowed disabled:opacity-50",
+                "disabled:cursor-not-allowed disabled:opacity-50 light:border-black",
               )}
             >
               <Select.Value placeholder={t("modelPicker_variant")} />
             </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
-                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
                   {variants.map((v) => (
-                    <Select.Item key={v} value={v} className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
+                    <Select.Item key={v} value={v} className="relative flex w-full cursor-pointer select-none items-center px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                       <Select.ItemText>{v}</Select.ItemText>
                     </Select.Item>
                   ))}
@@ -148,13 +149,14 @@ export function ProfilesClientView({
   loading,
   error,
   pendingAction,
-  newName,
   newAssignments,
-  onNewNameChange,
   onAssignmentChange,
   onCreate,
   onSwitch,
-  onDelete,
+  onDeleteStart,
+  onDeleteConfirm,
+  onDeleteCancel,
+  deleteConfirmProfile,
   editingProfile,
   editAssignments,
   onEditStart,
@@ -168,9 +170,7 @@ export function ProfilesClientView({
   onControlsClear,
 }: ProfilesClientViewProps) {
   const [showForm, setShowForm] = useState(false);
-  const isAssigned = Boolean(newAssignments["orchestrator"]?.provider && newAssignments["orchestrator"]?.model && newAssignments["orchestrator"]?.variant);
-  const canCreate = Boolean(newName && isAssigned);
-
+  const [modalKey, setModalKey] = useState(0);
   const visibleProfiles = derivedProfiles ?? profiles;
   const isFiltered = Boolean(controlsState && (controlsState.search.length > 0 || Object.keys(controlsState.activeFilters).length > 0));
   const showNoData = profiles.length === 0;
@@ -178,7 +178,7 @@ export function ProfilesClientView({
 
   if (loading) {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-8 text-muted-foreground">
+      <div className="flex items-center gap-3 border-2 border-border bg-card p-8 text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
         <span>{t("profiles_loading")}</span>
       </div>
@@ -188,165 +188,68 @@ export function ProfilesClientView({
   if (error) return <ErrorBanner title={t("profiles_loadError")} message={error} />;
 
   return (
-    <div className="space-y-6">
-      {/* Create Profile Form */}
-      {!showForm ? (
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => setShowForm(true)}
-          className="group flex w-full items-center justify-center gap-3 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-6 transition-all hover:border-primary/60 hover:bg-primary/10"
-          aria-label={t("profiles_create_title")}
-        >
-          <span className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/15 text-primary transition-transform group-hover:scale-110 group-hover:bg-primary/20">
-            <Plus className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <div className="text-left">
-            <span className="block text-sm font-semibold text-primary">{t("profiles_create_title")}</span>
-            <span className="block text-xs text-muted-foreground">{t("profiles_create_description")}</span>
-          </div>
-        </Button>
-      ) : (
-        <form
-          onSubmit={onCreate}
-          className="rounded-xl border border-border bg-card p-6"
-        >
-          {/* Header */}
-          <div className="mb-5 flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary/10">
-              <Plus className="h-5 w-5 text-primary" aria-hidden="true" />
-            </div>
-            <div>
-              <h4 className="font-semibold text-card-foreground">{t("profiles_create_title")}</h4>
-              <p className="text-sm text-muted-foreground">{t("profiles_create_description")}</p>
-            </div>
-          </div>
+    <div className="flex flex-col h-full min-h-0">
+      {/* Create Profile Modal */}
+      <CreateProfileModal
+        key={modalKey}
+        open={showForm}
+        pendingAction={pendingAction}
+        onSubmit={onCreate}
+        onClose={() => setShowForm(false)}
+      />
 
-          {/* Name Input */}
-          <div className="space-y-1.5">
-            <label
-              htmlFor="profile-name"
-              className="text-xs font-medium uppercase tracking-wider text-muted-foreground"
-            >
-              {t("profiles_create_placeholder")}
-            </label>
-            <Input
-              id="profile-name"
-              type="text"
-              aria-describedby="profile-name-help profile-create-disabled-help"
-              placeholder={t("profiles_create_placeholder")}
-              value={newName}
-              onChange={(e) => onNewNameChange(e.target.value.toLowerCase().replace(/[^a-z0-9_-]/g, ""))}
-            />
-            <p id="profile-name-help" className="text-xs text-muted-foreground">
-              {t("profiles_nameHelp")}
-            </p>
-          </div>
-
-          {/* Orchestrator Assignment */}
-          <div className="mt-4 rounded-xl border-2 border-dashed border-primary/30 bg-primary/5 p-4">
-            <div className="mb-3 flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-primary" aria-hidden="true" />
-                <h5 className="text-sm font-medium text-card-foreground">{t("profiles_orchestrator_assignment")}</h5>
-              </div>
-              {isAssigned && (
-                <Badge variant="success" className="gap-1">
-                  <Check className="h-3 w-3" />
-                  {t("profiles_assigned")}
-                </Badge>
-              )}
-            </div>
-
-            <OrchestratorPicker
-              catalog={catalog}
-              value={newAssignments["orchestrator"] ?? { provider: "", model: "", variant: "" }}
-              onChange={(a) => onAssignmentChange("orchestrator", a)}
-            />
-
-            <div className="mt-3 flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Info className="h-3.5 w-3.5" aria-hidden="true" />
-              {t("profiles_create_required")}
-            </div>
-          </div>
-
-          {/* Actions */}
-          <div className="mt-5 flex items-center gap-3">
-            <Button
-              type="submit"
-              disabled={!canCreate || pendingAction === "create"}
-              aria-describedby={!canCreate ? "profile-create-disabled-help" : undefined}
-            >
-              {pendingAction === "create" ? (
-                <Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden="true" />
-              ) : (
-                <Plus className="mr-1.5 h-4 w-4" aria-hidden="true" />
-              )}
-              {t("profiles_create_action")}
-            </Button>
-            {!canCreate && (
-              <p id="profile-create-disabled-help" className="max-w-xs text-xs text-muted-foreground">
-                {t("profiles_createDisabledHelp")}
-              </p>
-            )}
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                onNewNameChange("");
-                onAssignmentChange("orchestrator", { provider: "", model: "", variant: "" });
-              }}
-            >
-              <RotateCcw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-              {t("profiles_clear")}
-            </Button>
-            <div className="flex-1" />
-            <Button
-              type="button"
-              variant="destructive"
-              size="sm"
-              onClick={() => {
-                setShowForm(false);
-                onNewNameChange("");
-                onAssignmentChange("orchestrator", { provider: "", model: "", variant: "" });
-              }}
-            >
-              <Trash2 className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-              {t("profiles_discard")}
-            </Button>
-          </div>
-        </form>
-      )}
-
-      {/* Profile List */}
-      {controls && controlsState && onControlsChange && onControlsClear && (
-        <ListingControls
-          config={controls}
-          state={controlsState}
-          onChange={onControlsChange}
-          onClear={onControlsClear}
-          resultCount={visibleProfiles.length}
+      {/* Delete Profile Confirmation Dialog */}
+      {deleteConfirmProfile && (
+        <ConfirmDialog
+          open={Boolean(deleteConfirmProfile)}
+          onOpenChange={(open) => {
+            if (!open) onDeleteCancel();
+          }}
+          title={t("profiles_deleteConfirm", { name: deleteConfirmProfile })}
+          description=""
+          confirmLabel={t("profiles_delete")}
+          cancelLabel={t("backups_cancel")}
+          variant="warning"
+          onConfirm={onDeleteConfirm}
         />
       )}
 
-      {showNoData && (
-        <ListingEmptyState variant="no-data" entity="profiles" />
-      )}
+      {/* Create Profile Trigger */}
+      <Button
+        type="button"
+        variant="outline"
+        onClick={() => { setModalKey((k) => k + 1); setShowForm(true); }}
+        className="group flex w-full items-center justify-center gap-3 border-2 border-dashed border-primary/30 bg-primary/5 p-5 transition-all hover:border-primary/60 hover:bg-primary/10"
+        aria-label={t("profiles_create_title")}
+      >
+        <span className="flex h-9 w-9 items-center justify-center bg-primary/15 text-primary transition-transform group-hover:bg-primary/20">
+          <Plus className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <div className="text-left">
+          <span className="block font-mono text-sm font-bold uppercase text-primary">{t("profiles_create_title")}</span>
+          <span className="block text-xs text-muted-foreground">{t("profiles_create_description")}</span>
+        </div>
+      </Button>
 
-      {showNoMatch && (
-        <ListingEmptyState
-          variant="no-matches"
-          entity="profiles"
-          onClear={onControlsClear}
-        />
-      )}
+      {/* Scrollable Profile List */}
+      <div className="flex-1 min-h-0 overflow-y-auto scrollbar-brutal">
+        {showNoData && (
+          <ListingEmptyState variant="no-data" entity="profiles" />
+        )}
 
-      <div className="space-y-3">
+        {showNoMatch && (
+          <ListingEmptyState
+            variant="no-matches"
+            entity="profiles"
+            onClear={onControlsClear}
+          />
+        )}
+
+        <div className="space-y-3 pr-3">
         {visibleProfiles.map((profile) => (
           <div
             key={profile.name}
-            className={`relative rounded-xl border border-border bg-card p-4 transition-colors hover:border-border/80 hover:bg-accent/40 ${
+            className={`relative border-2 border-border bg-card p-4 transition-colors hover:border-border/80 hover:bg-accent/40 ${
               profile.active ? "border-l-4 border-l-primary pl-3" : ""
             }`}
           >
@@ -354,7 +257,7 @@ export function ProfilesClientView({
               <div className="w-full space-y-4">
                 <div className="flex items-center gap-2">
                   <Pencil className="h-4 w-4 text-primary" />
-                  <h4 className="font-semibold text-card-foreground">
+                  <h4 className="font-mono text-sm font-bold uppercase text-card-foreground">
                     {t("profiles_editTitle")} {profile.displayName}
                   </h4>
                 </div>
@@ -378,7 +281,7 @@ export function ProfilesClientView({
             ) : (
               <div className="flex items-center justify-between gap-4">
                 <div className="flex min-w-0 items-center gap-3">
-                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center bg-primary/15">
                     <UserCircle className="h-4 w-4 text-primary" aria-hidden="true" />
                   </div>
                   <div className="min-w-0">
@@ -428,7 +331,7 @@ export function ProfilesClientView({
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => onDelete(profile.name)}
+                      onClick={() => onDeleteStart(profile.name)}
                       aria-label={t("profiles_delete")}
                       disabled={pendingAction === `delete:${profile.name}`}
                     >
@@ -444,6 +347,7 @@ export function ProfilesClientView({
             )}
           </div>
         ))}
+        </div>
       </div>
     </div>
   );

@@ -7,15 +7,14 @@ import {
   PinOff,
   RotateCcw,
   Trash2,
-  AlertCircle,
   Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Badge } from "@/components/atoms/Badge/Badge";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
 import { ListingControls } from "@/components/molecules/ListingControls/ListingControls";
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
+import { DeleteBackupModal } from "@/components/organisms/DeleteBackupModal";
 import { cn } from "@/lib/utils";
 import { t } from "@/resources/resources";
 import type { BackupsClientViewProps } from "./BackupsClient.types";
@@ -38,15 +37,12 @@ export function BackupsClientView({
   onUnpin,
   onDelete,
   deleteConfirmId,
-  restoreConfirmId,
   onDeleteConfirm,
   onDeleteCancel,
-  onRestoreConfirm,
-  onRestoreCancel,
 }: BackupsClientViewProps) {
   if (loading) {
     return (
-      <div className="flex items-center gap-3 rounded-xl border border-border bg-card p-8 text-muted-foreground shadow-sm">
+      <div className="flex items-center gap-3 border-2 border-border bg-card p-8 text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
         <span>{t("backups_loading")}</span>
       </div>
@@ -60,12 +56,12 @@ export function BackupsClientView({
 
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-border bg-card p-6 shadow-sm transition-colors hover:border-border/80">
+      <div className="border-2 border-border bg-card p-6 shadow-[4px_4px_0_0_var(--border)]">
         <div className="mb-4 flex items-center gap-2">
-          <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+          <div className="flex h-8 w-8 items-center justify-center bg-primary/15">
             <RefreshCw className="h-4 w-4 text-primary" aria-hidden="true" />
           </div>
-          <h4 className="font-semibold text-card-foreground">{t("backups_sync_title")}</h4>
+          <h4 className="font-mono text-sm font-bold uppercase text-card-foreground">{t("backups_sync_title")}</h4>
         </div>
         <p className="mb-4 text-sm text-muted-foreground">{t("backups_sync_description")}</p>
         <Button onClick={onSync} className="w-full sm:w-auto" disabled={syncing}>
@@ -80,7 +76,7 @@ export function BackupsClientView({
           <pre
             role="status"
             className={cn(
-              "mt-4 max-h-48 overflow-auto rounded-lg border border-border bg-muted p-4 font-mono text-xs text-muted-foreground",
+              "mt-4 max-h-48 overflow-auto border-2 border-border bg-muted p-4 font-mono text-xs text-muted-foreground scrollbar-brutal",
             )}
           >
             {syncOutput}
@@ -109,14 +105,14 @@ export function BackupsClientView({
             {derivedBackups.map((backup) => (
               <div
                 key={backup.id}
-                className="relative flex items-start gap-4 rounded-xl border border-border bg-card p-4 shadow-sm transition-colors hover:border-border/80 hover:bg-accent/40"
+                className="relative flex items-start gap-4 border-2 border-border bg-card p-4 transition-colors hover:border-primary/50"
               >
-                <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-muted ring-4 ring-card">
+                <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center bg-muted ring-4 ring-card">
                   <HardDrive className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <h4 className="font-semibold text-card-foreground">{backup.id}</h4>
+                    <h4 className="font-mono text-sm font-bold text-card-foreground">{backup.id}</h4>
                     {backup.pinned && (
                       <Badge variant="error" pulsing className="gap-1">
                         <Pin className="h-3 w-3" aria-hidden="true" />
@@ -133,12 +129,12 @@ export function BackupsClientView({
                     </span>
                     <span>{backup.size} bytes</span>
                   </div>
-                  <p className="mt-1 text-xs text-muted-foreground/70">{backup.timestamp}</p>
+                  <p className="mt-1 font-mono text-xs text-muted-foreground/70">{backup.timestamp}</p>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => onRestore(backup.id)}
+                      onClick={() => onRestore(backup.id, backup.source)}
                       disabled={pendingAction === `restore:${backup.id}`}
                     >
                       {pendingAction === `restore:${backup.id}` ? (
@@ -184,31 +180,13 @@ export function BackupsClientView({
         </div>
       )}
 
-      <ConfirmDialog
-        open={deleteConfirmId !== null}
-        onOpenChange={(open) => {
-          if (!open) onDeleteCancel();
-        }}
-        title={t("backups_deleteConfirmTitle")}
-        description={t("backups_deleteConfirmDesc", { id: deleteConfirmId ?? "" })}
-        confirmLabel={t("backups_delete")}
-        cancelLabel={t("backups_cancel")}
-        variant="destructive"
-        onConfirm={onDeleteConfirm}
-      />
-
-      <ConfirmDialog
-        open={restoreConfirmId !== null}
-        onOpenChange={(open) => {
-          if (!open) onRestoreCancel();
-        }}
-        title={t("backups_restoreConfirmTitle")}
-        description={t("backups_restoreConfirmDesc", { id: restoreConfirmId ?? "" })}
-        confirmLabel={t("backups_restore")}
-        cancelLabel={t("backups_cancel")}
-        variant="warning"
-        onConfirm={onRestoreConfirm}
-      />
+      {deleteConfirmId && (
+        <DeleteBackupModal
+          backupName={deleteConfirmId}
+          onConfirm={onDeleteConfirm}
+          onCancel={onDeleteCancel}
+        />
+      )}
     </div>
   );
 }

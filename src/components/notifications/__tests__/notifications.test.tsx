@@ -113,9 +113,9 @@ describe("NotificationItem", () => {
 
 describe("NotificationPanel", () => {
   it("renders panel header when no notifications", () => {
-    render(<NotificationPanel open={true} onClose={() => {}} />, { wrapper });
+    render(<NotificationPanel />, { wrapper });
 
-    expect(screen.getByRole("heading", { name: "Notifications" })).not.toBeNull();
+    expect(screen.getByText("// NOTIFICATIONS")).not.toBeNull();
     expect(screen.getByText("No notifications yet.")).not.toBeNull();
   });
 
@@ -123,17 +123,9 @@ describe("NotificationPanel", () => {
     svc.push({ severity: "error", title: "Error One", message: "msg1" });
     svc.push({ severity: "update", title: "Update Available", message: "msg2" });
 
-    render(<NotificationPanel open={true} onClose={() => {}} />, { wrapper });
+    render(<NotificationPanel />, { wrapper });
 
     expect(screen.getByText("Error One")).not.toBeNull();
     expect(screen.getByText("Update Available")).not.toBeNull();
-  });
-
-  it("calls onClose when close button is clicked", () => {
-    const onClose = vi.fn();
-    render(<NotificationPanel open={true} onClose={onClose} />, { wrapper });
-
-    fireEvent.click(screen.getByRole("button", { name: /close/i }));
-    expect(onClose).toHaveBeenCalledTimes(1);
   });
 });

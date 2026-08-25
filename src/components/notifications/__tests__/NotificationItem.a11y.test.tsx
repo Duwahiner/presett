@@ -37,41 +37,14 @@ describe("NotificationItem — spinner + accessibility", () => {
 
 describe("NotificationPanel — a11y attributes", () => {
   it("has role=log and aria-live=polite on list", () => {
-    render(<NotificationPanel open={true} onClose={() => {}} />, { wrapper });
+    render(<NotificationPanel />, { wrapper });
     const log = screen.getByRole("log");
     expect(log).not.toBeNull();
     expect(log.getAttribute("aria-live")).toBe("polite");
   });
 
-  it("close button is focusable", () => {
-    render(<NotificationPanel open={true} onClose={() => {}} />, { wrapper });
-    const btn = screen.getByRole("button", { name: /close/i });
-    expect(btn).not.toBeNull();
-    expect(btn.getAttribute("tabindex")).not.toBe("-1");
-  });
-
-  it("traps Tab focus inside panel when open", () => {
-    render(<NotificationPanel open={true} onClose={() => {}} />, { wrapper });
-    const panel = screen.getByRole("dialog", { name: /notifications/i });
-    const closeBtn = screen.getByRole("button", { name: /close/i });
-
-    // Focus should start on the first focusable element (close button)
-    expect(document.activeElement).toBe(closeBtn);
-
-    // Tab from last element should wrap to first
-    fireEvent.keyDown(document, { key: "Tab" });
-    // After Tab, focus should still be within the panel (wrapped)
-    expect(panel.contains(document.activeElement)).toBe(true);
-
-    // Shift+Tab from first element should wrap to last
-    fireEvent.keyDown(document, { key: "Tab", shiftKey: true });
-    expect(panel.contains(document.activeElement)).toBe(true);
-  });
-
-  it("panel has role=dialog and aria-label", () => {
-    render(<NotificationPanel open={true} onClose={() => {}} />, { wrapper });
-    const dialog = screen.getByRole("dialog", { name: /notifications/i });
-    expect(dialog).not.toBeNull();
-    expect(dialog.getAttribute("aria-label")).toBeTruthy();
+  it("panel renders with NOTIFICATIONS header", () => {
+    render(<NotificationPanel />, { wrapper });
+    expect(screen.getByText("// NOTIFICATIONS")).not.toBeNull();
   });
 });

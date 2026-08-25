@@ -51,7 +51,7 @@ export function ListingControls({
             </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
-                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md scrollbar-brutal">
                   {f.options.map((o) => (
                     <Select.Item key={o.value} value={o.value} className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                       <Select.ItemText>{t(o.labelKey)}</Select.ItemText>
@@ -76,7 +76,7 @@ export function ListingControls({
           </Select.Trigger>
           <Select.Portal>
             <Select.Positioner className="z-50">
-              <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md">
+              <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto rounded-md border bg-popover p-1 text-popover-foreground shadow-md scrollbar-brutal">
                 {config.sort.fields.map((f) => (
                   <Select.Item key={f.value} value={f.value} className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                     <Select.ItemText>{t(f.labelKey)}</Select.ItemText>

@@ -26,7 +26,7 @@ export function NotificationItem({ notification, onDismiss }: NotificationItemPr
   return (
     <div
       className={cn(
-        "flex items-start gap-3 rounded-xl border border-border p-3 transition-colors",
+        "flex items-start gap-3 border border-border p-3 transition-colors",
         notification.status === "unread" && "bg-accent/50",
       )}
     >
@@ -68,7 +68,7 @@ export function NotificationItem({ notification, onDismiss }: NotificationItemPr
         <button
           type="button"
           aria-label={t("notif_item_dismiss_aria")}
-          className="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="shrink-0 p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           onClick={() => onDismiss(notification.id)}
         >
           <X className="size-3.5" />

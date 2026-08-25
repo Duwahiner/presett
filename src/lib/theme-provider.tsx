@@ -3,13 +3,18 @@
 import { ThemeProvider as NextThemesProvider } from "next-themes";
 import type { ThemeProviderProps } from "next-themes";
 
-export function ThemeProvider({ children, ...props }: ThemeProviderProps) {
+interface AuditThemeProviderProps extends ThemeProviderProps {
+  forcedTheme?: string;
+}
+
+export function ThemeProvider({ children, forcedTheme, ...props }: AuditThemeProviderProps) {
   return (
     <NextThemesProvider
       attribute="class"
-      defaultTheme="system"
-      enableSystem
-      storageKey="presett-theme"
+      defaultTheme={forcedTheme ?? "dark"}
+      enableSystem={false}
+      storageKey={forcedTheme ? undefined : "presett-theme"}
+      forcedTheme={forcedTheme}
       {...props}
     >
       {children}

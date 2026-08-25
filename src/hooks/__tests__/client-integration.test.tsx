@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { type FormEvent, type ReactNode } from "react";
+import { type ReactNode } from "react";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { BackupsClient } from "@/components/organisms/BackupsClient/BackupsClient";
 import { GlobalConfigClient } from "@/components/organisms/GlobalConfigClient/GlobalConfigClient";
@@ -24,21 +24,21 @@ vi.mock("@/components/organisms/ModelsClient/ModelsClient.view", () => ({
 
 vi.mock("@/components/organisms/ProfilesClient/ProfilesClient.view", () => ({
   ProfilesClientView: ({
-    newName,
     editingProfile,
-    onNewNameChange,
     onAssignmentChange,
     onCreate,
     onSwitch,
-    onDelete,
+    onDeleteStart,
+    onDeleteConfirm,
     onEditStart,
     onEditSave,
   }: ProfilesClientViewProps) => (
     <>
-      <button onClick={() => { onNewNameChange("new"); onAssignmentChange("orchestrator", { provider: "openai", model: "gpt-5", variant: "high" }); }}>Prepare create</button>
-      <button disabled={!newName} onClick={() => void onCreate({ preventDefault: () => {} } as FormEvent)}>Create profile</button>
+      <button onClick={() => onAssignmentChange("orchestrator", { provider: "openai", model: "gpt-5", variant: "high" })}>Prepare create</button>
+      <button onClick={() => void onCreate("new")}>Create profile</button>
       <button onClick={() => void onSwitch("work")}>Switch profile</button>
-      <button onClick={() => void onDelete("work")}>Delete profile</button>
+      <button onClick={() => void onDeleteStart("work")}>Delete profile</button>
+      <button onClick={() => void onDeleteConfirm()}>Confirm delete</button>
       <button onClick={() => onEditStart("work")}>Start update</button>
       {editingProfile && <button onClick={() => void onEditSave()}>Update profile</button>}
     </>
