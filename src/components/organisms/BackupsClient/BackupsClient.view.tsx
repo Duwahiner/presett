@@ -9,10 +9,9 @@ import {
   Trash2,
   Loader2,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+
 import { Badge } from "@/components/atoms/Badge/Badge";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
-import { ListingControls } from "@/components/molecules/ListingControls/ListingControls";
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
 import { DeleteBackupModal } from "@/components/organisms/DeleteBackupModal";
 import { cn } from "@/lib/utils";
@@ -64,14 +63,18 @@ export function BackupsClientView({
           <h4 className="font-mono text-sm font-bold uppercase text-card-foreground">{t("backups_sync_title")}</h4>
         </div>
         <p className="mb-4 text-sm text-muted-foreground">{t("backups_sync_description")}</p>
-        <Button onClick={onSync} className="w-full sm:w-auto" disabled={syncing}>
+        <button
+          onClick={onSync}
+          disabled={syncing}
+          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
+        >
           {syncing ? (
-            <Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden="true" />
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           ) : (
-            <RefreshCw className="mr-1.5 h-4 w-4" aria-hidden="true" />
+            <RefreshCw className="h-4 w-4" aria-hidden="true" />
           )}
           {t("backups_sync_action")}
-        </Button>
+        </button>
         {syncOutput && (
           <pre
             role="status"
@@ -83,16 +86,6 @@ export function BackupsClientView({
           </pre>
         )}
       </div>
-
-      {!showNoData && (
-        <ListingControls
-          config={controls.config}
-          state={controls.state}
-          onChange={onControlsChange}
-          onClear={onClearControls}
-          resultCount={resultCount}
-        />
-      )}
 
       {showNoData ? (
         <ListingEmptyState variant="no-data" entity="backups" />
@@ -131,47 +124,47 @@ export function BackupsClientView({
                   </div>
                   <p className="mt-1 font-mono text-xs text-muted-foreground/70">{backup.timestamp}</p>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
+                    <button
+                      type="button"
                       onClick={() => onRestore(backup.id, backup.source)}
                       disabled={pendingAction === `restore:${backup.id}`}
+                      className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                     >
                       {pendingAction === `restore:${backup.id}` ? (
-                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                       ) : (
-                        <RotateCcw className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                        <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
                       )}
                       {t("backups_restore")}
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => (backup.pinned ? onUnpin(backup.id) : onPin(backup.id))}
                       disabled={pendingAction === `pin:${backup.id}` || pendingAction === `unpin:${backup.id}`}
+                      className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                     >
                       {pendingAction === `pin:${backup.id}` || pendingAction === `unpin:${backup.id}` ? (
-                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                       ) : backup.pinned ? (
-                        <PinOff className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                        <PinOff className="h-3.5 w-3.5" aria-hidden="true" />
                       ) : (
-                        <Pin className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                        <Pin className="h-3.5 w-3.5" aria-hidden="true" />
                       )}
                       {backup.pinned ? t("backups_unpin") : t("backups_pin")}
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => onDelete(backup.id)}
                       disabled={pendingAction === `delete:${backup.id}`}
+                      className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                     >
                       {pendingAction === `delete:${backup.id}` ? (
-                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                       ) : (
-                        <Trash2 className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
+                        <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                       )}
                       {t("backups_delete")}
-                    </Button>
+                    </button>
                   </div>
                 </div>
               </div>

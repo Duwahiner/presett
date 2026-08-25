@@ -51,7 +51,7 @@ export function AgentAssignmentRow({
   const prefixColor = useMemo(() => getAgentPrefixColor(agentKey), [agentKey]);
 
   return (
-    <div className="border-2 border-border bg-card p-4 transition-colors hover:border-border/80 hover:bg-accent/40">
+    <div className="border-2 border-border bg-card p-4 transition-colors hover:border-border hover:bg-muted">
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center bg-primary/15">
@@ -78,16 +78,17 @@ export function AgentAssignmentRow({
           </div>
         </div>
 
-        <Button
-          variant="ghost"
-          size="sm"
+        <button
+          type="button"
           aria-label={t("agentAssignment_edit")}
           aria-expanded={isEditing}
           disabled={disabled}
           onClick={() => setIsEditing((prev) => !prev)}
+          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
         >
-          <Pencil className="h-4 w-4" aria-hidden="true" />
-        </Button>
+          <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+          {t("agentAssignment_edit")}
+        </button>
       </div>
 
       {isEditing && (

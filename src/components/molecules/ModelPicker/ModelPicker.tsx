@@ -45,25 +45,25 @@ function PickerField({
         {label}
       </label>
       <Select.Root value={value || null} onValueChange={onChange} disabled={disabled}>
-        <Select.Trigger
-          aria-label={label}
-          className={cn(
-            "flex h-9 w-full items-center justify-between border-2 border-border bg-transparent px-3 py-1 text-sm transition-colors",
-            "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-            "disabled:cursor-not-allowed disabled:opacity-50 light:border-black",
-          )}
-        >
+         <Select.Trigger
+           aria-label={label}
+           className={cn(
+             "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+             "focus-visible:outline-none focus-visible:border-primary",
+             "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white light:text-black light:focus-visible:border-primary",
+           )}
+         >
           <Select.Value placeholder={placeholder} />
           <ChevronDown className="size-4 text-muted-foreground" />
         </Select.Trigger>
         <Select.Portal>
           <Select.Positioner className="z-50">
-            <Select.Popup
-               className={cn(
-                 "max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal",
-                 "focus-visible:outline-none light:border-black",
-               )}
-            >
+             <Select.Popup
+                className={cn(
+                  "max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal",
+                  "focus-visible:outline-none light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]",
+                )}
+             >
               {options.map((option) => (
                 <Select.Item
                   key={option}
@@ -153,7 +153,7 @@ export function ModelPicker({
         type="button"
         disabled={disabled || !isValid}
         onClick={() => onConfirm({ provider, model, variant })}
-        className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-white light:!text-black light:shadow-[4px_4px_0_0_#000000]"
+        className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-white light:!text-black light:shadow-[4px_4px_0_0_#000000]"
       >
         {t("modelPicker_save")}
       </button>

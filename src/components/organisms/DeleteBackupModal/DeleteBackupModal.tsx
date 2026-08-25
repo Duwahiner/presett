@@ -1,7 +1,6 @@
 "use client";
 
 import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 
 interface DeleteBackupModalProps {
   backupName: string;
@@ -30,14 +29,14 @@ export function DeleteBackupModal({
           <h2 className="font-mono text-sm font-bold uppercase text-foreground">
             DELETE BACKUP?
           </h2>
-          <Button
-            variant="ghost"
-            size="icon"
+          <button
+            type="button"
             aria-label="Close"
             onClick={onCancel}
+            className="flex cursor-pointer items-center justify-center border-2 border-border bg-card p-2 text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none light:border-black"
           >
-            <X className="size-4" />
-          </Button>
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
         <p className="mb-6 text-sm text-muted-foreground">
@@ -45,12 +44,20 @@ export function DeleteBackupModal({
         </p>
 
         <div className="flex items-center justify-end gap-3">
-          <Button variant="outline" onClick={onCancel}>
+          <button
+            type="button"
+            onClick={onCancel}
+            className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none light:border-black light:text-black"
+          >
             CANCEL
-          </Button>
-          <Button variant="destructive" onClick={onConfirm}>
+          </button>
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="flex cursor-pointer items-center justify-center gap-2 border-2 border-destructive bg-destructive/10 px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-destructive shadow-[4px_4px_0_0_var(--destructive)] transition-shadow hover:!shadow-none light:border-destructive light:text-destructive"
+          >
             DELETE
-          </Button>
+          </button>
         </div>
       </div>
     </div>

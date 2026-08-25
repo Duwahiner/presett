@@ -72,7 +72,17 @@ export function filterAndSortProfiles(
   });
 }
 
-export function ProfilesClient() {
+export function ProfilesClient({
+  showForm: externalShowForm,
+  setShowForm: externalSetShowForm,
+  modalKey: externalModalKey,
+  setModalKey: externalSetModalKey,
+}: {
+  showForm?: boolean;
+  setShowForm?: (show: boolean) => void;
+  modalKey?: number;
+  setModalKey?: (fn: (k: number) => number) => void;
+} = {}) {
   const isAuditMode = useAuditMode();
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [catalog, setCatalog] = useState<ModelCatalog>({});
@@ -271,6 +281,10 @@ export function ProfilesClient() {
       controlsState={controlsState}
       onControlsChange={handleControlsChange}
       onControlsClear={handleControlsClear}
+      showForm={externalShowForm}
+      setShowForm={externalSetShowForm}
+      modalKey={externalModalKey}
+      setModalKey={externalSetModalKey}
     />
   );
 }

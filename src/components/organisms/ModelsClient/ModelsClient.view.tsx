@@ -59,25 +59,25 @@ export function ModelsClientView({
           <p className="text-sm font-medium text-card-foreground">{activeProfile}</p>
         </div>
         <Select.Root value={activeProfile} onValueChange={(v) => { if (v) onSwitchProfile(v); }} disabled={switchingProfile}>
-          <Select.Trigger
-            aria-label={t("models_activeProfile")}
-            className={cn(
-              "flex h-9 w-full max-w-[200px] items-center justify-between border-2 border-border bg-transparent px-3 py-1 text-sm transition-colors",
-              "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-              "disabled:cursor-not-allowed disabled:opacity-50 light:border-black",
-            )}
-          >
+           <Select.Trigger
+             aria-label={t("models_activeProfile")}
+             className={cn(
+               "flex h-9 w-full max-w-[200px] items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+               "focus-visible:outline-none focus-visible:border-primary",
+               "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white light:text-black light:focus-visible:border-primary",
+             )}
+           >
             <Select.Value />
             <ChevronDown className="size-4 text-muted-foreground" />
           </Select.Trigger>
           <Select.Portal>
             <Select.Positioner className="z-50">
-              <Select.Popup
-               className={cn(
-                   "max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal",
-                   "focus-visible:outline-none",
-                 )}
-              >
+               <Select.Popup
+                className={cn(
+                    "max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal",
+                    "focus-visible:outline-none light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]",
+                  )}
+               >
                 {profiles.map((p) => (
                   <Select.Item
                     key={p.name}
@@ -145,7 +145,7 @@ export function ModelsClientView({
           type="button"
           onClick={onSync}
           disabled={syncing}
-          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
+          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
         >
           {syncing ? (
             <Loader2 className="h-4 w-4 animate-spin" />
@@ -158,7 +158,7 @@ export function ModelsClientView({
           type="button"
           onClick={() => setResetDialogOpen(true)}
           disabled={resetting || assignments.length === 0}
-          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-card light:!text-black light:shadow-[4px_4px_0_0_#000000]"
+          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-card light:!text-black light:shadow-[4px_4px_0_0_#000000]"
         >
           {resetting ? (
             <Loader2 className="h-4 w-4 animate-spin" />

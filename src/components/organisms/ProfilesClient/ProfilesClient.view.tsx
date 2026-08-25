@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Pencil, Plus, Trash2, UserCircle, Sparkles, Check, Info, RotateCcw, ChevronDown } from "lucide-react";
+import { Loader2, Pencil, Trash2, UserCircle, Sparkles, Check, Info, RotateCcw, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/atoms/Badge/Badge";
@@ -42,20 +42,20 @@ function OrchestratorPicker({
             value={value.provider || null}
             onValueChange={(v) => onChange({ provider: v ?? "", model: "", variant: "" })}
           >
-             <Select.Trigger
-               aria-label={t("modelPicker_provider")}
-               className={cn(
-                 "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
-                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring light:border-black light:bg-white",
-               )}
-             >
+              <Select.Trigger
+                aria-label={t("modelPicker_provider")}
+                className={cn(
+                  "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+                  "focus-visible:outline-none focus-visible:border-primary light:border-black light:bg-white light:text-black light:focus-visible:border-primary",
+                )}
+              >
                <Select.Value placeholder={t("modelPicker_provider")} />
                <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
              </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
-                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
-                  {providers.map((p) => (
+                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
+                   {providers.map((p) => (
                     <Select.Item key={p} value={p} className="relative flex w-full cursor-pointer select-none items-center px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                       <Select.ItemText>{p}</Select.ItemText>
                     </Select.Item>
@@ -75,21 +75,21 @@ function OrchestratorPicker({
             onValueChange={(v) => onChange({ ...value, model: v ?? "", variant: "" })}
             disabled={!value.provider}
           >
-             <Select.Trigger
-               aria-label={t("modelPicker_model")}
-               className={cn(
-                 "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
-                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                 "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white",
-               )}
-             >
+              <Select.Trigger
+                aria-label={t("modelPicker_model")}
+                className={cn(
+                  "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+                  "focus-visible:outline-none focus-visible:border-primary",
+                  "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white light:text-black light:focus-visible:border-primary",
+                )}
+              >
                <Select.Value placeholder={t("modelPicker_model")} />
                <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
              </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
-                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
-                  {models.map((m) => (
+                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
+                   {models.map((m) => (
                     <Select.Item key={m} value={m} className="relative flex w-full cursor-pointer select-none items-center px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                       <Select.ItemText>{m}</Select.ItemText>
                     </Select.Item>
@@ -109,21 +109,21 @@ function OrchestratorPicker({
             onValueChange={(v) => onChange({ ...value, variant: v ?? "" })}
             disabled={!value.model}
           >
-             <Select.Trigger
-               aria-label={t("modelPicker_variant")}
-               className={cn(
-                 "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
-                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                 "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white",
-               )}
-             >
+              <Select.Trigger
+                aria-label={t("modelPicker_variant")}
+                className={cn(
+                  "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+                  "focus-visible:outline-none focus-visible:border-primary",
+                  "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white light:text-black light:focus-visible:border-primary",
+                )}
+              >
                <Select.Value placeholder={t("modelPicker_variant")} />
                <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
              </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
-                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
-                  {variants.map((v) => (
+                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
+                   {variants.map((v) => (
                     <Select.Item key={v} value={v} className="relative flex w-full cursor-pointer select-none items-center px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                       <Select.ItemText>{v}</Select.ItemText>
                     </Select.Item>
@@ -135,17 +135,16 @@ function OrchestratorPicker({
         </div>
       </div>
 
-      {!hideButton && (
-        <button
-          type="button"
-          onClick={() => onChange(value)}
-          disabled={!isAssigned}
-          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black whitespace-nowrap"
-        >
-          <Check className="h-3.5 w-3.5" aria-hidden="true" />
-          {t("profiles_saveAssignment")}
-        </button>
-      )}
+       {!hideButton && (
+         <button
+           type="button"
+           onClick={() => onChange(value)}
+           disabled={!isAssigned}
+           className="flex cursor-pointer items-center justify-center border-2 border-border bg-card p-2 text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black"
+         >
+           <Check className="h-3.5 w-3.5" aria-hidden="true" />
+         </button>
+       )}
     </div>
   );
 }
@@ -174,10 +173,23 @@ export function ProfilesClientView({
   controls,
   controlsState,
   onControlsChange,
-  onControlsClear,
-}: ProfilesClientViewProps) {
-  const [showForm, setShowForm] = useState(false);
-  const [modalKey, setModalKey] = useState(0);
+   onControlsClear,
+   showForm,
+   setShowForm,
+   modalKey,
+   setModalKey,
+ }: ProfilesClientViewProps & {
+  showForm?: boolean;
+  setShowForm?: (show: boolean) => void;
+  modalKey?: number;
+  setModalKey?: (fn: (k: number) => number) => void;
+}) {
+  const [internalShowForm, setInternalShowForm] = useState(false);
+  const [internalModalKey, setInternalModalKey] = useState(0);
+  const activeShowForm = showForm ?? internalShowForm;
+  const activeSetShowForm = setShowForm ?? setInternalShowForm;
+  const activeModalKey = modalKey ?? internalModalKey;
+  const activeSetModalKey = setModalKey ?? setInternalModalKey;
   const visibleProfiles = derivedProfiles ?? profiles;
   const isFiltered = Boolean(controlsState && (controlsState.search.length > 0 || Object.keys(controlsState.activeFilters).length > 0));
   const showNoData = profiles.length === 0;
@@ -212,35 +224,16 @@ export function ProfilesClientView({
         />
       )}
 
-      {!showForm && (
-        /* Create Profile Trigger */
-        <Button
-          type="button"
-          variant="outline"
-          onClick={() => { setModalKey((k) => k + 1); setShowForm(true); }}
-          className="group flex w-full cursor-pointer items-center justify-center gap-3 border-2 border-dashed border-primary/30 bg-primary/5 p-5 transition-all hover:border-primary/60 hover:bg-primary/10"
-          aria-label={t("profiles_create_title")}
-        >
-          <span className="flex h-9 w-9 items-center justify-center bg-primary/15 text-primary transition-transform group-hover:bg-primary/20">
-            <Plus className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <div className="text-left">
-            <span className="block font-mono text-sm font-bold uppercase text-primary">{t("profiles_create_title")}</span>
-            <span className="block text-xs text-muted-foreground">{t("profiles_create_description")}</span>
-          </div>
-        </Button>
-      )}
-
       {/* Scrollable Profile List */}
       <div className="flex-1 min-h-0 overflow-y-auto scrollbar-brutal">
         {/* Create Profile Panel */}
         <CreateProfilePanel
-          key={modalKey}
-          open={showForm}
+          key={activeModalKey}
+          open={activeShowForm}
           pendingAction={pendingAction}
           catalog={catalog}
           onSubmit={onCreate}
-          onCancel={() => setShowForm(false)}
+          onCancel={() => activeSetShowForm(false)}
         />
 
         {showNoData && (
@@ -255,13 +248,11 @@ export function ProfilesClientView({
           />
         )}
 
-        <div className="space-y-3 pr-3">
+        <div className="space-y-3">
         {visibleProfiles.map((profile) => (
           <div
             key={profile.name}
-            className={`relative border-2 border-border bg-card p-4 transition-colors hover:border-border/80 hover:bg-accent/40 ${
-              profile.active ? "border-l-4 border-l-primary pl-3" : ""
-            }`}
+            className={`relative border-2 border-border bg-card p-4 transition-colors hover:border-border hover:bg-muted`}
           >
             {editingProfile === profile.name ? (
               <div className="w-full space-y-4">
@@ -273,14 +264,13 @@ export function ProfilesClientView({
                     </h4>
                   </div>
                   <button
-                    type="button"
-                    onClick={() => onEditAssignmentChange("orchestrator", editAssignments["orchestrator"] ?? { provider: "", model: "", variant: "" })}
-                    disabled={!editAssignments["orchestrator"]?.provider}
-                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black whitespace-nowrap"
-                  >
-                    <Check className="h-3.5 w-3.5" aria-hidden="true" />
-                    {t("profiles_saveAssignment")}
-                  </button>
+                     type="button"
+                     onClick={() => onEditAssignmentChange("orchestrator", editAssignments["orchestrator"] ?? { provider: "", model: "", variant: "" })}
+                     disabled={!editAssignments["orchestrator"]?.provider}
+                     className="flex cursor-pointer items-center justify-center border-2 border-border bg-card p-2 text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black"
+                    >
+                      <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                    </button>
                 </div>
                 <OrchestratorPicker
                   catalog={catalog}
@@ -293,7 +283,7 @@ export function ProfilesClientView({
                     type="button"
                     onClick={onEditSave}
                     disabled={!editAssignments["orchestrator"]?.provider || pendingAction === "edit"}
-                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
+                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
                   >
                     {pendingAction === "edit" && (
                       <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -303,7 +293,7 @@ export function ProfilesClientView({
                   <button
                     type="button"
                     onClick={onEditCancel}
-                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                   >
                     {t("backups_cancel")}
                   </button>
@@ -340,23 +330,23 @@ export function ProfilesClientView({
                     type="button"
                     onClick={() => onEditStart(profile.name)}
                     aria-label={t("profiles_edit")}
-                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black whitespace-nowrap"
+                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                   >
                     <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                     {t("profiles_edit")}
                   </button>
                   {!profile.active && (
-                    <button
-                      type="button"
-                      onClick={() => onSwitch(profile.name)}
-                      disabled={pendingAction === `switch:${profile.name}`}
-                       className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black whitespace-nowrap"
+                      <button
+                       type="button"
+                       onClick={() => onSwitch(profile.name)}
+                       disabled={pendingAction === `switch:${profile.name}`}
+                       className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                      >
                        {pendingAction === `switch:${profile.name}` && (
                          <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
                        )}
                        {t("profiles_switch")}
-                    </button>
+                     </button>
                   )}
                   {profile.name ? (
                     <button
@@ -364,14 +354,14 @@ export function ProfilesClientView({
                       onClick={() => onDeleteStart(profile.name)}
                       aria-label={t("profiles_delete")}
                       disabled={pendingAction === `delete:${profile.name}`}
-                       className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black whitespace-nowrap"
-                     >
-                       {pendingAction === `delete:${profile.name}` ? (
-                         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                       ) : (
-                         <Trash2 className="h-4 w-4" aria-hidden="true" />
-                       )}
-                     </button>
+                      className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                      >
+                        {pendingAction === `delete:${profile.name}` ? (
+                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                        ) : (
+                          <Trash2 className="h-4 w-4" aria-hidden="true" />
+                        )}
+                      </button>
                   ) : null}
                 </div>
               </div>
