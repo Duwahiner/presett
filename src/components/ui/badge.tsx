@@ -10,7 +10,7 @@ const badgeVariants = cva(
         default:
           "border-primary/50 bg-primary/15 text-primary hover:bg-primary/25",
         secondary:
-          "border-accent/50 bg-accent/15 text-accent-foreground hover:bg-accent/25",
+           "border-accent/50 bg-accent/15 text-success hover:bg-accent/25",
         destructive:
           "border-destructive/50 bg-destructive/15 text-destructive hover:bg-destructive/25",
         outline: "border-border text-foreground",

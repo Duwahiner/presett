@@ -5,12 +5,12 @@ import type { Result } from "@/lib/types";
 import { err, ok } from "@/lib/types";
 import { createPreWriteBackup, prunePreWriteBackups } from "@/lib/preWriteBackup";
 
-export interface GentleAiConfig { persona?: string; language?: Locale; [key: string]: unknown }
+export interface GentleAiConfig { [key: string]: unknown }
 
 export async function readGentleAiConfigSafe(dir: string): Promise<Result<GentleAiConfig>> {
   try {
     const value = JSON.parse(await readFile(join(dir, "state.json"), "utf8")) as GentleAiConfig;
-    return ok({ persona: value.persona, language: value.language });
+    return ok(value);
   } catch (cause) {
     return err({ code: "FILE_MISSING", message: "state.json not found", cause });
   }

@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-import { getConfig, getCatalog, saveAssignment } from "@/services/modelsApiService";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { getConfig, getCatalog, saveAssignment, clearModelCatalogCache } from "@/services/modelsApiService";
 import * as api from "@/services/api";
 
 vi.mock("@/services/api", async () => {
@@ -14,6 +14,11 @@ vi.mock("@/services/api", async () => {
 });
 
 describe("modelsApiService", () => {
+  beforeEach(() => {
+    clearModelCatalogCache();
+    vi.clearAllMocks();
+  });
+
   it("fetches config", async () => {
     const mockedGet = vi.mocked(api.get);
     mockedGet.mockResolvedValue({ assignments: [] });
@@ -32,6 +37,17 @@ describe("modelsApiService", () => {
 
     expect(mockedGet).toHaveBeenCalledWith("/models");
     expect(result).toEqual({ providers: [], catalog: {} });
+  });
+
+  it("reuses the catalog response from the client cache", async () => {
+    const mockedGet = vi.mocked(api.get);
+    mockedGet.mockResolvedValue({ providers: ["openai"], catalog: { openai: {} } });
+
+    const first = await getCatalog();
+    const second = await getCatalog();
+
+    expect(first).toEqual(second);
+    expect(mockedGet).toHaveBeenCalledTimes(1);
   });
 
   it("saves an assignment", async () => {

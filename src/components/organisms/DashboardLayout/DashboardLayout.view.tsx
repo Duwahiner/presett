@@ -16,7 +16,6 @@ import {
   Loader2,
   Settings,
   Bell,
-  ChevronsUpDown,
   Sun,
   Moon,
 } from "lucide-react";
@@ -198,14 +197,13 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
           <div className="border-b-2 border-border p-3">
             <button
               type="button"
-              className="flex w-full cursor-pointer items-center gap-3 border-2 border-border bg-card px-3 py-2.5 text-left transition-shadow hover:!shadow-none-sm active:translate-x-px active:translate-y-px active:shadow-none"
+              className="flex w-full items-center gap-3 border-2 border-border bg-card px-3 py-2.5 text-left"
             >
               <span className="flex size-9 items-center justify-center bg-accent font-mono text-[13px] font-bold text-accent-foreground">GS</span>
               <span className="min-w-0 flex-1">
                 <span className="block truncate text-sm font-bold text-foreground">{t("sidebar_workspace_name")}</span>
                 <span className="block truncate font-mono text-xs text-muted-foreground">{t("sidebar_workspace_preset")}</span>
               </span>
-              <ChevronsUpDown className="size-4 text-muted-foreground" aria-hidden="true" />
             </button>
           </div>
 
@@ -418,7 +416,9 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
             "min-h-0 flex-1 bg-background/60",
             isDashboard ? "overflow-hidden" : "overflow-y-auto",
           )}>
-            {children}
+            <div key={pathname} className="page-transition h-full">
+              {children}
+            </div>
           </main>
         </div>
       </div>

@@ -17,6 +17,7 @@ import { Loader2 } from "lucide-react";
 export function ModelsClientView({
   assignments,
   catalog,
+  catalogLoading,
   loading,
   error,
   saving,
@@ -33,8 +34,8 @@ export function ModelsClientView({
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   if (loading) {
-    return (
-      <div className="flex items-center gap-3 border-2 border-border bg-card p-8 text-muted-foreground">
+      return (
+      <div className="flex min-h-[240px] items-center justify-center gap-3 border-2 border-border bg-card p-8 text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
         <span>{t("models_loading")}</span>
       </div>
@@ -101,7 +102,14 @@ export function ModelsClientView({
         </Select.Root>
       </div>
 
-      {Object.keys(catalog).length === 0 && (
+      {catalogLoading && (
+        <div className="flex items-center justify-center gap-3 border-2 border-border bg-card p-4 text-muted-foreground">
+          <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
+          <span>{t("models_validationMessage")}</span>
+        </div>
+      )}
+
+      {!catalogLoading && Object.keys(catalog).length === 0 && (
         <ErrorBanner
           variant="warning"
           title={t("models_validationUnavailable")}
@@ -132,7 +140,7 @@ export function ModelsClientView({
               model={assignment.model}
               variant={assignment.variant}
               catalog={catalog}
-              disabled={saving === assignment.agentKey || Object.keys(catalog).length === 0}
+              disabled={catalogLoading || saving === assignment.agentKey || Object.keys(catalog).length === 0}
               onSave={(a) => onSave(assignment.agentKey, a)}
             />
           ))}

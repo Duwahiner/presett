@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { getConfig, getCatalog, saveAssignment } from "@/services/modelsApiService";
+import { clearModelCatalogCache, getConfig, getCatalog, saveAssignment } from "@/services/modelsApiService";
 import { listProfiles, switchProfile } from "@/services/profilesApiService";
 import { runSync } from "@/services/backupsApiService";
 import { t } from "@/resources/resources";
@@ -20,6 +20,7 @@ export function ModelsClient() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [originalAssignments, setOriginalAssignments] = useState<Assignment[]>([]);
   const [catalog, setCatalog] = useState<ModelCatalog>({});
+  const [catalogLoading, setCatalogLoading] = useState(true);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [activeProfile, setActiveProfile] = useState("");
   const [loading, setLoading] = useState(true);
@@ -37,6 +38,7 @@ export function ModelsClient() {
       setAssignments(AUDIT_FIXTURE_MODELS_ASSIGNMENTS);
       setOriginalAssignments(AUDIT_FIXTURE_MODELS_ASSIGNMENTS);
       setCatalog(AUDIT_FIXTURE_CATALOG);
+      setCatalogLoading(false);
       setProfiles(AUDIT_FIXTURE_PROFILES.profiles);
       setActiveProfile(AUDIT_FIXTURE_CONFIG.defaultAgent);
       setLoading(false);
@@ -45,11 +47,24 @@ export function ModelsClient() {
 
     let isMounted = true;
 
+    async function loadCatalog(forceRefresh = false) {
+      if (isMounted) setCatalogLoading(true);
+      try {
+        const catalogData = await getCatalog(forceRefresh ? { forceRefresh: true } : undefined);
+        if (!isMounted) return;
+        setCatalog(catalogData.catalog);
+      } catch {
+        if (!isMounted) return;
+        setCatalog({});
+      } finally {
+        if (isMounted) setCatalogLoading(false);
+      }
+    }
+
     async function loadInitialData() {
       try {
-        const [config, catalogData, profilesData] = await Promise.all([
+        const [config, profilesData] = await Promise.all([
           getConfig(),
-          getCatalog(),
           listProfiles(),
         ]);
 
@@ -57,7 +72,6 @@ export function ModelsClient() {
 
         setAssignments(config.assignments);
         setOriginalAssignments(config.assignments);
-        setCatalog(catalogData.catalog);
         setProfiles(profilesData.profiles);
         setActiveProfile(config.defaultAgent ?? "");
       } catch (cause) {
@@ -72,6 +86,7 @@ export function ModelsClient() {
     }
 
     void loadInitialData();
+    void loadCatalog();
 
     return () => {
       isMounted = false;
@@ -121,14 +136,20 @@ export function ModelsClient() {
 
   async function handleSync() {
     if (isAuditMode) return; // Deny writes in audit mode
-    setSyncing(true);
-    try {
-      await runSync();
-      // Reload config to reflect any changes from sync
-      const config = await getConfig();
-      setAssignments(config.assignments);
-      setOriginalAssignments(config.assignments);
-      onSuccess(t("models_syncSuccess"));
+      setSyncing(true);
+      try {
+        await runSync();
+        clearModelCatalogCache();
+        // Reload config to reflect any changes from sync
+        const config = await getConfig();
+        setAssignments(config.assignments);
+        setOriginalAssignments(config.assignments);
+        setCatalogLoading(true);
+        void getCatalog({ forceRefresh: true })
+          .then((catalogData) => setCatalog(catalogData.catalog))
+          .catch(() => setCatalog({}))
+          .finally(() => setCatalogLoading(false));
+        onSuccess(t("models_syncSuccess"));
     } catch (cause) {
       onError(t("models_syncNow"), cause instanceof Error ? cause.message : String(cause));
     } finally {
@@ -159,6 +180,7 @@ export function ModelsClient() {
     <ModelsClientView
       assignments={assignments}
       catalog={catalog}
+      catalogLoading={catalogLoading}
       loading={loading}
       error={error}
       saving={saving}

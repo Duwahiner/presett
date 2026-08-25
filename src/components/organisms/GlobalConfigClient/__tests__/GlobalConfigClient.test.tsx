@@ -18,7 +18,7 @@ const configuredResponse = {
   defaultAgent: "main",
   agents: ["main", "reviewer"],
   assignments: [{ agentKey: "main", provider: "openai", model: "gpt-5", variant: "high" }],
-  gentleAi: { language: "en", persona: "Builder" },
+  gentleAi: { language: "en", persona: "gentleman" },
 };
 
 const catalogResponse = {
@@ -72,11 +72,11 @@ describe("GlobalConfigClient runtime behavior", () => {
     const user = userEvent.setup();
     render(<GlobalConfigClient />, { wrapper });
 
-    await user.clear(await screen.findByLabelText("Persona"));
-    await user.type(screen.getByLabelText("Persona"), "Reviewer");
+    await user.click(await screen.findByLabelText("Persona"));
+    await user.click(await screen.findByText("neutral"));
     await user.click(screen.getByRole("button", { name: "Save Gentle-AI" }));
 
-    await waitFor(() => expect(patchGlobalConfig).toHaveBeenCalledWith({ domain: "gentle-ai", language: "en", persona: "Reviewer" }));
+    await waitFor(() => expect(patchGlobalConfig).toHaveBeenCalledWith({ domain: "gentle-ai", persona: "neutral" }));
     await waitFor(() => expect(screen.getByRole("button", { name: "Save Gentle-AI" }).hasAttribute("disabled")).toBe(false));
   });
 

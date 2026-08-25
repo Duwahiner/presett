@@ -44,6 +44,7 @@ describe("ProfilesClientView", () => {
   const defaultProps: ProfilesClientViewProps = {
     profiles: [],
     catalog: {},
+    catalogLoading: false,
     loading: false,
     error: null,
     pendingAction: null,
