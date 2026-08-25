@@ -20,6 +20,7 @@ export function ModelsClient() {
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [originalAssignments, setOriginalAssignments] = useState<Assignment[]>([]);
   const [catalog, setCatalog] = useState<ModelCatalog>({});
+  const [connectedProviders, setConnectedProviders] = useState<string[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [profiles, setProfiles] = useState<Profile[]>([]);
   const [activeProfile, setActiveProfile] = useState("");
@@ -38,6 +39,7 @@ export function ModelsClient() {
       setAssignments(AUDIT_FIXTURE_MODELS_ASSIGNMENTS);
       setOriginalAssignments(AUDIT_FIXTURE_MODELS_ASSIGNMENTS);
       setCatalog(AUDIT_FIXTURE_CATALOG);
+      setConnectedProviders(["openai", "anthropic", "google"]);
       setCatalogLoading(false);
       setProfiles(AUDIT_FIXTURE_PROFILES.profiles);
       setActiveProfile(AUDIT_FIXTURE_CONFIG.defaultAgent);
@@ -53,9 +55,11 @@ export function ModelsClient() {
         const catalogData = await getCatalog(forceRefresh ? { forceRefresh: true } : undefined);
         if (!isMounted) return;
         setCatalog(catalogData.catalog);
+        setConnectedProviders(catalogData.connectedProviders ?? []);
       } catch {
         if (!isMounted) return;
         setCatalog({});
+        setConnectedProviders([]);
       } finally {
         if (isMounted) setCatalogLoading(false);
       }
@@ -180,6 +184,7 @@ export function ModelsClient() {
     <ModelsClientView
       assignments={assignments}
       catalog={catalog}
+      connectedProviders={connectedProviders}
       catalogLoading={catalogLoading}
       loading={loading}
       error={error}

@@ -276,7 +276,7 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
                 type="search"
                 aria-label={t("topbar_search_aria")}
                 placeholder={t("topbar_search_placeholder")}
-                className="h-11 border-border bg-transparent pl-12 pr-10 text-[15px] font-medium text-card-foreground shadow-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/80 focus-visible:border-ring focus-visible:ring-2 focus-visible:ring-ring/35 [&::-webkit-search-cancel-button]:appearance-none"
+                className="h-11 border-border bg-transparent pl-12 pr-10 text-[15px] font-medium text-card-foreground shadow-none transition-[border-color,box-shadow] placeholder:text-muted-foreground/80 focus-visible:border-primary light:focus-visible:border-primary [&::-webkit-search-cancel-button]:appearance-none"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
               />

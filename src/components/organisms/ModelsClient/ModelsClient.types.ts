@@ -11,6 +11,7 @@ export interface Assignment {
 export interface ModelsClientViewProps {
   assignments: Assignment[];
   catalog: ModelCatalog;
+  connectedProviders?: string[];
   catalogLoading: boolean;
   loading: boolean;
   error: string | null;

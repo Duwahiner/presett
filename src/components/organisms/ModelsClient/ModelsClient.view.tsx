@@ -17,6 +17,7 @@ import { Loader2 } from "lucide-react";
 export function ModelsClientView({
   assignments,
   catalog,
+  connectedProviders,
   catalogLoading,
   loading,
   error,
@@ -140,6 +141,7 @@ export function ModelsClientView({
               model={assignment.model}
               variant={assignment.variant}
               catalog={catalog}
+              connectedProviders={connectedProviders}
               disabled={catalogLoading || saving === assignment.agentKey || Object.keys(catalog).length === 0}
               onSave={(a) => onSave(assignment.agentKey, a)}
             />

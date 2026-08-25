@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { DEFAULT_MODEL_CACHE_DIR } from "@/services/modelCacheService";
 import { DEFAULT_OPEN_CODE_CONFIG_DIR } from "@/adapters/opencode";
 import { loadMergedModelCatalogSafe } from "@/services/modelCatalogService";
+import { getConnectedProvidersSafe, normalizeProviderName } from "@/services/providerAuthService";
 
 export const dynamic = "force-dynamic";
 
@@ -20,21 +21,33 @@ function gentleAiDir(): string {
 }
 
 export async function GET() {
-  const result = await loadMergedModelCatalogSafe({
-    cacheDir: cacheDir(),
-    openCodeConfigDir: openCodeConfigDir(),
-    gentleAiDir: gentleAiDir(),
-  });
+  const [catalogResult, connectedResult] = await Promise.all([
+    loadMergedModelCatalogSafe({
+      cacheDir: cacheDir(),
+      openCodeConfigDir: openCodeConfigDir(),
+      gentleAiDir: gentleAiDir(),
+    }),
+    getConnectedProvidersSafe(),
+  ]);
 
-  if (!result.ok) {
+  if (!catalogResult.ok) {
     return NextResponse.json(
-      { error: result.error },
-      { status: result.error.code === "FILE_MISSING" ? 503 : 500 },
+      { error: catalogResult.error },
+      { status: catalogResult.error.code === "FILE_MISSING" ? 503 : 500 },
     );
   }
 
+  // Map connected provider display names to catalog IDs
+  const connectedProviders = new Set<string>();
+  if (connectedResult.ok) {
+    for (const provider of connectedResult.value) {
+      connectedProviders.add(normalizeProviderName(provider.name));
+    }
+  }
+
   return NextResponse.json({
-    providers: Object.keys(result.value),
-    catalog: result.value,
+    providers: Object.keys(catalogResult.value),
+    catalog: catalogResult.value,
+    connectedProviders: Array.from(connectedProviders),
   });
 }
