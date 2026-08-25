@@ -18,7 +18,7 @@ export interface ProfilesClientViewProps {
   pendingAction: string | null;
   newAssignments: Record<string, { provider: string; model: string; variant: string }>;
   onAssignmentChange: (key: string, assignment: { provider: string; model: string; variant: string }) => void;
-  onCreate: (name: string) => void;
+  onCreate: (name: string, assignment?: { provider: string; model: string; variant: string }) => void;
   onSwitch: (name: string) => void;
   onDeleteStart: (name: string) => void;
   onDeleteConfirm: () => void;

@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
 export default function ModelsPage() {
   return (
     <div className="flex h-full flex-col">
-      <div className="border-b-2 border-border bg-card px-8 py-6">
+      <div className="px-8 py-6">
         <div className="flex items-center gap-3">
           <div className="flex h-10 w-10 items-center justify-center bg-primary/15">
             <Cpu className="h-5 w-5 text-primary" aria-hidden="true" />

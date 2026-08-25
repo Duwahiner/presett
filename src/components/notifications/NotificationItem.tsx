@@ -68,7 +68,7 @@ export function NotificationItem({ notification, onDismiss }: NotificationItemPr
         <button
           type="button"
           aria-label={t("notif_item_dismiss_aria")}
-          className="shrink-0 p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+          className="shrink-0 cursor-pointer p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
           onClick={() => onDismiss(notification.id)}
         >
           <X className="size-3.5" />

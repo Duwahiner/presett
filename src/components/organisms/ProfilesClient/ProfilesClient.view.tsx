@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Pencil, Plus, Trash2, UserCircle, Sparkles, Check, Info, RotateCcw } from "lucide-react";
+import { Loader2, Pencil, Plus, Trash2, UserCircle, Sparkles, Check, Info, RotateCcw, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/atoms/Badge/Badge";
@@ -13,16 +13,18 @@ import { t } from "@/resources/resources";
 import type { ProfilesClientViewProps } from "./ProfilesClient.types";
 import type { ModelCatalog } from "@/components/molecules/ModelPicker/ModelPicker";
 import { Select } from "@/components/ui/select";
-import { CreateProfileModal } from "./CreateProfileModal";
+import { CreateProfilePanel } from "./CreateProfilePanel";
 
 function OrchestratorPicker({
   catalog,
   value,
   onChange,
+  hideButton,
 }: {
   catalog: ModelCatalog;
   value: { provider: string; model: string; variant: string };
   onChange: (v: { provider: string; model: string; variant: string }) => void;
+  hideButton?: boolean;
 }) {
   const providers = Object.keys(catalog);
   const models = Object.keys(catalog[value.provider] ?? {});
@@ -41,14 +43,15 @@ function OrchestratorPicker({
             onValueChange={(v) => onChange({ provider: v ?? "", model: "", variant: "" })}
           >
              <Select.Trigger
-              aria-label={t("modelPicker_provider")}
-              className={cn(
-                "flex h-9 w-full items-center justify-between border-2 border-border bg-transparent px-3 py-1 text-sm transition-colors",
-                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring light:border-black",
-              )}
-            >
-              <Select.Value placeholder={t("modelPicker_provider")} />
-            </Select.Trigger>
+               aria-label={t("modelPicker_provider")}
+               className={cn(
+                 "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring light:border-black light:bg-white",
+               )}
+             >
+               <Select.Value placeholder={t("modelPicker_provider")} />
+               <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+             </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
                 <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
@@ -73,15 +76,16 @@ function OrchestratorPicker({
             disabled={!value.provider}
           >
              <Select.Trigger
-              aria-label={t("modelPicker_model")}
-              className={cn(
-                "flex h-9 w-full items-center justify-between border-2 border-border bg-transparent px-3 py-1 text-sm transition-colors",
-                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                "disabled:cursor-not-allowed disabled:opacity-50 light:border-black",
-              )}
-            >
-              <Select.Value placeholder={t("modelPicker_model")} />
-            </Select.Trigger>
+               aria-label={t("modelPicker_model")}
+               className={cn(
+                 "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                 "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white",
+               )}
+             >
+               <Select.Value placeholder={t("modelPicker_model")} />
+               <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+             </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
                 <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
@@ -106,15 +110,16 @@ function OrchestratorPicker({
             disabled={!value.model}
           >
              <Select.Trigger
-              aria-label={t("modelPicker_variant")}
-              className={cn(
-                "flex h-9 w-full items-center justify-between border-2 border-border bg-transparent px-3 py-1 text-sm transition-colors",
-                "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
-                "disabled:cursor-not-allowed disabled:opacity-50 light:border-black",
-              )}
-            >
-              <Select.Value placeholder={t("modelPicker_variant")} />
-            </Select.Trigger>
+               aria-label={t("modelPicker_variant")}
+               className={cn(
+                 "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+                 "focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring",
+                 "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white",
+               )}
+             >
+               <Select.Value placeholder={t("modelPicker_variant")} />
+               <ChevronDown className="h-4 w-4 shrink-0 opacity-50" />
+             </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
                 <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal">
@@ -130,15 +135,17 @@ function OrchestratorPicker({
         </div>
       </div>
 
-      <Button
-        variant="outline"
-        size="sm"
-        onClick={() => onChange(value)}
-        disabled={!isAssigned}
-      >
-        <Check className="mr-1.5 h-3.5 w-3.5" aria-hidden="true" />
-        {t("profiles_saveAssignment")}
-      </Button>
+      {!hideButton && (
+        <button
+          type="button"
+          onClick={() => onChange(value)}
+          disabled={!isAssigned}
+          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black whitespace-nowrap"
+        >
+          <Check className="h-3.5 w-3.5" aria-hidden="true" />
+          {t("profiles_saveAssignment")}
+        </button>
+      )}
     </div>
   );
 }
@@ -189,15 +196,6 @@ export function ProfilesClientView({
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      {/* Create Profile Modal */}
-      <CreateProfileModal
-        key={modalKey}
-        open={showForm}
-        pendingAction={pendingAction}
-        onSubmit={onCreate}
-        onClose={() => setShowForm(false)}
-      />
-
       {/* Delete Profile Confirmation Dialog */}
       {deleteConfirmProfile && (
         <ConfirmDialog
@@ -214,25 +212,37 @@ export function ProfilesClientView({
         />
       )}
 
-      {/* Create Profile Trigger */}
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => { setModalKey((k) => k + 1); setShowForm(true); }}
-        className="group flex w-full items-center justify-center gap-3 border-2 border-dashed border-primary/30 bg-primary/5 p-5 transition-all hover:border-primary/60 hover:bg-primary/10"
-        aria-label={t("profiles_create_title")}
-      >
-        <span className="flex h-9 w-9 items-center justify-center bg-primary/15 text-primary transition-transform group-hover:bg-primary/20">
-          <Plus className="h-5 w-5" aria-hidden="true" />
-        </span>
-        <div className="text-left">
-          <span className="block font-mono text-sm font-bold uppercase text-primary">{t("profiles_create_title")}</span>
-          <span className="block text-xs text-muted-foreground">{t("profiles_create_description")}</span>
-        </div>
-      </Button>
+      {!showForm && (
+        /* Create Profile Trigger */
+        <Button
+          type="button"
+          variant="outline"
+          onClick={() => { setModalKey((k) => k + 1); setShowForm(true); }}
+          className="group flex w-full cursor-pointer items-center justify-center gap-3 border-2 border-dashed border-primary/30 bg-primary/5 p-5 transition-all hover:border-primary/60 hover:bg-primary/10"
+          aria-label={t("profiles_create_title")}
+        >
+          <span className="flex h-9 w-9 items-center justify-center bg-primary/15 text-primary transition-transform group-hover:bg-primary/20">
+            <Plus className="h-5 w-5" aria-hidden="true" />
+          </span>
+          <div className="text-left">
+            <span className="block font-mono text-sm font-bold uppercase text-primary">{t("profiles_create_title")}</span>
+            <span className="block text-xs text-muted-foreground">{t("profiles_create_description")}</span>
+          </div>
+        </Button>
+      )}
 
       {/* Scrollable Profile List */}
       <div className="flex-1 min-h-0 overflow-y-auto scrollbar-brutal">
+        {/* Create Profile Panel */}
+        <CreateProfilePanel
+          key={modalKey}
+          open={showForm}
+          pendingAction={pendingAction}
+          catalog={catalog}
+          onSubmit={onCreate}
+          onCancel={() => setShowForm(false)}
+        />
+
         {showNoData && (
           <ListingEmptyState variant="no-data" entity="profiles" />
         )}
@@ -255,27 +265,48 @@ export function ProfilesClientView({
           >
             {editingProfile === profile.name ? (
               <div className="w-full space-y-4">
-                <div className="flex items-center gap-2">
-                  <Pencil className="h-4 w-4 text-primary" />
-                  <h4 className="font-mono text-sm font-bold uppercase text-card-foreground">
-                    {t("profiles_editTitle")} {profile.displayName}
-                  </h4>
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-2">
+                    <Pencil className="h-4 w-4 text-primary" />
+                    <h4 className="font-mono text-sm font-bold uppercase text-card-foreground">
+                      {t("profiles_editTitle")} {profile.displayName}
+                    </h4>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => onEditAssignmentChange("orchestrator", editAssignments["orchestrator"] ?? { provider: "", model: "", variant: "" })}
+                    disabled={!editAssignments["orchestrator"]?.provider}
+                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black whitespace-nowrap"
+                  >
+                    <Check className="h-3.5 w-3.5" aria-hidden="true" />
+                    {t("profiles_saveAssignment")}
+                  </button>
                 </div>
                 <OrchestratorPicker
                   catalog={catalog}
                   value={editAssignments["orchestrator"] ?? { provider: "", model: "", variant: "" }}
                   onChange={(a) => onEditAssignmentChange("orchestrator", a)}
+                  hideButton={true}
                 />
                 <div className="flex gap-2">
-                  <Button onClick={onEditSave} disabled={!editAssignments["orchestrator"]?.provider || pendingAction === "edit"}>
+                  <button
+                    type="button"
+                    onClick={onEditSave}
+                    disabled={!editAssignments["orchestrator"]?.provider || pendingAction === "edit"}
+                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
+                  >
                     {pendingAction === "edit" && (
-                      <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
                     )}
                     {t("profiles_save")}
-                  </Button>
-                  <Button variant="outline" onClick={onEditCancel}>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={onEditCancel}
+                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                  >
                     {t("backups_cancel")}
-                  </Button>
+                  </button>
                 </div>
               </div>
             ) : (
@@ -305,42 +336,42 @@ export function ProfilesClientView({
                 </div>
 
                 <div className="flex shrink-0 gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <button
+                    type="button"
                     onClick={() => onEditStart(profile.name)}
                     aria-label={t("profiles_edit")}
+                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black whitespace-nowrap"
                   >
-                    <Pencil className="h-4 w-4" aria-hidden="true" />
+                    <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                     {t("profiles_edit")}
-                  </Button>
+                  </button>
                   {!profile.active && (
-                    <Button
-                      variant="ghost"
-                      size="sm"
+                    <button
+                      type="button"
                       onClick={() => onSwitch(profile.name)}
                       disabled={pendingAction === `switch:${profile.name}`}
-                    >
-                      {pendingAction === `switch:${profile.name}` && (
-                        <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
-                      )}
-                      {t("profiles_switch")}
-                    </Button>
+                       className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black whitespace-nowrap"
+                     >
+                       {pendingAction === `switch:${profile.name}` && (
+                         <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                       )}
+                       {t("profiles_switch")}
+                    </button>
                   )}
                   {profile.name ? (
-                    <Button
-                      variant="destructive"
-                      size="sm"
+                    <button
+                      type="button"
                       onClick={() => onDeleteStart(profile.name)}
                       aria-label={t("profiles_delete")}
                       disabled={pendingAction === `delete:${profile.name}`}
-                    >
-                      {pendingAction === `delete:${profile.name}` ? (
-                        <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                      ) : (
-                        <Trash2 className="h-4 w-4" aria-hidden="true" />
-                      )}
-                    </Button>
+                       className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black whitespace-nowrap"
+                     >
+                       {pendingAction === `delete:${profile.name}` ? (
+                         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                       ) : (
+                         <Trash2 className="h-4 w-4" aria-hidden="true" />
+                       )}
+                     </button>
                   ) : null}
                 </div>
               </div>
