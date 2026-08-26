@@ -13,6 +13,7 @@ export interface AgentAssignmentRowProps {
   model: string;
   variant: string;
   catalog: ModelCatalog;
+  connectedProviders?: string[];
   disabled?: boolean;
   onSave: (assignment: {
     provider: string;
@@ -43,6 +44,7 @@ export function AgentAssignmentRow({
   model,
   variant,
   catalog,
+  connectedProviders,
   disabled,
   onSave,
 }: AgentAssignmentRowProps) {
@@ -95,6 +97,7 @@ export function AgentAssignmentRow({
         <div className="mt-4 border-t border-border pt-4">
           <ModelPicker
             catalog={catalog}
+            connectedProviders={connectedProviders}
             initialProvider={provider}
             initialModel={model}
             initialVariant={variant}

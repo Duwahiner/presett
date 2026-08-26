@@ -17,6 +17,7 @@ export type ModelCatalog = Record<string, Record<string, string[]>>;
 export interface CatalogResponse {
   providers: string[];
   catalog: ModelCatalog;
+  connectedProviders: string[];
 }
 
 const CLIENT_CATALOG_CACHE_TTL_MS = 30_000;

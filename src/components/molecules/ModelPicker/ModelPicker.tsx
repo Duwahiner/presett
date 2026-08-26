@@ -11,6 +11,7 @@ export type ModelCatalog = Record<string, Record<string, string[]>>;
 
 export interface ModelPickerProps {
   catalog: ModelCatalog;
+  connectedProviders?: string[];
   initialProvider?: string;
   initialModel?: string;
   initialVariant?: string;
@@ -28,7 +29,8 @@ interface PickerFieldProps {
   options: string[];
   placeholder: string;
   disabled?: boolean;
-        onChange: (value: string | null) => void;
+  onChange: (value: string | null) => void;
+  connectedSet?: Set<string>;
 }
 
 function PickerField({
@@ -38,6 +40,7 @@ function PickerField({
   placeholder,
   disabled,
   onChange,
+  connectedSet,
 }: PickerFieldProps) {
   return (
     <div className="space-y-1.5">
@@ -64,23 +67,31 @@ function PickerField({
                   "focus-visible:outline-none light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]",
                 )}
              >
-              {options.map((option) => (
-                <Select.Item
-                  key={option}
-                  value={option}
-                  className={cn(
-                    "relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none",
-                    "focus:bg-accent focus:text-accent-foreground",
-                  )}
-                >
-                  <span className="absolute left-2 flex size-3.5 items-center justify-center">
-                    <Select.ItemIndicator>
-                      <Check className="size-3" />
-                    </Select.ItemIndicator>
-                  </span>
-                  <Select.ItemText className="pl-6">{option}</Select.ItemText>
-                </Select.Item>
-              ))}
+              {options.map((option) => {
+                const isConnected = connectedSet?.has(option);
+                return (
+                  <Select.Item
+                    key={option}
+                    value={option}
+                    className={cn(
+                      "relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none",
+                      "focus:bg-accent focus:text-accent-foreground",
+                    )}
+                  >
+                    <span className="absolute left-2 flex size-3.5 items-center justify-center">
+                      <Select.ItemIndicator>
+                        <Check className="size-3" />
+                      </Select.ItemIndicator>
+                    </span>
+                    <Select.ItemText className="pl-6 flex items-center gap-2">
+                      {option}
+                      {isConnected && (
+                        <span className="inline-flex size-2 rounded-full bg-success" title="Connected" />
+                      )}
+                    </Select.ItemText>
+                  </Select.Item>
+                );
+              })}
             </Select.Popup>
           </Select.Positioner>
         </Select.Portal>
@@ -91,6 +102,7 @@ function PickerField({
 
 export function ModelPicker({
   catalog,
+  connectedProviders = [],
   initialProvider = "",
   initialModel = "",
   initialVariant = "",
@@ -101,14 +113,19 @@ export function ModelPicker({
   const [model, setModel] = useState(initialModel);
   const [variant, setVariant] = useState(initialVariant);
 
-  const providers = useMemo(() => Object.keys(catalog), [catalog]);
+  const providers = useMemo(() => Object.keys(catalog).sort(), [catalog]);
   const models = useMemo(
-    () => Object.keys(catalog[provider] ?? {}),
+    () => Object.keys(catalog[provider] ?? {}).sort(),
     [catalog, provider],
   );
   const variants = useMemo(
     () => catalog[provider]?.[model] ?? [],
     [catalog, provider, model],
+  );
+  
+  const connectedSet = useMemo(
+    () => new Set(connectedProviders),
+    [connectedProviders],
   );
 
   const isValid = provider && model && variant;
@@ -122,6 +139,7 @@ export function ModelPicker({
           options={providers}
           placeholder={t("modelPicker_provider")}
           disabled={disabled}
+          connectedSet={connectedSet}
           onChange={(value) => {
             setProvider(value ?? "");
             setModel("");
