@@ -1,9 +1,10 @@
-import { exec as execCallback } from "node:child_process";
+import { execFile as execFileCallback } from "node:child_process";
 import { promisify } from "node:util";
 import type { Result } from "@/lib/types";
 import { ok, err } from "@/lib/types";
 
-const exec = promisify(execCallback) as ExecLike;
+const execFile = promisify(execFileCallback) as unknown as ExecFileLike;
+const CLI_BIN = "opencode";
 const CLI_TIMEOUT_MS = 10_000;
 const MAX_BUFFER = 2 * 1024 * 1024;
 const CACHE_TTL_MS = 30_000;
@@ -30,6 +31,8 @@ export interface ProviderUsage {
 
 export interface RecentSession {
   sessionId: string;
+  /** Canonical session title from the `session` table join (may be blank). */
+  title: string | null;
   projectPath: string | null;
   lastUpdatedAt: string; // ISO
   messageCount: number;
@@ -42,6 +45,8 @@ export interface RecentSession {
 export interface UsageStatsData {
   providers: ProviderUsage[];
   recentSessions: RecentSession[];
+  /** Total number of sessions matching the selected days/project filter. */
+  totalSessions: number;
   rangeLabel: "7d" | "30d" | "all";
   generatedAt: string;
 }
@@ -52,9 +57,11 @@ export interface UsageStatsOptions {
 }
 
 type ExecResult = { stdout: string; stderr: string };
-type ExecLike = (
-  command: string,
-  options: { maxBuffer: number; timeout: number },
+type ExecFileOptions = { maxBuffer: number; timeout: number; shell: boolean };
+type ExecFileLike = (
+  file: string,
+  args: string[],
+  options: ExecFileOptions,
 ) => Promise<ExecResult>;
 
 let cache: { key: string; data: UsageStatsData; expiresAt: number } | null = null;
@@ -76,22 +83,20 @@ export function escapeSqlLiteral(value: string): string {
 }
 
 /**
- * Escape a value for safe embedding inside a double-quoted shell argument.
- * Neutralizes the shell-active characters ($, backtick, double quote, backslash)
- * that exec would otherwise interpret through the shell.
+ * Build the argv for the `opencode db` invocation. The SQL is passed as a single
+ * argument element, never through a shell command line, so:
+ * - no shell can expand `%VAR%`, chain `&`/`|`, or break out of a double quote;
+ * - embedded newlines and JSON paths (`$.cost`) travel untouched on every OS;
+ * - no shell-argument escaping is ever needed.
  */
-export function escapeShellArgument(value: string): string {
-  return value.replace(/[\\"`$]/g, "\\$&");
+export function buildDbArgs(sql: string): string[] {
+  return ["db", sql, "--format", "json"];
 }
 
-export function buildDbCommand(sql: string): string {
-  return `opencode db "${escapeShellArgument(sql)}" --format json`;
-}
-
-function whereClauses(opts: UsageStatsOptions): string {
+function whereClauses(opts: UsageStatsOptions, timeCreated: string = "time_created"): string {
   let clauses = "json_extract(data, '$.role') = 'assistant'";
   if (opts.days > 0) {
-    clauses += ` AND time_created >= strftime('%s','now','-${opts.days} days') * 1000`;
+    clauses += ` AND ${timeCreated} >= strftime('%s','now','-${opts.days} days') * 1000`;
   }
   if (opts.project !== undefined) {
     clauses += ` AND json_extract(data, '$.path.cwd') = '${escapeSqlLiteral(opts.project)}'`;
@@ -116,18 +121,28 @@ ORDER BY total_cost DESC`;
 }
 
 export function buildRecentSessionsSql(opts: UsageStatsOptions): string {
-  return `SELECT
-  session_id,
-  json_extract(data, '$.path.cwd') AS project_path,
-  MAX(time_created) AS last_updated_at,
-  COUNT(*) AS message_count,
-  SUM(COALESCE(json_extract(data, '$.cost'), 0)) AS total_cost,
-  SUM(COALESCE(json_extract(data, '$.tokens.input'), 0)) AS input_tokens,
-  SUM(COALESCE(json_extract(data, '$.tokens.output'), 0)) AS output_tokens,
-  GROUP_CONCAT(DISTINCT json_extract(data, '$.providerID')) AS providers
-FROM message
-WHERE ${whereClauses(opts)}
-GROUP BY session_id
+  // The grouped subquery applies the days/project filters and joins the session
+  // table for the canonical title without corrupting aggregation (session.id is
+  // unique per group). The outer query computes COUNT(*) OVER () over the FULL
+  // grouped result — BEFORE LIMIT — so `total_sessions` reflects every matching
+  // session, not just the 5 rows returned, while the list stays capped at 5.
+  return `SELECT *, COUNT(*) OVER () AS total_sessions
+FROM (
+  SELECT
+    session.title AS title,
+    session_id,
+    json_extract(data, '$.path.cwd') AS project_path,
+    MAX(message.time_created) AS last_updated_at,
+    COUNT(*) AS message_count,
+    SUM(COALESCE(json_extract(data, '$.cost'), 0)) AS total_cost,
+    SUM(COALESCE(json_extract(data, '$.tokens.input'), 0)) AS input_tokens,
+    SUM(COALESCE(json_extract(data, '$.tokens.output'), 0)) AS output_tokens,
+    GROUP_CONCAT(DISTINCT json_extract(data, '$.providerID')) AS providers
+  FROM message
+  JOIN session ON session.id = message.session_id
+  WHERE ${whereClauses(opts, "message.time_created")}
+  GROUP BY session_id
+)
 ORDER BY last_updated_at DESC
 LIMIT 5`;
 }
@@ -211,6 +226,7 @@ function aggregateProviders(rows: ProviderRow[]): ProviderUsage[] {
 }
 
 interface SessionRow {
+  title: string | null;
   session_id: string;
   project_path: string | null;
   last_updated_at: unknown;
@@ -219,6 +235,7 @@ interface SessionRow {
   input_tokens: unknown;
   output_tokens: unknown;
   providers: string | null;
+  total_sessions: unknown;
 }
 
 function parseSessions(rows: SessionRow[]): RecentSession[] {
@@ -227,6 +244,8 @@ function parseSessions(rows: SessionRow[]): RecentSession[] {
     const output = toNumber(row.output_tokens);
     return {
       sessionId: row.session_id ?? "unknown",
+      title:
+        typeof row.title === "string" && row.title.length > 0 ? row.title : null,
       projectPath:
         typeof row.project_path === "string" && row.project_path.length > 0 ? row.project_path : null,
       lastUpdatedAt: new Date(toNumber(row.last_updated_at)).toISOString(),
@@ -247,7 +266,7 @@ function rangeLabelFor(days: DaysFilter): "7d" | "30d" | "all" {
 
 export async function collectUsageStats(
   opts: UsageStatsOptions,
-  execFn: ExecLike = exec,
+  execFn: ExecFileLike = execFile,
 ): Promise<Result<UsageStatsData>> {
   const cacheKey = `${opts.days}:${opts.project ?? ""}`;
   const now = Date.now();
@@ -257,8 +276,16 @@ export async function collectUsageStats(
 
   try {
     const [providerOut, sessionsOut] = await Promise.all([
-      execFn(buildDbCommand(buildProviderUsageSql(opts)), { maxBuffer: MAX_BUFFER, timeout: CLI_TIMEOUT_MS }),
-      execFn(buildDbCommand(buildRecentSessionsSql(opts)), { maxBuffer: MAX_BUFFER, timeout: CLI_TIMEOUT_MS }),
+      execFn(CLI_BIN, buildDbArgs(buildProviderUsageSql(opts)), {
+        maxBuffer: MAX_BUFFER,
+        timeout: CLI_TIMEOUT_MS,
+        shell: false,
+      }),
+      execFn(CLI_BIN, buildDbArgs(buildRecentSessionsSql(opts)), {
+        maxBuffer: MAX_BUFFER,
+        timeout: CLI_TIMEOUT_MS,
+        shell: false,
+      }),
     ]);
 
     let providerRows: ProviderRow[];
@@ -277,6 +304,9 @@ export async function collectUsageStats(
     const data: UsageStatsData = {
       providers: aggregateProviders(providerRows),
       recentSessions: parseSessions(sessionRows),
+      // The window count rides on every returned row; an empty match set means
+      // zero matching sessions.
+      totalSessions: sessionRows.length > 0 ? toNumber(sessionRows[0].total_sessions) : 0,
       rangeLabel: rangeLabelFor(opts.days),
       generatedAt: new Date().toISOString(),
     };

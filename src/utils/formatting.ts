@@ -1,8 +1,6 @@
 import dayjs from 'dayjs';
-import utc from 'dayjs/plugin/utc';
 import 'dayjs/locale/es';
 
-dayjs.extend(utc);
 dayjs.locale('es');
 
 export const getBytes = (num: number): string => {
@@ -21,5 +19,18 @@ export const getBytes = (num: number): string => {
 };
 
 export const formatDate = (isoDate: string): string => {
-  return dayjs.utc(isoDate).format('D [de] MMMM [de] YYYY, h:mm a');
+  // Parse in local mode so a trailing "Z" (UTC) instant is rendered in the
+  // browser/runtime timezone instead of being force-formatted as UTC.
+  return dayjs(isoDate).format('D [de] MMMM [de] YYYY, h:mm a');
+};
+
+/**
+ * Reduce a session id to a compact, recognizable form for display.
+ * OpenCode session ids share the `ses_` prefix, so it is stripped and the
+ * remainder is truncated (default 10 chars) — enough to distinguish sessions
+ * without consuming card width.
+ */
+export const shortenSessionId = (sessionId: string, maxLength = 10): string => {
+  const trimmed = sessionId.startsWith('ses_') ? sessionId.slice('ses_'.length) : sessionId;
+  return trimmed.length > maxLength ? trimmed.slice(0, maxLength) : trimmed;
 };

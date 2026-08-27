@@ -80,6 +80,18 @@ describe("DashboardLayout", () => {
     expect(screen.getByText("full-gentleman")).not.toBeNull();
   });
 
+  it("renders the usage stats navigation entry linking to the camelCase route", () => {
+    render(
+      <DashboardLayout>
+        <main>Child</main>
+      </DashboardLayout>,
+    );
+
+    const link = screen.getByRole("link", { name: "Usage" });
+    expect(link).not.toBeNull();
+    expect(link.getAttribute("href")).toBe("/usageStats");
+  });
+
   it("renders the compact Gentle-AI version below the Sync Configs CTA in the sidebar footer", () => {
     render(
       <DashboardLayout gentleAiVersion="v2.4.0">

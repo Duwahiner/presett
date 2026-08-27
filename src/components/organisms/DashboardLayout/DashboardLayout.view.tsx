@@ -8,6 +8,7 @@ import {
   Cpu,
   Layers,
   Archive,
+  BarChart2,
   Menu,
   Search,
   X,
@@ -43,6 +44,7 @@ const menuItems: { key: keyof Resources; href: string; icon: React.ComponentType
   { key: "nav_models", href: "/models", icon: Cpu },
   { key: "nav_profiles", href: "/profiles", icon: Layers },
   { key: "nav_backups", href: "/backups", icon: Archive },
+  { key: "nav_usage_stats", href: "/usageStats", icon: BarChart2 },
 ];
 
 const workspaceItems: { key: keyof Resources; href: string; icon: React.ComponentType<{ className?: string }> }[] = [
