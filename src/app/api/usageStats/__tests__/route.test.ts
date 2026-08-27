@@ -13,6 +13,7 @@ vi.mock("@/services/usageStatsService", () => ({
 const VALID_DATA = {
   providers: [],
   recentSessions: [],
+  totalSessions: 0,
   rangeLabel: "7d",
   generatedAt: "2026-08-26T00:00:00.000Z",
 };
