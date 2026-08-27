@@ -53,7 +53,7 @@ export function AgentAssignmentRow({
   const prefixColor = useMemo(() => getAgentPrefixColor(agentKey), [agentKey]);
 
   return (
-    <div className="border-2 border-border bg-card p-4 transition-colors hover:border-border hover:bg-muted">
+    <div className="border border-border bg-card p-4 transition-colors hover:border-border hover:bg-muted">
       <div className="flex items-center justify-between gap-4">
         <div className="flex min-w-0 items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center bg-primary/15">
@@ -65,15 +65,15 @@ export function AgentAssignmentRow({
               <span>{suffix}</span>
             </h4>
             <div className="mt-1 flex flex-wrap items-center gap-1.5">
-              <span className="inline-flex border-2 border-border px-1.5 font-mono text-[10px] font-bold uppercase text-foreground light:border-black light:text-black">
+              <span className="inline-flex border border-border px-1.5 font-mono text-[10px] font-bold uppercase text-foreground light:border-black light:text-black">
                 {provider}
               </span>
               <span className="text-muted-foreground/50">/</span>
-              <span className="inline-flex border-2 border-border px-1.5 font-mono text-[10px] font-bold uppercase text-foreground light:border-black light:text-black">
+              <span className="inline-flex border border-border px-1.5 font-mono text-[10px] font-bold uppercase text-foreground light:border-black light:text-black">
                 {model || t("agentAssignment_unset")}
               </span>
               <span className="text-muted-foreground/50">/</span>
-              <span className="inline-flex border-2 border-border px-1.5 font-mono text-[10px] font-bold uppercase text-foreground light:border-black light:text-black">
+              <span className="inline-flex border border-border px-1.5 font-mono text-[10px] font-bold uppercase text-foreground light:border-black light:text-black">
                 {variant || t("agentAssignment_unset")}
               </span>
             </div>
@@ -86,7 +86,7 @@ export function AgentAssignmentRow({
           aria-expanded={isEditing}
           disabled={disabled}
           onClick={() => setIsEditing((prev) => !prev)}
-          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+          className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
         >
           <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
           {t("agentAssignment_edit")}

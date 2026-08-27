@@ -42,7 +42,7 @@ export function BackupsClientView({
 }: BackupsClientViewProps) {
   if (loading) {
     return (
-      <div className="flex items-center gap-3 border-2 border-border bg-card p-8 text-muted-foreground">
+      <div className="flex items-center gap-3 border border-border bg-card p-8 text-muted-foreground">
         <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
         <span>{t("backups_loading")}</span>
       </div>
@@ -56,7 +56,7 @@ export function BackupsClientView({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-6">
-      <div className="flex-shrink-0 border-2 border-border bg-card p-6 shadow-[4px_4px_0_0_var(--border)]">
+      <div className="flex-shrink-0 border border-border bg-card p-6 shadow-[4px_4px_0_0_var(--border)]">
         <div className="mb-4 flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center bg-primary/15">
             <RefreshCw className="h-4 w-4 text-primary" aria-hidden="true" />
@@ -67,7 +67,7 @@ export function BackupsClientView({
         <button
           onClick={onSync}
           disabled={syncing}
-          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
+          className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
         >
           {syncing ? (
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -80,7 +80,7 @@ export function BackupsClientView({
           <pre
             role="status"
             className={cn(
-              "mt-4 max-h-48 overflow-auto border-2 border-border bg-muted p-4 font-mono text-xs text-muted-foreground scrollbar-brutal",
+              "mt-4 max-h-48 overflow-auto border border-border bg-muted p-4 font-mono text-xs text-muted-foreground scrollbar-brutal",
             )}
           >
             {syncOutput}
@@ -100,7 +100,7 @@ export function BackupsClientView({
             {derivedBackups.map((backup) => (
               <div
                 key={backup.id}
-                className="relative flex items-start gap-4 border-2 border-border bg-card p-4 transition-colors hover:border-primary/50"
+                className="relative flex items-start gap-4 border border-border bg-card p-4 transition-colors hover:border-primary/50"
               >
                 <div className="relative z-10 flex h-8 w-8 shrink-0 items-center justify-center bg-muted ring-4 ring-card">
                   <HardDrive className="h-4 w-4 text-muted-foreground" aria-hidden="true" />
@@ -130,7 +130,7 @@ export function BackupsClientView({
                       type="button"
                       onClick={() => onRestore(backup.id, backup.source)}
                       disabled={pendingAction === `restore:${backup.id}`}
-                      className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                      className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                     >
                       {pendingAction === `restore:${backup.id}` ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -143,7 +143,7 @@ export function BackupsClientView({
                       type="button"
                       onClick={() => (backup.pinned ? onUnpin(backup.id) : onPin(backup.id))}
                       disabled={pendingAction === `pin:${backup.id}` || pendingAction === `unpin:${backup.id}`}
-                      className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                      className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                     >
                       {pendingAction === `pin:${backup.id}` || pendingAction === `unpin:${backup.id}` ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
@@ -158,7 +158,7 @@ export function BackupsClientView({
                       type="button"
                       onClick={() => onDelete(backup.id)}
                       disabled={pendingAction === `delete:${backup.id}`}
-                      className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                      className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                     >
                       {pendingAction === `delete:${backup.id}` ? (
                         <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />

@@ -33,7 +33,7 @@ export default function UsageStatsPage() {
       </div>
 
       <div className="flex-1 overflow-hidden p-6 scrollbar-brutal">
-        <div className="flex h-full flex-col border-2 border-border bg-card p-6 shadow-[4px_4px_0_0_var(--border)]">
+        <div className="flex h-full flex-col border border-border bg-card p-6 shadow-[4px_4px_0_0_var(--border)]">
           <UsageStatsClient />
         </div>
       </div>

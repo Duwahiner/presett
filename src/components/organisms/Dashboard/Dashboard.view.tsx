@@ -43,7 +43,7 @@ function AgentTile({ agent }: { agent: DashboardAgent }) {
   const isConfigured = Boolean(agent.provider && agent.model && agent.variant);
 
   return (
-    <div className="group flex min-h-[188px] flex-col border-2 border-border bg-card p-5 shadow-[4px_4px_0_0_var(--foreground)] transition-colors light:border-black light:bg-white light:shadow-[4px_4px_0_0_#000000]">
+    <div className="group flex min-h-[188px] flex-col border border-border bg-card p-5 shadow-[4px_4px_0_0_var(--foreground)] transition-colors light:border-black light:bg-white light:shadow-[4px_4px_0_0_#000000]">
       <div className="flex items-start justify-between">
         <div className="flex size-12 items-center justify-center bg-muted font-mono text-base font-bold text-foreground light:bg-gray-100">
           {agent.agentKey.slice(0, 2).toUpperCase()}
@@ -90,7 +90,7 @@ function AgentTile({ agent }: { agent: DashboardAgent }) {
 function AddAgentTile() {
   return (
     <Link href="/models" className="block">
-      <div className="flex min-h-[188px] flex-col items-center justify-center gap-2 border-2 border-dashed border-border bg-card p-5 text-muted-foreground transition-colors hover:border-primary hover:text-foreground">
+      <div className="flex min-h-[188px] flex-col items-center justify-center gap-2 border border-dashed border-border bg-card p-5 text-muted-foreground transition-colors hover:border-primary hover:text-foreground">
         <span className="flex size-12 items-center justify-center bg-muted">
           <Plus className="size-5" />
         </span>
@@ -112,7 +112,7 @@ function QuickAction({ icon: Icon, title, desc, href }: QuickActionProps) {
      <Link href={href} className="block">
        <Button
          variant="ghost"
-         className="flex h-auto w-full items-center justify-start gap-3 border-2 border-transparent p-2.5 text-left font-normal hover:border-border hover:bg-muted"
+         className="flex h-auto w-full items-center justify-start gap-3 border border-transparent p-2.5 text-left font-normal hover:border-border hover:bg-muted"
        >
          <span className="flex size-9 shrink-0 items-center justify-center bg-muted text-foreground">
            <Icon className="size-[18px]" />
@@ -142,12 +142,12 @@ export function DashboardView({ className, stats, agents }: DashboardProps) {
         <div className="flex items-center gap-2">
           <Link
             href="/backups"
-            className="flex h-11 items-center gap-2 border-2 border-border bg-background px-4 font-mono text-sm font-bold uppercase tracking-wide text-foreground shadow-[4px_4px_0_0_var(--foreground)] transition-all hover:shadow-none active:translate-x-px active:translate-y-px active:shadow-none"
+            className="flex h-11 items-center gap-2 border border-border bg-background px-4 font-mono text-sm font-bold uppercase tracking-wide text-foreground shadow-[4px_4px_0_0_var(--foreground)] transition-all hover:shadow-none active:translate-x-px active:translate-y-px active:shadow-none"
           >
             <FolderClock className="size-4" />
             {t("dashboard_backups_action")}
           </Link>
-          <Button className="h-11 border-2 border-border px-4 shadow-[4px_4px_0_0_var(--foreground)] transition-all hover:shadow-none active:translate-x-px active:translate-y-px active:shadow-none" render={<Link href="/profiles" />}>
+          <Button className="h-11 border border-border px-4 shadow-[4px_4px_0_0_var(--foreground)] transition-all hover:shadow-none active:translate-x-px active:translate-y-px active:shadow-none" render={<Link href="/profiles" />}>
             <Plus className="size-4" />
             {t("profiles_create_action")}
           </Button>
@@ -182,7 +182,7 @@ export function DashboardView({ className, stats, agents }: DashboardProps) {
       </section>
 
       <div className="grid min-h-0 flex-1 grid-cols-1 items-stretch gap-8 xl:grid-cols-3">
-        <section className="flex min-h-0 flex-col border-2 border-border bg-card p-5 sm:p-6 xl:col-span-2">
+        <section className="flex min-h-0 flex-col border border-border bg-card p-5 sm:p-6 xl:col-span-2">
           <div className="mb-5 flex items-center justify-between">
             <h2 className="text-base font-bold text-foreground">{t("dashboard_agents_title")}</h2>
             <Button
@@ -204,7 +204,7 @@ export function DashboardView({ className, stats, agents }: DashboardProps) {
         </section>
 
         <section className="flex flex-col">
-          <Card className="flex h-full flex-col gap-2.5 p-5 shadow-none sm:p-6">
+          <Card className="flex h-full flex-col gap-2.5 border border-border p-5 shadow-none sm:p-6">
             <h2 className="mb-3 text-base font-bold text-foreground">{t("dashboard_quick_access_title")}</h2>
             <QuickAction
               icon={Cpu}
@@ -225,7 +225,7 @@ export function DashboardView({ className, stats, agents }: DashboardProps) {
               href="/backups"
             />
 
-            <div className="mt-auto border-2 border-accent bg-accent p-4 text-accent-foreground">
+            <div className="mt-auto border border-accent bg-accent p-4 text-accent-foreground">
               <p className="text-base font-bold">{t("tdd_strict_mode_title")}</p>
               <p className="mt-2 text-sm text-accent-foreground text-pretty">
                 {t("tdd_strict_mode_desc")}

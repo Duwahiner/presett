@@ -90,7 +90,7 @@ export function CreateProfileModal({
         ref={dialogRef}
         role="dialog"
         aria-label={t("profiles_create_title")}
-        className="relative z-10 w-full max-w-md border-2 border-border bg-card p-6 shadow-[4px_4px_0_0_var(--border)]"
+        className="relative z-10 w-full max-w-md border border-border bg-card p-6 shadow-[4px_4px_0_0_var(--border)]"
       >
         <div className="mb-5 flex items-center justify-between">
           <h2 className="font-mono text-sm font-bold uppercase text-foreground">
@@ -135,14 +135,14 @@ export function CreateProfileModal({
             <button
               type="button"
               onClick={onClose}
-              className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+              className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
             >
               CANCEL
             </button>
             <button
               type="submit"
               disabled={!canSubmit}
-              className="flex items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-white light:!text-black light:shadow-[4px_4px_0_0_#000000]"
+              className="flex items-center justify-center gap-2 border border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-white light:!text-black light:shadow-[4px_4px_0_0_#000000]"
             >
               {pendingAction === "create" && (
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
