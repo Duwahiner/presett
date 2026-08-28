@@ -1,4 +1,4 @@
-import { Loader2 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 
 export function FloatingLoadingIndicator({ label }: { label: string }) {
   return (
@@ -6,10 +6,12 @@ export function FloatingLoadingIndicator({ label }: { label: string }) {
       role="status"
       aria-live="polite"
       aria-atomic="true"
-      className="fixed bottom-5 right-5 z-50 flex items-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)]"
+      aria-label={label}
+      title={label}
+      className="fixed bottom-5 right-5 z-50 flex size-9 items-center justify-center rounded-full bg-card/95 text-primary shadow-lg backdrop-blur-sm"
     >
-      <Loader2 className="h-4 w-4 animate-spin text-primary motion-reduce:animate-none" aria-hidden="true" />
-      <span>{label}</span>
+      <Spinner aria-hidden="true" className="size-5" />
+      <span className="sr-only">{label}</span>
     </div>
   );
 }
