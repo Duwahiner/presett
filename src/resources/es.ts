@@ -274,6 +274,7 @@ export const es: Resources = {
   "usage_stats_status_badge": "Local",
   "usage_stats_header_description": "Audita el uso y costo de OpenCode por proveedor, modelo y proyecto.",
   "usage_stats_loading": "Cargando estadísticas de uso…",
+  "loading_background": "Procesando…",
   "usage_stats_loadError": "No se pudieron cargar las estadísticas de uso",
   "usage_stats_empty_title": "No hay datos de uso",
   "usage_stats_empty_desc": "No se encontró actividad de proveedores en el período seleccionado.",

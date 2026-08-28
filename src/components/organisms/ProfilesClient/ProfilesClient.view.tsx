@@ -10,6 +10,8 @@ import { ListingControls } from "@/components/molecules/ListingControls/ListingC
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { t } from "@/resources/resources";
+import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
+import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 import type { ProfilesClientViewProps } from "./ProfilesClient.types";
 import type { ModelCatalog } from "@/components/molecules/ModelPicker/ModelPicker";
 import { Select } from "@/components/ui/select";
@@ -197,18 +199,14 @@ export function ProfilesClientView({
   const showNoMatch = profiles.length > 0 && visibleProfiles.length === 0 && isFiltered;
 
   if (loading) {
-    return (
-       <div className="flex min-h-[240px] items-center justify-center gap-3 border border-border bg-card p-8 text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
-        <span>{t("profiles_loading")}</span>
-      </div>
-    );
+    return <PageSkeleton variant="profiles" label={t("profiles_loading")} />;
   }
 
   if (error) return <ErrorBanner title={t("profiles_loadError")} message={error} />;
 
   return (
     <div className="flex flex-col h-full min-h-0">
+      {pendingAction !== null && <FloatingLoadingIndicator label={t("loading_background")} />}
       {catalogLoading && (
          <div className="mb-4 flex items-center justify-center gap-3 border border-border bg-card p-4 text-muted-foreground">
           <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />

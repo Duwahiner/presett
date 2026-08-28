@@ -112,6 +112,7 @@ describe("BackupsClientView", () => {
     renderView({ pendingAction: "pin:backup-1" });
 
     expect(screen.getByRole("button", { name: "Pin" }).hasAttribute("disabled")).toBe(true);
+    expect(screen.getByRole("status").textContent).toContain("Working");
   });
 
   it("does not render inline feedback (delegated to notification system)", () => {

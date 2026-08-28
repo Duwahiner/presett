@@ -13,6 +13,8 @@ import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/List
 import { t } from "@/resources/resources";
 import type { ModelsClientViewProps } from "./ModelsClient.types";
 import { Loader2 } from "lucide-react";
+import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
+import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 
 export function ModelsClientView({
   assignments,
@@ -35,12 +37,7 @@ export function ModelsClientView({
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   if (loading) {
-      return (
-      <div className="flex min-h-[240px] items-center justify-center gap-3 border border-border bg-card p-8 text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
-        <span>{t("models_loading")}</span>
-      </div>
-    );
+    return <PageSkeleton variant="models" label={t("models_loading")} />;
   }
 
   if (error) return <ErrorBanner title={t("models_loadError")} message={error} />;
@@ -49,6 +46,9 @@ export function ModelsClientView({
 
   return (
     <div className="flex flex-col h-full min-h-0 space-y-4">
+      {(saving !== null || syncing || switchingProfile || resetting) && (
+        <FloatingLoadingIndicator label={t("loading_background")} />
+      )}
       {/* Profile Selector */}
       <div className="flex items-center gap-3 border border-border bg-card p-4">
         <div className="flex h-8 w-8 items-center justify-center bg-primary/15">

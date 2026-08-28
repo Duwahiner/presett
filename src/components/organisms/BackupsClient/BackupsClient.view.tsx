@@ -12,12 +12,15 @@ import {
 
 import { Badge } from "@/components/atoms/Badge/Badge";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
+import { ListingControls } from "@/components/molecules/ListingControls/ListingControls";
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
 import { DeleteBackupModal } from "@/components/organisms/DeleteBackupModal";
 import { cn } from "@/lib/utils";
 import { t } from "@/resources/resources";
 import { getBytes, formatDate } from "@/utils/formatting";
 import type { BackupsClientViewProps } from "./BackupsClient.types";
+import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
+import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 
 export function BackupsClientView({
   backups,
@@ -41,12 +44,7 @@ export function BackupsClientView({
   onDeleteCancel,
 }: BackupsClientViewProps) {
   if (loading) {
-    return (
-      <div className="flex items-center gap-3 border border-border bg-card p-8 text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
-        <span>{t("backups_loading")}</span>
-      </div>
-    );
+    return <PageSkeleton variant="backups" label={t("backups_loading")} />;
   }
 
   if (error) return <ErrorBanner title={t("backups_loadError")} message={error} />;
@@ -56,6 +54,9 @@ export function BackupsClientView({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-6">
+      {(syncing || pendingAction !== null) && (
+        <FloatingLoadingIndicator label={t("loading_background")} />
+      )}
       <div className="flex-shrink-0 border border-border bg-card p-6 shadow-[4px_4px_0_0_var(--border)]">
         <div className="mb-4 flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center bg-primary/15">
@@ -87,6 +88,14 @@ export function BackupsClientView({
           </pre>
         )}
        </div>
+
+       <ListingControls
+         config={controls.config}
+         state={controls.state}
+         onChange={onControlsChange}
+         onClear={onClearControls}
+         resultCount={resultCount}
+       />
 
        <div className="min-h-0 flex-1 overflow-y-auto pr-4 scrollbar-brutal">
        {showNoData ? (
