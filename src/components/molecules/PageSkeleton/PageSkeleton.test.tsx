@@ -8,5 +8,10 @@ describe("PageSkeleton", () => {
 
     expect(screen.getByRole("status", { name: "Loading usage stats…" })).not.toBeNull();
     expect(document.querySelectorAll('[aria-hidden="true"]').length).toBeGreaterThan(3);
+    const blocks = document.querySelectorAll('[data-slot="skeleton"]');
+    expect(blocks.length).toBeGreaterThan(0);
+    expect(blocks[0]?.classList.contains("animate-pulse")).toBe(true);
+    expect(blocks[0]?.classList.contains("bg-muted")).toBe(true);
+    expect(blocks[0]?.classList.contains("border")).toBe(false);
   });
 });

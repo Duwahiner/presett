@@ -3,7 +3,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 type PageSkeletonVariant = "models" | "profiles" | "backups" | "usageStats" | "diagnostics";
 
 function Block({ className = "" }: { className?: string }) {
-  return <Skeleton className={`border border-border bg-card ${className}`} />;
+  return <Skeleton className={className} />;
 }
 
 export function PageSkeleton({ variant, label }: { variant: PageSkeletonVariant; label: string }) {
