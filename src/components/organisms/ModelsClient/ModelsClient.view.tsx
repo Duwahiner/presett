@@ -12,9 +12,7 @@ import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
 import { t } from "@/resources/resources";
 import type { ModelsClientViewProps } from "./ModelsClient.types";
-import { Loader2 } from "lucide-react";
-import { Spinner } from "@/components/ui/spinner";
-import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
+import { SectionSpinner, Spinner } from "@/components/ui/spinner";
 import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 
 export function ModelsClientView({
@@ -37,8 +35,8 @@ export function ModelsClientView({
 }: ModelsClientViewProps) {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
-  if (loading) {
-    return <PageSkeleton variant="models" label={t("models_loading")} />;
+if (loading) {
+    return <SectionSpinner label={t("loading_section")} />;
   }
 
   if (error) return <ErrorBanner title={t("models_loadError")} message={error} />;
@@ -104,12 +102,7 @@ export function ModelsClientView({
         </Select.Root>
       </div>
 
-      {catalogLoading && (
-        <p className="flex items-center gap-2 text-sm text-muted-foreground">
-          <Spinner aria-hidden="true" className="size-4 shrink-0 text-primary" />
-          {t("models_validationMessage")}
-        </p>
-      )}
+      {catalogLoading && <SectionSpinner label={t("loading_section")} />}
 
       {!catalogLoading && Object.keys(catalog).length === 0 && (
         <ErrorBanner
@@ -159,7 +152,7 @@ export function ModelsClientView({
           className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
         >
           {syncing ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Spinner data-icon="inline-start" aria-hidden="true" />
           ) : (
             <RefreshCw className="h-4 w-4" />
           )}
@@ -172,7 +165,7 @@ export function ModelsClientView({
           className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-card light:!text-black light:shadow-[4px_4px_0_0_#000000]"
         >
           {resetting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Spinner data-icon="inline-start" aria-hidden="true" />
           ) : (
             <RotateCcw className="h-4 w-4" />
           )}

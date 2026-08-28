@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Pencil, Trash2, UserCircle, Sparkles, Check, Info, RotateCcw, ChevronDown } from "lucide-react";
+import { Pencil, Trash2, UserCircle, Sparkles, Check, Info, RotateCcw, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/atoms/Badge/Badge";
@@ -10,8 +10,7 @@ import { ListingControls } from "@/components/molecules/ListingControls/ListingC
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { t } from "@/resources/resources";
-import { Spinner } from "@/components/ui/spinner";
-import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
+import { SectionSpinner, Spinner } from "@/components/ui/spinner";
 import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 import type { ProfilesClientViewProps } from "./ProfilesClient.types";
 import type { ModelCatalog } from "@/components/molecules/ModelPicker/ModelPicker";
@@ -199,8 +198,8 @@ export function ProfilesClientView({
   const showNoData = profiles.length === 0;
   const showNoMatch = profiles.length > 0 && visibleProfiles.length === 0 && isFiltered;
 
-  if (loading) {
-    return <PageSkeleton variant="profiles" label={t("profiles_loading")} />;
+if (loading) {
+    return <SectionSpinner label={t("loading_section")} />;
   }
 
   if (error) return <ErrorBanner title={t("profiles_loadError")} message={error} />;
@@ -208,12 +207,7 @@ export function ProfilesClientView({
   return (
     <div className="flex flex-col h-full min-h-0">
       {pendingAction !== null && <FloatingLoadingIndicator label={t("loading_background")} />}
-      {catalogLoading && (
-        <p className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
-          <Spinner aria-hidden="true" className="size-4 shrink-0 text-primary" />
-          {t("models_validationMessage")}
-        </p>
-      )}
+      {catalogLoading && <SectionSpinner label={t("loading_section")} />}
 
       {/* Delete Profile Confirmation Dialog */}
       {deleteConfirmProfile && (
@@ -293,7 +287,7 @@ export function ProfilesClientView({
                      className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
                   >
                     {pendingAction === "edit" && (
-                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                      <Spinner data-icon="inline-start" aria-hidden="true" />
                     )}
                     {t("profiles_save")}
                   </button>
@@ -350,7 +344,7 @@ export function ProfilesClientView({
                        className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                      >
                        {pendingAction === `switch:${profile.name}` && (
-                         <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                         <Spinner data-icon="inline-start" aria-hidden="true" />
                        )}
                        {t("profiles_switch")}
                      </button>
@@ -364,7 +358,7 @@ export function ProfilesClientView({
                        className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                       >
                         {pendingAction === `delete:${profile.name}` ? (
-                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                          <Spinner data-icon="inline-start" aria-hidden="true" />
                         ) : (
                           <Trash2 className="h-4 w-4" aria-hidden="true" />
                         )}

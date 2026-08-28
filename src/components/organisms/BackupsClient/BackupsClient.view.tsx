@@ -7,7 +7,6 @@ import {
   PinOff,
   RotateCcw,
   Trash2,
-  Loader2,
 } from "lucide-react";
 
 import { Badge } from "@/components/atoms/Badge/Badge";
@@ -19,7 +18,7 @@ import { cn } from "@/lib/utils";
 import { t } from "@/resources/resources";
 import { getBytes, formatDate } from "@/utils/formatting";
 import type { BackupsClientViewProps } from "./BackupsClient.types";
-import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
+import { SectionSpinner, Spinner } from "@/components/ui/spinner";
 import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 
 export function BackupsClientView({
@@ -43,8 +42,8 @@ export function BackupsClientView({
   onDeleteConfirm,
   onDeleteCancel,
 }: BackupsClientViewProps) {
-  if (loading) {
-    return <PageSkeleton variant="backups" label={t("backups_loading")} />;
+if (loading) {
+    return <SectionSpinner label={t("loading_section")} />;
   }
 
   if (error) return <ErrorBanner title={t("backups_loadError")} message={error} />;
@@ -71,7 +70,7 @@ export function BackupsClientView({
           className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
         >
           {syncing ? (
-            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            <Spinner data-icon="inline-start" aria-hidden="true" />
           ) : (
             <RefreshCw className="h-4 w-4" aria-hidden="true" />
           )}
@@ -142,7 +141,7 @@ export function BackupsClientView({
                       className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                     >
                       {pendingAction === `restore:${backup.id}` ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                        <Spinner data-icon="inline-start" aria-hidden="true" />
                       ) : (
                         <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
                       )}
@@ -155,7 +154,7 @@ export function BackupsClientView({
                       className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                     >
                       {pendingAction === `pin:${backup.id}` || pendingAction === `unpin:${backup.id}` ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                        <Spinner data-icon="inline-start" aria-hidden="true" />
                       ) : backup.pinned ? (
                         <PinOff className="h-3.5 w-3.5" aria-hidden="true" />
                       ) : (
@@ -170,7 +169,7 @@ export function BackupsClientView({
                       className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                     >
                       {pendingAction === `delete:${backup.id}` ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                        <Spinner data-icon="inline-start" aria-hidden="true" />
                       ) : (
                         <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
                       )}

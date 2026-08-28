@@ -47,7 +47,7 @@ describe("DiagnosticsClient", () => {
   it("renders safe local diagnostics and stable/RC versions without paths", async () => {
     render(<DiagnosticsClient />, { wrapper });
 
-    expect(screen.getByRole("status").textContent).toContain("Loading diagnostics");
+    expect(screen.getByRole("status").textContent).toContain("Loading");
     expect(await screen.findByText("Gentle-AI CLI")).not.toBeNull();
     expect(screen.getByText("1.2.0")).not.toBeNull();
     expect(screen.getByText("State unavailable")).not.toBeNull();

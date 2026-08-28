@@ -275,6 +275,7 @@ export interface Resources {
   "usage_stats_header_description": string;
   "usage_stats_loading": string;
   "loading_background": string;
+  "loading_section": string;
   "usage_stats_loadError": string;
   "usage_stats_empty_title": string;
   "usage_stats_empty_desc": string;
