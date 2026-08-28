@@ -13,6 +13,7 @@ import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/List
 import { t } from "@/resources/resources";
 import type { ModelsClientViewProps } from "./ModelsClient.types";
 import { Loader2 } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
 import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 
@@ -104,10 +105,10 @@ export function ModelsClientView({
       </div>
 
       {catalogLoading && (
-        <div className="flex items-center justify-center gap-3 border border-border bg-card p-4 text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
-          <span>{t("models_validationMessage")}</span>
-        </div>
+        <p className="flex items-center gap-2 text-sm text-muted-foreground">
+          <Spinner aria-hidden="true" className="size-4 shrink-0 text-primary" />
+          {t("models_validationMessage")}
+        </p>
       )}
 
       {!catalogLoading && Object.keys(catalog).length === 0 && (

@@ -10,6 +10,7 @@ import { ListingControls } from "@/components/molecules/ListingControls/ListingC
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { t } from "@/resources/resources";
+import { Spinner } from "@/components/ui/spinner";
 import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
 import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 import type { ProfilesClientViewProps } from "./ProfilesClient.types";
@@ -208,10 +209,10 @@ export function ProfilesClientView({
     <div className="flex flex-col h-full min-h-0">
       {pendingAction !== null && <FloatingLoadingIndicator label={t("loading_background")} />}
       {catalogLoading && (
-         <div className="mb-4 flex items-center justify-center gap-3 border border-border bg-card p-4 text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
-          <span>{t("models_validationMessage")}</span>
-        </div>
+        <p className="mb-4 flex items-center gap-2 text-sm text-muted-foreground">
+          <Spinner aria-hidden="true" className="size-4 shrink-0 text-primary" />
+          {t("models_validationMessage")}
+        </p>
       )}
 
       {/* Delete Profile Confirmation Dialog */}
