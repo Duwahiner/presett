@@ -4,7 +4,6 @@ import { useState } from "react";
 import { AlertCircle, Check, ChevronDown, RefreshCw, RotateCcw, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AgentAssignmentRow } from "@/components/molecules/AgentAssignmentRow/AgentAssignmentRow";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
@@ -12,7 +11,7 @@ import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
 import { t } from "@/resources/resources";
 import type { ModelsClientViewProps } from "./ModelsClient.types";
-import { Spinner } from "@/components/ui/spinner";
+import { LoadingButton, Spinner } from "@/components/ui/spinner";
 import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
 import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 
@@ -104,10 +103,7 @@ export function ModelsClientView({
       </div>
 
       {catalogLoading && (
-        <Button disabled size="sm">
-          <Spinner data-icon="inline-start" />
-          {t("loading_section")}
-        </Button>
+        <LoadingButton label={t("loading_section")} />
       )}
 
       {!catalogLoading && Object.keys(catalog).length === 0 && (

@@ -3,14 +3,13 @@
 import { useState } from "react";
 import { Pencil, Trash2, UserCircle, Sparkles, Check, Info, RotateCcw, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/atoms/Badge/Badge";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
 import { ListingControls } from "@/components/molecules/ListingControls/ListingControls";
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { t } from "@/resources/resources";
-import { Spinner } from "@/components/ui/spinner";
+import { LoadingButton, Spinner } from "@/components/ui/spinner";
 import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
 import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 import type { ProfilesClientViewProps } from "./ProfilesClient.types";
@@ -209,10 +208,7 @@ export function ProfilesClientView({
     <div className="flex flex-col h-full min-h-0">
       {pendingAction !== null && <FloatingLoadingIndicator label={t("loading_background")} />}
       {catalogLoading && (
-        <Button disabled size="sm">
-          <Spinner data-icon="inline-start" />
-          {t("loading_section")}
-        </Button>
+        <LoadingButton label={t("loading_section")} />
       )}
 
       {/* Delete Profile Confirmation Dialog */}

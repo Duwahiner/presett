@@ -1,5 +1,6 @@
 import { LoaderIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 /** Primitive spinner icon. Use this inside buttons, badges, or any inline context. */
 export function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
@@ -14,16 +15,16 @@ export function Spinner({ className, ...props }: React.ComponentProps<"svg">) {
   );
 }
 
-/** Full-section centered loading state. Use this when an entire data region is fetching. */
-export function SectionSpinner({ label = "Cargando..." }: { label?: string }) {
+/** Compact disabled control for API sub-states. */
+export function LoadingButton({ label = "Cargando…" }: { label?: string }) {
   return (
-    <div
-      role="status"
-      aria-live="polite"
-      className="flex h-full min-h-[240px] flex-col items-center justify-center gap-3"
+    <Button
+      disabled
+      size="sm"
+      className="rounded-xl bg-muted-foreground text-background disabled:opacity-100"
     >
-      <Spinner aria-hidden="true" className="size-7 text-primary" />
-      <span className="text-sm text-muted-foreground">{label}</span>
-    </div>
+      <Spinner data-icon="inline-start" aria-hidden="true" />
+      {label}
+    </Button>
   );
 }
