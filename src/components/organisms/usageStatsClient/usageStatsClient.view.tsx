@@ -14,7 +14,7 @@ import type {
   UsageStatsData,
 } from "@/services/usageStatsService";
 import type { UsageStatsClientViewProps } from "./usageStatsClient.types";
-import { SectionSpinner } from "@/components/ui/spinner";
+import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
 import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 
 const DAY_OPTIONS: Array<{
@@ -364,7 +364,7 @@ export function UsageStatsClientView({
         className="min-h-0 flex-1 overflow-y-auto pr-4 scrollbar-brutal"
       >
 {loading && data === null ? (
-          <SectionSpinner label={t("loading_section")} />
+          <PageSkeleton variant="usageStats" label={t("usage_stats_loading")} />
         ) : error ? (
           <div className="flex flex-col items-center gap-4 border border-border bg-card p-8">
             <ErrorBanner title={t("usage_stats_loadError")} message={error} className="w-full" />

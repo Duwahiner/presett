@@ -12,7 +12,8 @@ import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
 import { t } from "@/resources/resources";
 import type { ModelsClientViewProps } from "./ModelsClient.types";
-import { SectionSpinner, Spinner } from "@/components/ui/spinner";
+import { Spinner } from "@/components/ui/spinner";
+import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
 import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 
 export function ModelsClientView({
@@ -35,8 +36,8 @@ export function ModelsClientView({
 }: ModelsClientViewProps) {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
-if (loading) {
-    return <SectionSpinner label={t("loading_section")} />;
+  if (loading) {
+    return <PageSkeleton variant="models" label={t("models_loading")} />;
   }
 
   if (error) return <ErrorBanner title={t("models_loadError")} message={error} />;
@@ -102,7 +103,12 @@ if (loading) {
         </Select.Root>
       </div>
 
-      {catalogLoading && <SectionSpinner label={t("loading_section")} />}
+      {catalogLoading && (
+        <Button disabled size="sm">
+          <Spinner data-icon="inline-start" />
+          {t("loading_section")}
+        </Button>
+      )}
 
       {!catalogLoading && Object.keys(catalog).length === 0 && (
         <ErrorBanner

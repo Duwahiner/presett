@@ -10,7 +10,8 @@ import { ListingControls } from "@/components/molecules/ListingControls/ListingC
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { t } from "@/resources/resources";
-import { SectionSpinner, Spinner } from "@/components/ui/spinner";
+import { Spinner } from "@/components/ui/spinner";
+import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
 import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 import type { ProfilesClientViewProps } from "./ProfilesClient.types";
 import type { ModelCatalog } from "@/components/molecules/ModelPicker/ModelPicker";
@@ -198,8 +199,8 @@ export function ProfilesClientView({
   const showNoData = profiles.length === 0;
   const showNoMatch = profiles.length > 0 && visibleProfiles.length === 0 && isFiltered;
 
-if (loading) {
-    return <SectionSpinner label={t("loading_section")} />;
+  if (loading) {
+    return <PageSkeleton variant="profiles" label={t("profiles_loading")} />;
   }
 
   if (error) return <ErrorBanner title={t("profiles_loadError")} message={error} />;
@@ -207,7 +208,12 @@ if (loading) {
   return (
     <div className="flex flex-col h-full min-h-0">
       {pendingAction !== null && <FloatingLoadingIndicator label={t("loading_background")} />}
-      {catalogLoading && <SectionSpinner label={t("loading_section")} />}
+      {catalogLoading && (
+        <Button disabled size="sm">
+          <Spinner data-icon="inline-start" />
+          {t("loading_section")}
+        </Button>
+      )}
 
       {/* Delete Profile Confirmation Dialog */}
       {deleteConfirmProfile && (

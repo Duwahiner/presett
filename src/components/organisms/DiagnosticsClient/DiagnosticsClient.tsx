@@ -10,7 +10,8 @@ import { t } from "@/resources/resources";
 import { useNotificationToasts } from "@/hooks/useNotificationToasts";
 import { checkDiagnosticsUpdates, getDiagnostics } from "@/services/diagnosticsApiService";
 import type { DiagnosticsReport, DiagnosticsUpdateState, RouteState } from "@/services/diagnosticsService";
-import { SectionSpinner, Spinner } from "@/components/ui/spinner";
+import { Spinner } from "@/components/ui/spinner";
+import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
 import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 
 function StatusBadge({ ok, text }: { ok: boolean; text: string }) {
@@ -97,8 +98,8 @@ export function DiagnosticsClient() {
     }
   }
 
-if (loading) {
-    return <SectionSpinner label={t("loading_section")} />;
+  if (loading) {
+    return <PageSkeleton variant="diagnostics" label={t("diagnostics_loading")} />;
   }
 
   return (

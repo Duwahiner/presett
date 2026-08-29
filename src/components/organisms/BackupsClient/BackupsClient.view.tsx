@@ -18,7 +18,8 @@ import { cn } from "@/lib/utils";
 import { t } from "@/resources/resources";
 import { getBytes, formatDate } from "@/utils/formatting";
 import type { BackupsClientViewProps } from "./BackupsClient.types";
-import { SectionSpinner, Spinner } from "@/components/ui/spinner";
+import { Spinner } from "@/components/ui/spinner";
+import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
 import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 
 export function BackupsClientView({
@@ -42,8 +43,8 @@ export function BackupsClientView({
   onDeleteConfirm,
   onDeleteCancel,
 }: BackupsClientViewProps) {
-if (loading) {
-    return <SectionSpinner label={t("loading_section")} />;
+  if (loading) {
+    return <PageSkeleton variant="backups" label={t("backups_loading")} />;
   }
 
   if (error) return <ErrorBanner title={t("backups_loadError")} message={error} />;
