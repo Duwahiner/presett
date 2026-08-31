@@ -25,8 +25,8 @@ export const metadata: Metadata = {
   title: "PreSett",
   description: "Visual configuration manager for Gentle-AI",
   icons: {
-    icon: "/icon.svg",
-    apple: "/icon.svg",
+    icon: "/favicon.svg",
+    apple: "/favicon.svg",
   },
 };
 

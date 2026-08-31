@@ -1,6 +1,6 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
 import { render } from "@testing-library/react";
-import RootLayout from "@/app/layout";
+import RootLayout, { metadata } from "@/app/layout";
 
 vi.mock("next/font/google", () => ({
   Inter: () => ({ variable: "--font-inter" }),
@@ -96,5 +96,12 @@ describe("RootLayout", () => {
 
     expect(layoutDocument.querySelector("[data-testid='theme-provider']")).not.toBeNull();
     expect(layoutDocument.querySelector("[data-testid='child']")).not.toBeNull();
+  });
+
+  it("points both icon and apple metadata at /favicon.svg", () => {
+    expect(metadata.icons).toEqual({
+      icon: "/favicon.svg",
+      apple: "/favicon.svg",
+    });
   });
 });

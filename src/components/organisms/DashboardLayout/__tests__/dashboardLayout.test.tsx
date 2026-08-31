@@ -160,6 +160,31 @@ describe("DashboardLayout", () => {
     expect(screen.getByRole("button", { name: "Dark mode" })).not.toBeNull();
   });
 
+  it("renders the brand logo image in the sidebar header", () => {
+    render(
+      <DashboardLayout>
+        <main>Child</main>
+      </DashboardLayout>,
+    );
+
+    const logo = screen.getByRole("img", { name: "PreSett" });
+    expect(logo.getAttribute("src")).toBe("/logo.svg");
+  });
+
+  it("renders the brand logo image in the mobile navigation header", async () => {
+    const user = userEvent.setup();
+    render(
+      <DashboardLayout>
+        <main>Child</main>
+      </DashboardLayout>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
+    const mobileNav = screen.getByRole("navigation", { name: "Menu" });
+    const logo = within(mobileNav).getByRole("img", { name: "PreSett" });
+    expect(logo.getAttribute("src")).toBe("/logo.svg");
+  });
+
   it("keeps the Dashboard shell fixed without scrolling the shared main region", () => {
     render(<DashboardLayout><div>Dashboard content</div></DashboardLayout>);
 

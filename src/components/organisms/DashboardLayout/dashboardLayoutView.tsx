@@ -13,7 +13,6 @@ import {
   Search,
   X,
   RefreshCw,
-  Sparkles,
   Settings,
   Bell,
   Sun,
@@ -187,13 +186,12 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
     <div className="flex h-screen w-full items-stretch overflow-hidden bg-background">
       <div className="flex h-full w-full overflow-hidden bg-card">
         <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-sidebar md:flex">
-          <div className="flex h-[74px] items-center gap-2.5 border-b border-border px-5">
-            <div className="flex size-8 items-center justify-center border border-border bg-primary text-primary-foreground">
-              <Sparkles className="size-4" />
-            </div>
-            <span className="font-mono text-[15px] font-bold uppercase tracking-tight text-foreground">
-              PreSett
-            </span>
+          <div className="flex h-[74px] items-center border-b border-border px-5">
+            <img
+              src="/logo.svg"
+              alt="PreSett"
+              className="h-10.5 w-auto bg-white p-1"
+            />
           </div>
 
           <div className="border-b border-border p-3">
@@ -378,13 +376,12 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
                 className="absolute left-3 right-3 top-3 max-h-[calc(100dvh-1.5rem)] overflow-y-auto border border-border bg-sidebar p-3 shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal"
               >
                 <div className="mb-3 flex items-center justify-between px-1">
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex size-8 items-center justify-center bg-primary text-primary-foreground">
-                      <Sparkles className="size-4" />
-                    </div>
-                    <span className="font-mono text-sm font-bold uppercase tracking-wider text-sidebar-foreground">
-                      PRESETT
-                    </span>
+                  <div className="flex items-center">
+                    <img
+                      src="/logo.svg"
+                      alt="PreSett"
+                      className="h-8.5 w-auto bg-white p-1"
+                    />
                   </div>
                   <Button
                     variant="ghost"
