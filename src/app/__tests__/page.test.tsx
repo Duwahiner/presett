@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { buildDashboardData } from "@/app/page";
 import type { BackupInfo } from "@/services/backupsApiService";
-import type { DashboardAgent } from "@/components/organisms/Dashboard/Dashboard.types";
+import type { DashboardAgent } from "@/components/organisms/Dashboard/dashboardTypes";
 
 const agents: DashboardAgent[] = [
   {

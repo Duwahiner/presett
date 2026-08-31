@@ -1,4 +1,4 @@
-import { Dashboard } from "@/components/organisms/Dashboard/Dashboard";
+import { Dashboard } from "@/components/organisms/Dashboard/dashboard";
 import { getConfig } from "@/services/modelsApiService";
 import { listProfiles } from "@/services/profilesApiService";
 import { listBackups } from "@/services/backupsApiService";
@@ -7,7 +7,7 @@ import { t } from "@/resources/resources";
 import type {
   DashboardStats,
   DashboardAgent,
-} from "@/components/organisms/Dashboard/Dashboard.types";
+} from "@/components/organisms/Dashboard/dashboardTypes";
 import type { BackupInfo } from "@/services/backupsApiService";
 import { IS_VISUAL_AUDIT_MODE } from "@/lib/visual-audit";
 import {

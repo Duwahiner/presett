@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
 import SearchPage from "../page";
 
-vi.mock("@/components/organisms/SearchClient/SearchClient", () => ({
+vi.mock("@/components/organisms/SearchClient/searchClient", () => ({
   SearchClient: () => <div data-testid="search-client" />,
 }));
 

@@ -4,11 +4,11 @@
  * All timestamps are frozen to `AUDIT_FIXTURE_TIMESTAMP` so renders are
  * pixel-identical across repeated runs.
  */
-import type { DashboardAgent, DashboardStats } from "@/components/organisms/Dashboard/Dashboard.types";
-import type { Assignment } from "@/components/organisms/ModelsClient/ModelsClient.types";
-import type { Profile } from "@/components/organisms/ProfilesClient/ProfilesClient.types";
+import type { DashboardAgent, DashboardStats } from "@/components/organisms/Dashboard/dashboardTypes";
+import type { Assignment } from "@/components/organisms/ModelsClient/modelsClientTypes";
+import type { Profile } from "@/components/organisms/ProfilesClient/profilesClientTypes";
 import type { BackupInfo } from "@/services/backupsApiService";
-import type { ModelCatalog } from "@/components/molecules/ModelPicker/ModelPicker";
+import type { ModelCatalog } from "@/components/molecules/ModelPicker/modelPicker";
 import type { GlobalConfigResponse } from "@/services/globalConfigApiService";
 import type { Notification } from "@/services/notificationService";
 

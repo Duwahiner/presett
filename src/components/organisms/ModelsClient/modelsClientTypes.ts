@@ -1,0 +1,28 @@
+import type { ModelCatalog } from "@/components/molecules/ModelPicker/modelPicker";
+import type { Profile } from "@/services/profilesApiService";
+
+export interface Assignment {
+  agentKey: string;
+  provider: string;
+  model: string;
+  variant: string;
+}
+
+export interface ModelsClientViewProps {
+  assignments: Assignment[];
+  catalog: ModelCatalog;
+  connectedProviders?: string[];
+  catalogLoading: boolean;
+  loading: boolean;
+  error: string | null;
+  saving: string | null;
+  profiles: Profile[];
+  activeProfile: string;
+  syncing: boolean;
+  switchingProfile: boolean;
+  resetting: boolean;
+  onSave: (agentKey: string, assignment: { provider: string; model: string; variant: string }) => void;
+  onSwitchProfile: (name: string) => void;
+  onSync: () => void;
+  onReset: () => void;
+}

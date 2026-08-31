@@ -11,7 +11,7 @@ import { DEFAULT_OPEN_CODE_CONFIG_DIR } from "@/adapters/opencode";
 import { DEFAULT_MODEL_CACHE_DIR } from "@/services/modelCacheService";
 import { defaultPresettDir } from "@/lib/paths";
 import { buildSafeError, requireMutationOrigin } from "@/lib/localApiSecurity";
-import { readGentleAiConfigSafe, writeGentleAiConfig } from "@/adapters/gentle-ai";
+import { readGentleAiConfigSafe, writeGentleAiConfig } from "@/adapters/gentleAi";
 import { readStateJsonSafe } from "@/services/stateService";
 import { loadMergedModelCatalogSafe } from "@/services/modelCatalogService";
 import {

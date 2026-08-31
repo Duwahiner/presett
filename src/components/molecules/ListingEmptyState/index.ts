@@ -1,6 +1,6 @@
-export { ListingEmptyState } from "./ListingEmptyState";
+export { ListingEmptyState } from "./listingEmptyState";
 export type {
   ListingEntity,
   ListingEmptyVariant,
   ListingEmptyStateProps,
-} from "./ListingEmptyState.types";
+} from "./listingEmptyStateTypes";

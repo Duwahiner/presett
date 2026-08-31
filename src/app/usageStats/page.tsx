@@ -1,7 +1,7 @@
 "use client";
 
 import { BarChart2 } from "lucide-react";
-import { Badge } from "@/components/atoms/Badge/Badge";
+import { Badge } from "@/components/atoms/Badge/badge";
 import { UsageStatsClient } from "@/components/organisms/usageStatsClient/usageStatsClient";
 import { t } from "@/resources/resources";
 

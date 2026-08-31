@@ -1,6 +1,6 @@
-export { ListingControls } from "./ListingControls";
+export { ListingControls } from "./listingControls";
 export type {
   ListingControlsConfig,
   ListingControlsState,
   ListingControlsProps,
-} from "./ListingControls.types";
+} from "./listingControlsTypes";

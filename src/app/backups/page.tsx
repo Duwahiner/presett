@@ -1,8 +1,8 @@
 "use client";
 
 import { Archive } from "lucide-react";
-import { Badge } from "@/components/atoms/Badge/Badge";
-import { BackupsClient } from "@/components/organisms/BackupsClient/BackupsClient";
+import { Badge } from "@/components/atoms/Badge/badge";
+import { BackupsClient } from "@/components/organisms/BackupsClient/backupsClient";
 import { t } from "@/resources/resources";
 
 export const dynamic = "force-dynamic";
