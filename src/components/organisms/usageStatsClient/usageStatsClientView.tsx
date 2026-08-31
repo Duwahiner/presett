@@ -15,7 +15,7 @@ import type {
 } from "@/services/usageStatsService";
 import type { UsageStatsClientViewProps } from "./usageStatsClientTypes";
 import { PageSkeleton } from "@/components/molecules/PageSkeleton/pageSkeleton";
-import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
+import { LoadingIndicator } from "@/components/molecules/loadingIndicator/loadingIndicator";
 
 const DAY_OPTIONS: Array<{
   value: DaysFilter;
@@ -280,8 +280,8 @@ export function UsageStatsClientView({
   }
 
   return (
-    <div className="flex h-full min-h-0 flex-col gap-6">
-      {loading && data !== null && <FloatingLoadingIndicator label={t("loading_background")} />}
+    <div className="relative flex h-full min-h-0 flex-col gap-6">
+      {loading && data !== null && <LoadingIndicator label={t("loading_section")} />}
       {/* Fixed: filters + summary (never scroll) */}
       <div className="shrink-0 space-y-4">
         <div className="flex flex-wrap items-end gap-6 border border-border bg-card p-4 shadow-[4px_4px_0_0_var(--border)]">
@@ -363,7 +363,7 @@ export function UsageStatsClientView({
         data-testid="usageStatsScroll"
         className="min-h-0 flex-1 overflow-y-auto pr-4 scrollbar-brutal"
       >
-{loading && data === null ? (
+        {loading && data === null ? (
           <PageSkeleton variant="usageStats" label={t("usage_stats_loading")} />
         ) : error ? (
           <div className="flex flex-col items-center gap-4 border border-border bg-card p-8">

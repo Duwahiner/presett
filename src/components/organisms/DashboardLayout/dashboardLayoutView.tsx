@@ -14,7 +14,6 @@ import {
   X,
   RefreshCw,
   Sparkles,
-  Loader2,
   Settings,
   Bell,
   Sun,
@@ -28,6 +27,7 @@ import { cn } from "@/lib/utils";
 import { t } from "@/resources/resources";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Spinner } from "@/components/ui/spinner";
 import { useTheme } from "next-themes";
 import { NotificationProvider, useNotifications } from "@/contexts/notificationContext";
 import { AuditNotificationProvider, useAuditNotifications } from "@/lib/visual-audit/auditContext";
@@ -230,7 +230,7 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
                 disabled={syncing}
               >
                 {syncing
-                  ? <Loader2 className="size-4 animate-spin" />
+                  ? <Spinner aria-hidden="true" />
                   : <RefreshCw className="size-4" />}
                 {t("sidebar_sync_cta")}
               </button>
