@@ -47,7 +47,7 @@ export function Button({
       className={className}
       {...props}
     >
-      hola
+      {children}
     </UIButton>
   );
 }

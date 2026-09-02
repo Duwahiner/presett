@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Pencil, Trash2, UserCircle, Sparkles, Check, Info, RotateCcw, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { Button } from "@/components/atoms/Button/button";
 import { Badge } from "@/components/atoms/Badge/badge";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/errorBanner";
 import { ListingControls } from "@/components/molecules/ListingControls/listingControls";
@@ -237,7 +238,15 @@ export function ProfilesClientView({
         />
 
         {showNoData && (
-          <ListingEmptyState variant="no-data" entity="profiles" />
+          <div className="flex flex-col items-center gap-4">
+            <ListingEmptyState variant="no-data" entity="profiles" />
+            <Button
+              onClick={() => activeSetShowForm(true)}
+              aria-label={t("profiles_create_action")}
+            >
+              {t("profiles_create_title")}
+            </Button>
+          </div>
         )}
 
         {showNoMatch && (
