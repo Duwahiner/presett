@@ -9,9 +9,9 @@ import { ListingControls } from "@/components/molecules/ListingControls/listingC
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/listingEmptyState";
 import { ConfirmDialog } from "@/components/ui/confirmDialog";
 import { t } from "@/resources/resources";
-import { LoadingButton, Spinner } from "@/components/ui/spinner";
+import { Spinner } from "@/components/ui/spinner";
+import { LoadingIndicator } from "@/components/molecules/loadingIndicator/loadingIndicator";
 import { PageSkeleton } from "@/components/molecules/PageSkeleton/pageSkeleton";
-import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 import type { ProfilesClientViewProps } from "./profilesClientTypes";
 import type { ModelCatalog } from "@/components/molecules/ModelPicker/modelPicker";
 import { Select } from "@/components/ui/select";
@@ -205,11 +205,8 @@ export function ProfilesClientView({
   if (error) return <ErrorBanner title={t("profiles_loadError")} message={error} />;
 
   return (
-    <div className="flex flex-col h-full min-h-0">
-      {pendingAction !== null && <FloatingLoadingIndicator label={t("loading_background")} />}
-      {catalogLoading && (
-        <LoadingButton label={t("loading_section")} />
-      )}
+    <div className="relative flex h-full min-h-0 flex-col">
+      {catalogLoading && <LoadingIndicator label={t("loading_section")} />}
 
       {/* Delete Profile Confirmation Dialog */}
       {deleteConfirmProfile && (

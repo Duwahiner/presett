@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { Loader2 } from "lucide-react";
 import { Badge } from "@/components/atoms/Badge/badge";
 import { Card } from "@/components/ui/card";
+import { LoadingIndicator } from "@/components/molecules/loadingIndicator/loadingIndicator";
 import { t } from "@/resources/resources";
 import { searchEntities } from "@/services/searchApiService";
 import type { SearchEntityType, SearchResult } from "@/services/searchService";
@@ -68,7 +68,7 @@ export function SearchClient() {
   return (
     <div className="space-y-6">
       {!query && <Card className="p-6"><h2 className="text-lg font-semibold">{t("search_empty_title")}</h2><p className="mt-2 text-sm text-muted-foreground">{t("search_empty_description")}</p></Card>}
-      {loading && <div role="status" className="flex items-center gap-3 rounded-xl border border-border bg-card p-6 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin" aria-hidden="true" />{t("search_loading")}</div>}
+      {loading && <LoadingIndicator label={t("search_loading")} />}
       {error && <div role="alert" className="rounded-xl border border-destructive/20 bg-destructive/10 px-4 py-3 text-sm text-destructive">{error}</div>}
       {visibleWarnings.length > 0 && <div role="status" className="rounded-xl border border-warning/30 bg-warning/10 px-4 py-3 text-sm text-warning-foreground">{t("search_partial_warning", { sources: visibleWarnings.join(", ") })}</div>}
       {query && !loading && !error && visibleResults.length === 0 && <div role="status" className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground">{t("search_no_results", { query })}</div>}

@@ -36,16 +36,29 @@ describe("GlobalConfigClient runtime behavior", () => {
     getCatalog.mockResolvedValue(catalogResponse);
   });
 
-  it("shows a loading status before rendering both configuration panels", async () => {
+  it("shows the shared PageSkeleton before rendering both configuration panels", async () => {
     let resolve!: (value: typeof configuredResponse) => void;
     getGlobalConfig.mockReturnValueOnce(new Promise((done) => { resolve = done; }));
     render(<GlobalConfigClient />, { wrapper });
 
-    expect(screen.getByRole("status").textContent).toContain("Loading configuration");
+    const status = screen.getByRole("status", { name: "Loading configuration…" });
+    expect(status.querySelectorAll('[data-slot="skeleton"]').length).toBeGreaterThan(0);
     resolve(configuredResponse);
     expect(await screen.findByRole("heading", { name: "Gentle-AI" })).toBeTruthy();
     expect(screen.getByRole("heading", { name: "OpenCode" })).toBeTruthy();
     expect(screen.getAllByText("Configured")).toHaveLength(2);
+  });
+
+  it("shows the shared LoadingIndicator while the catalog loads after the page is visible", async () => {
+    getGlobalConfig.mockResolvedValueOnce(configuredResponse);
+    getCatalog.mockReturnValueOnce(new Promise(() => {}));
+    render(<GlobalConfigClient />, { wrapper });
+
+    expect(await screen.findByRole("heading", { name: "Global configuration" })).toBeTruthy();
+    const status = screen.getByRole("status");
+    expect(status.textContent).toContain("Loading…");
+    expect(status.className).toContain("border-border");
+    expect(screen.getByRole("button", { name: "Save OpenCode" }).hasAttribute("disabled")).toBe(true);
   });
 
   it("renders Backups-aligned full-width configuration content", async () => {

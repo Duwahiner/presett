@@ -1,8 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Check, ChevronDown, Loader2, Settings2, Sparkles } from "lucide-react";
+import { Check, ChevronDown, Settings2, Sparkles } from "lucide-react";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Spinner } from "@/components/ui/spinner";
+import { PageSkeleton } from "@/components/molecules/PageSkeleton/pageSkeleton";
+import { LoadingIndicator } from "@/components/molecules/loadingIndicator/loadingIndicator";
 
 import { Select } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
@@ -191,7 +194,7 @@ export function GlobalConfigClient() {
   const openCodeConfigured = Boolean(agentKey && provider && model && variant);
   const isConfigured = gentleConfigured && openCodeConfigured;
 
-  if (loading) return <Card><CardContent className="flex min-h-[240px] items-center justify-center gap-3 p-6 text-muted-foreground" role="status"><Loader2 className="size-4 animate-spin text-primary" aria-hidden="true" />{t("config_loading")}</CardContent></Card>;
+  if (loading) return <PageSkeleton variant="settings" label={t("config_loading")} />;
 
   return (
     <main className="flex h-full flex-col">
@@ -222,14 +225,14 @@ export function GlobalConfigClient() {
           disabled={saving !== null}
           className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
         >
-          {saving === "gentle-ai" && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+          {saving === "gentle-ai" && <Spinner aria-hidden="true" />}
           {t("config_gentle_save")}
         </button></CardFooter>
         </Card>
 
         <Card>
         <CardHeader className="flex-row items-start justify-between gap-4 space-y-0"><div className="flex gap-3"><span className="flex size-9 items-center justify-center bg-primary/15 text-primary"><Settings2 className="size-4" aria-hidden="true" /></span><div><CardTitle className="font-mono text-sm font-bold uppercase">{t("config_opencode_title")}</CardTitle><p className="mt-1 text-sm text-muted-foreground">{t("config_opencode_description")}</p></div></div><Badge variant={openCodeConfigured ? "secondary" : "outline"} className={openCodeConfigured ? "text-success" : "text-muted-foreground"}>{t(openCodeConfigured ? "config_status_ready" : "config_status_incomplete")}</Badge></CardHeader>
-        {catalogLoading && <CardContent className="pt-0"><div className="flex items-center justify-center gap-3 border border-border bg-card p-4 text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" /><span>{t("models_validationMessage")}</span></div></CardContent>}
+        {catalogLoading && <LoadingIndicator label={t("loading_section")} />}
         <CardContent className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
           <ConfigSelect id="config-agent" label={t("config_agent")} value={agentKey} options={agents} disabled={saving !== null} error={fieldErrors.agentKey} onChange={(value) => { setAgentKey(value); setFieldErrors((errors) => ({ ...errors, agentKey: undefined })); }} />
           <ConfigSelect id="config-provider" label={t("config_provider")} value={provider} options={providers} disabled={saving !== null || catalogLoading || catalogUnavailable} error={fieldErrors.provider} onChange={(value) => { setProvider(value); setModel(""); setVariant(""); setFieldErrors((errors) => ({ ...errors, provider: undefined, model: undefined, variant: undefined })); }} />
@@ -242,7 +245,7 @@ export function GlobalConfigClient() {
           disabled={saving !== null || catalogLoading || catalogUnavailable}
           className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
         >
-          {saving === "opencode" && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+          {saving === "opencode" && <Spinner aria-hidden="true" />}
           {t("config_opencode_save")}
         </button></CardFooter>
         </Card>

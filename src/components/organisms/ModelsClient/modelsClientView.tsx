@@ -11,9 +11,9 @@ import { ErrorBanner } from "@/components/molecules/ErrorBanner/errorBanner";
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/listingEmptyState";
 import { t } from "@/resources/resources";
 import type { ModelsClientViewProps } from "./modelsClientTypes";
-import { LoadingButton, Spinner } from "@/components/ui/spinner";
+import { Spinner } from "@/components/ui/spinner";
+import { LoadingIndicator } from "@/components/molecules/loadingIndicator/loadingIndicator";
 import { PageSkeleton } from "@/components/molecules/PageSkeleton/pageSkeleton";
-import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 
 export function ModelsClientView({
   assignments,
@@ -44,10 +44,7 @@ export function ModelsClientView({
   const displayAssignments = assignments;
 
   return (
-    <div className="flex flex-col h-full min-h-0 space-y-4">
-      {(saving !== null || syncing || switchingProfile || resetting) && (
-        <FloatingLoadingIndicator label={t("loading_background")} />
-      )}
+    <div className="relative flex h-full min-h-0 flex-col space-y-4">
       {/* Profile Selector */}
       <div className="flex items-center gap-3 border border-border bg-card p-4">
         <div className="flex h-8 w-8 items-center justify-center bg-primary/15">
@@ -60,25 +57,25 @@ export function ModelsClientView({
           <p className="text-sm font-medium text-card-foreground">{activeProfile}</p>
         </div>
         <Select.Root value={activeProfile} onValueChange={(v) => { if (v) onSwitchProfile(v); }} disabled={switchingProfile}>
-           <Select.Trigger
-             aria-label={t("models_activeProfile")}
-             className={cn(
-               "flex h-9 w-full max-w-[200px] items-center justify-between border border-border bg-card px-3 py-1 text-sm transition-colors",
-               "focus-visible:outline-none focus-visible:border-primary",
-               "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white light:text-black light:focus-visible:border-primary",
-             )}
-           >
+          <Select.Trigger
+            aria-label={t("models_activeProfile")}
+            className={cn(
+              "flex h-9 w-full max-w-[200px] items-center justify-between border border-border bg-card px-3 py-1 text-sm transition-colors",
+              "focus-visible:outline-none focus-visible:border-primary",
+              "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white light:text-black light:focus-visible:border-primary",
+            )}
+          >
             <Select.Value />
             <ChevronDown className="size-4 text-muted-foreground" />
           </Select.Trigger>
           <Select.Portal>
             <Select.Positioner className="z-50">
-               <Select.Popup
+              <Select.Popup
                 className={cn(
-                    "max-h-60 min-w-[var(--anchor-width)] overflow-auto border border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal",
-                    "focus-visible:outline-none light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]",
-                  )}
-               >
+                  "max-h-60 min-w-[var(--anchor-width)] overflow-auto border border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal",
+                  "focus-visible:outline-none light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]",
+                )}
+              >
                 {profiles.map((p) => (
                   <Select.Item
                     key={p.name}
@@ -102,9 +99,7 @@ export function ModelsClientView({
         </Select.Root>
       </div>
 
-      {catalogLoading && (
-        <LoadingButton label={t("loading_section")} />
-      )}
+      {catalogLoading && <LoadingIndicator label={t("loading_section")} />}
 
       {!catalogLoading && Object.keys(catalog).length === 0 && (
         <ErrorBanner
@@ -113,8 +108,6 @@ export function ModelsClientView({
           message={t("models_validationMessage")}
         />
       )}
-
-
 
       {/* Agent Assignments */}
       {assignments.length === 0 && displayAssignments.length === 0 ? (
