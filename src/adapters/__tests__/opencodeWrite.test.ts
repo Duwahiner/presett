@@ -49,19 +49,38 @@ describe("writeOpenCodeConfig", () => {
     expect(backups.length).toBe(1);
   });
 
-  it("refuses to write a jsonc file", async () => {
+  it("writes to a .jsonc file (OpenCode CLI prefers jsonc)", async () => {
     const configPath = join(tempDir, "opencode.jsonc");
     await writeFile(configPath, "{}");
 
     const result = await writeOpenCodeConfig(
       tempDir,
-      { agent: {} },
+      { agent: { "sdd-init": { model: "x/y", variant: "low" } } },
       backupDir,
       "opencode.jsonc",
     );
 
-    expect(result.ok).toBe(false);
-    if (!result.ok) expect(result.error.code).toBe("JSONC_NOT_SUPPORTED");
+    expect(result.ok).toBe(true);
+    const written = JSON.parse(await readFile(configPath, "utf-8"));
+    expect(written.agent["sdd-init"].model).toBe("x/y");
+  });
+
+  it("keeps opencode.json and opencode.jsonc in sync when both exist", async () => {
+    const jsonPath = join(tempDir, "opencode.json");
+    const jsoncPath = join(tempDir, "opencode.jsonc");
+    await writeFile(jsonPath, "{}");
+    await writeFile(jsoncPath, "{}");
+
+    const result = await writeOpenCodeConfig(
+      tempDir,
+      { agent: { "sdd-init": { model: "a/b", variant: "high" } } },
+      backupDir,
+    );
+
+    expect(result.ok).toBe(true);
+    expect(JSON.parse(await readFile(jsonPath, "utf-8"))).toEqual(
+      JSON.parse(await readFile(jsoncPath, "utf-8")),
+    );
   });
 
   it("preserves unknown keys", async () => {

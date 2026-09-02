@@ -67,7 +67,7 @@ const { getGlobalConfig, patchGlobalConfig, getCatalog, getConfig, saveAssignmen
   saveAssignment: vi.fn(),
 }));
 vi.mock("@/services/globalConfigApiService", () => ({ getGlobalConfig, patchGlobalConfig }));
-vi.mock("@/services/modelsApiService", () => ({ getCatalog, getConfig, saveAssignment }));
+vi.mock("@/services/modelsApiService", () => ({ getCatalog, getConfig, saveAssignment, clearModelCatalogCache: vi.fn() }));
 
 const { listProfiles, createProfile, switchProfile, deleteProfile, updateProfile } = vi.hoisted(() => ({
   listProfiles: vi.fn(),
@@ -261,7 +261,7 @@ describe("DiagnosticsClient notification integration", () => {
 const profileOperations = [
   { name: "create", button: "Create profile", success: "Profile created.", title: "Unable to create profile", prepare: async (user: ReturnType<typeof userEvent.setup>) => user.click(screen.getByRole("button", { name: "Prepare create" })), reject: () => createProfile.mockRejectedValueOnce(new Error(unsafeError)) },
   { name: "switch", button: "Switch profile", success: "Profile switched.", title: "Profile switched.", prepare: async () => {}, reject: () => switchProfile.mockRejectedValueOnce(new Error(unsafeError)) },
-  { name: "delete", button: "Delete profile", success: "Profile deleted.", title: "Unable to delete profile", prepare: async () => {}, reject: () => deleteProfile.mockRejectedValueOnce(new Error(unsafeError)) },
+  { name: "delete", button: "Confirm delete", success: "Profile deleted.", title: "Unable to delete profile", prepare: async (user: ReturnType<typeof userEvent.setup>) => user.click(screen.getByRole("button", { name: "Delete profile" })), reject: () => deleteProfile.mockRejectedValueOnce(new Error(unsafeError)) },
   { name: "update", button: "Update profile", success: "Profile updated.", title: "Unable to update profile", prepare: async (user: ReturnType<typeof userEvent.setup>) => user.click(screen.getByRole("button", { name: "Start update" })), reject: () => updateProfile.mockRejectedValueOnce(new Error(unsafeError)) },
 ];
 

@@ -33,7 +33,7 @@ describe("globals.css v2 token contract", () => {
   it("defines dark mode background as #000000 (pure black)", () => {
     // Dark mode tokens are in :root block (default dark)
     expect(css).toMatch(/--background:\s*#000000/);
-    expect(css).toMatch(/\*::-webkit-scrollbar\s*\{\s*width:\s*3px/);
+    expect(css).toMatch(/\*::-webkit-scrollbar\s*\{\s*width:\s*8px/);
   });
 
   it("defines dark mode foreground as #ffffff (pure white)", () => {
