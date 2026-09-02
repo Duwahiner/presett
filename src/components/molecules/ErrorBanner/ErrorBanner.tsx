@@ -53,7 +53,7 @@ export function ErrorBanner({
   return (
     <div
       className={cn(
-        "flex items-start gap-3 rounded-lg border border-l-4 p-4",
+        "flex items-start gap-3 rounded-lg border border-l p-4",
         container,
         className,
       )}

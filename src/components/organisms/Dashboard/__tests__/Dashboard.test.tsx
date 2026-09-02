@@ -74,7 +74,7 @@ describe("Dashboard", () => {
     const agentCard = screen.getByLabelText("sdd-orchestrator-default").closest("div[class*='min-h-[188px]']");
     const addAgentTile = screen.getByRole("link", { name: /add agent/i }).firstElementChild;
 
-    expect(agentCard?.className).toContain("border-2");
+    expect(agentCard?.className).toContain("border");
     expect(agentCard?.className).toContain("border-border");
     expect(agentCard?.className).toContain("p-5");
     expect(agentCard?.className).toContain("shadow-[4px_4px_0_0_var(--foreground)]");
@@ -126,8 +126,8 @@ describe("Dashboard", () => {
   it("keeps the dashboard composition grouped into framed agent and quick action panels", () => {
     render(<Dashboard stats={defaultStats} agents={defaultAgents} />);
 
-    expect(screen.getByRole("heading", { name: "Installed agents" }).parentElement?.parentElement?.className).toContain("border-2");
-    expect(screen.getByRole("heading", { name: "Quick Access" }).parentElement?.className).toContain("border-2");
+    expect(screen.getByRole("heading", { name: "Installed agents" }).parentElement?.parentElement?.className).toContain("border");
+    expect(screen.getByRole("heading", { name: "Quick Access" }).parentElement?.className).toContain("border");
     expect(screen.getByText("TDD strict mode").parentElement?.className).toContain("bg-accent");
   });
 

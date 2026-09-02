@@ -104,7 +104,7 @@ describe("DashboardLayout", () => {
     const syncButton = screen.getByRole("button", { name: /sync configs/i });
 
     expect(screen.getByText("Gentle-AI")).not.toBeNull();
-    expect(versionCard?.className).toContain("border-2");
+    expect(versionCard?.className).toContain("border");
     expect(versionCard?.className).toContain("border-border");
     expect(versionCard?.className).toContain("bg-card");
     expect(versionCard?.compareDocumentPosition(syncButton)).toBe(Node.DOCUMENT_POSITION_PRECEDING);
@@ -154,7 +154,7 @@ describe("DashboardLayout", () => {
     expect(searchbox.className).toContain("shadow-none");
     const topbar = searchbox.closest("header");
     expect(topbar?.className).toContain("h-[74px]");
-    expect(topbar?.className).toContain("border-b-2");
+    expect(topbar?.className).toContain("border-b");
     expect(topbar?.className).toContain("sm:px-6");
     expect(screen.getByRole("button", { name: "Light mode" })).not.toBeNull();
     expect(screen.getByRole("button", { name: "Dark mode" })).not.toBeNull();

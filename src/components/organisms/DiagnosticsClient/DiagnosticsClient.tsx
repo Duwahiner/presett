@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
-import { Activity, CheckCircle2, Loader2, RefreshCw, XCircle } from "lucide-react";
+import { Activity, CheckCircle2, RefreshCw, XCircle } from "lucide-react";
 import { Badge } from "@/components/atoms/Badge/Badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -10,6 +10,9 @@ import { t } from "@/resources/resources";
 import { useNotificationToasts } from "@/hooks/useNotificationToasts";
 import { checkDiagnosticsUpdates, getDiagnostics } from "@/services/diagnosticsApiService";
 import type { DiagnosticsReport, DiagnosticsUpdateState, RouteState } from "@/services/diagnosticsService";
+import { Spinner } from "@/components/ui/spinner";
+import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
+import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 
 function StatusBadge({ ok, text }: { ok: boolean; text: string }) {
   return <Badge variant={ok ? "success" : "error"}>{text}</Badge>;
@@ -96,16 +99,17 @@ export function DiagnosticsClient() {
   }
 
   if (loading) {
-    return <div role="status" className="flex items-center gap-3 rounded-xl border border-border bg-card p-8 text-muted-foreground"><Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />{t("diagnostics_loading")}</div>;
+    return <PageSkeleton variant="diagnostics" label={t("diagnostics_loading")} />;
   }
 
   return (
     <div className="space-y-6">
+      {checking && <FloatingLoadingIndicator label={t("loading_background")} />}
       <Card className="p-6">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h2 className="flex items-center gap-2 text-lg font-semibold"><Activity className="h-5 w-5 text-primary" aria-hidden="true" />{t("diagnostics_releases_title")}</h2>
           <Button onClick={handleCheck} disabled={checking}>
-            {checking ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" aria-hidden="true" /> : <RefreshCw className="mr-1.5 h-4 w-4" aria-hidden="true" />}
+            {checking ? <Spinner data-icon="inline-start" aria-hidden="true" /> : <RefreshCw className="mr-1.5 h-4 w-4" aria-hidden="true" />}
             {checking ? t("diagnostics_checking") : t("diagnostics_check_now")}
           </Button>
         </div>

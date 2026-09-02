@@ -169,7 +169,7 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
           aria-current={isActive ? "page" : undefined}
           onClick={onNavigate}
           className={cn(
-            "group flex items-center gap-3 border-2 px-3 py-2 text-sm font-bold uppercase tracking-tight transition-all",
+            "group flex items-center gap-3 border px-3 py-2 text-sm font-bold uppercase tracking-tight transition-all",
             isActive
               ? "border-border bg-accent text-accent-foreground shadow-[2px_2px_0_0_var(--foreground)]"
               : "border-transparent text-muted-foreground hover:border-border hover:text-foreground",
@@ -186,9 +186,9 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
     <>
     <div className="flex h-screen w-full items-stretch overflow-hidden bg-background">
       <div className="flex h-full w-full overflow-hidden bg-card">
-        <aside className="hidden w-64 shrink-0 flex-col border-r-2 border-border bg-sidebar md:flex">
-          <div className="flex h-[74px] items-center gap-2.5 border-b-2 border-border px-5">
-            <div className="flex size-8 items-center justify-center border-2 border-border bg-primary text-primary-foreground">
+        <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-sidebar md:flex">
+          <div className="flex h-[74px] items-center gap-2.5 border-b border-border px-5">
+            <div className="flex size-8 items-center justify-center border border-border bg-primary text-primary-foreground">
               <Sparkles className="size-4" />
             </div>
             <span className="font-mono text-[15px] font-bold uppercase tracking-tight text-foreground">
@@ -196,10 +196,10 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
             </span>
           </div>
 
-          <div className="border-b-2 border-border p-3">
+          <div className="border-b border-border p-3">
             <button
               type="button"
-              className="flex w-full items-center gap-3 border-2 border-border bg-card px-3 py-2.5 text-left"
+              className="flex w-full items-center gap-3 border border-border bg-card px-3 py-2.5 text-left"
             >
               <span className="flex size-9 items-center justify-center bg-accent font-mono text-[13px] font-bold text-accent-foreground">GS</span>
               <span className="min-w-0 flex-1">
@@ -225,7 +225,7 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
             {!isAuditMode && (
               <button
                 type="button"
-                className="mt-auto flex w-full cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--foreground)] transition-shadow hover:!shadow-none active:translate-x-1 active:translate-y-1 active:shadow-none disabled:pointer-events-none disabled:opacity-50"
+                className="mt-auto flex w-full cursor-pointer items-center justify-center gap-2 border border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--foreground)] transition-shadow hover:!shadow-none active:translate-x-1 active:translate-y-1 active:shadow-none disabled:pointer-events-none disabled:opacity-50"
                 onClick={handleSync}
                 disabled={syncing}
               >
@@ -237,9 +237,9 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
             )}
           </nav>
 
-          <div className="border-t-2 border-border p-3 light:border-black">
+          <div className="border-t border-border p-3 light:border-black">
             {gentleAiVersion && (
-              <div className="flex items-center justify-between gap-3 border-2 border-border bg-card px-3 py-2 light:border-black light:bg-white">
+              <div className="flex items-center justify-between gap-3 border border-border bg-card px-3 py-2 light:border-black light:bg-white">
                 <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground light:text-black">
                   {t("sidebar_gentle_ai_label")}
                 </span>
@@ -250,7 +250,7 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
         </aside>
 
         <div className="flex min-h-0 min-w-0 flex-1 flex-col">
-          <header className="flex h-[74px] shrink-0 items-center gap-3 border-b-2 border-border px-4 sm:px-6">
+          <header className="flex h-[74px] shrink-0 items-center gap-3 border-b border-border px-4 sm:px-6">
             <Button
               ref={menuButtonRef}
               variant="ghost"
@@ -304,25 +304,25 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
                     type="button"
                     aria-label={t("topbar_notifications_aria")}
                     aria-expanded={notificationOpen}
-                    className="relative flex cursor-pointer size-9 items-center justify-center border-2 border-border text-foreground transition-shadow hover:!shadow-none active:translate-x-px active:translate-y-px active:shadow-none"
+                    className="relative flex cursor-pointer size-9 items-center justify-center border border-border text-foreground transition-shadow hover:!shadow-none active:translate-x-px active:translate-y-px active:shadow-none"
                   >
                     <Bell className="size-[18px]" />
                     {unreadCount > 0 && (
-                      <span className="absolute -right-1.5 -top-1.5 size-3 border-2 border-border bg-primary" />
+                      <span className="absolute -right-1.5 -top-1.5 size-3 border border-border bg-primary" />
                     )}
                   </button>
                 </PopoverTrigger>
                 <PopoverContent
                   align="end"
                   sideOffset={8}
-                  className="w-[380px] border-2 border-border bg-card p-0 shadow-[4px_4px_0_0_var(--foreground)]"
+                  className="w-[380px] border border-border bg-card p-0 shadow-[4px_4px_0_0_var(--foreground)]"
                 >
                   <NotificationPanel />
                 </PopoverContent>
               </Popover>
 
               {!isAuditMode && themeMounted && (
-                <div className="flex items-center border-2 border-border p-0.5">
+                <div className="flex items-center border border-border p-0.5">
                   <button
                     type="button"
                     onClick={() => setTheme("light")}
@@ -351,7 +351,7 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
               <button
                 type="button"
                 aria-label={t("topbar_account_aria")}
-                className="ml-1 flex cursor-pointer items-center border-2 border-border p-0.5 transition-shadow hover:!shadow-none active:translate-x-px active:translate-y-px active:shadow-none"
+                className="ml-1 flex cursor-pointer items-center border border-border p-0.5 transition-shadow hover:!shadow-none active:translate-x-px active:translate-y-px active:shadow-none"
               >
                 <span className="flex size-8 items-center justify-center bg-primary font-mono text-[13px] font-bold text-primary-foreground">
                   PS
@@ -375,7 +375,7 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
                 id="mobile-navigation"
                 ref={mobileNavRef}
                 aria-label={t("sidebar_group_menu")}
-                className="absolute left-3 right-3 top-3 max-h-[calc(100dvh-1.5rem)] overflow-y-auto border-2 border-border bg-sidebar p-3 shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal"
+                className="absolute left-3 right-3 top-3 max-h-[calc(100dvh-1.5rem)] overflow-y-auto border border-border bg-sidebar p-3 shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal"
               >
                 <div className="mb-3 flex items-center justify-between px-1">
                   <div className="flex items-center gap-2.5">

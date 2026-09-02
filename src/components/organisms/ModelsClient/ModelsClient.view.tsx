@@ -4,7 +4,6 @@ import { useState } from "react";
 import { AlertCircle, Check, ChevronDown, RefreshCw, RotateCcw, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
-import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { AgentAssignmentRow } from "@/components/molecules/AgentAssignmentRow/AgentAssignmentRow";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
@@ -12,7 +11,9 @@ import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
 import { t } from "@/resources/resources";
 import type { ModelsClientViewProps } from "./ModelsClient.types";
-import { Loader2 } from "lucide-react";
+import { LoadingButton, Spinner } from "@/components/ui/spinner";
+import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
+import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 
 export function ModelsClientView({
   assignments,
@@ -35,12 +36,7 @@ export function ModelsClientView({
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
   if (loading) {
-      return (
-      <div className="flex min-h-[240px] items-center justify-center gap-3 border-2 border-border bg-card p-8 text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
-        <span>{t("models_loading")}</span>
-      </div>
-    );
+    return <PageSkeleton variant="models" label={t("models_loading")} />;
   }
 
   if (error) return <ErrorBanner title={t("models_loadError")} message={error} />;
@@ -49,8 +45,11 @@ export function ModelsClientView({
 
   return (
     <div className="flex flex-col h-full min-h-0 space-y-4">
+      {(saving !== null || syncing || switchingProfile || resetting) && (
+        <FloatingLoadingIndicator label={t("loading_background")} />
+      )}
       {/* Profile Selector */}
-      <div className="flex items-center gap-3 border-2 border-border bg-card p-4">
+      <div className="flex items-center gap-3 border border-border bg-card p-4">
         <div className="flex h-8 w-8 items-center justify-center bg-primary/15">
           <UserCircle className="h-4 w-4 text-primary" />
         </div>
@@ -64,7 +63,7 @@ export function ModelsClientView({
            <Select.Trigger
              aria-label={t("models_activeProfile")}
              className={cn(
-               "flex h-9 w-full max-w-[200px] items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+               "flex h-9 w-full max-w-[200px] items-center justify-between border border-border bg-card px-3 py-1 text-sm transition-colors",
                "focus-visible:outline-none focus-visible:border-primary",
                "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white light:text-black light:focus-visible:border-primary",
              )}
@@ -76,7 +75,7 @@ export function ModelsClientView({
             <Select.Positioner className="z-50">
                <Select.Popup
                 className={cn(
-                    "max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal",
+                    "max-h-60 min-w-[var(--anchor-width)] overflow-auto border border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal",
                     "focus-visible:outline-none light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]",
                   )}
                >
@@ -104,10 +103,7 @@ export function ModelsClientView({
       </div>
 
       {catalogLoading && (
-        <div className="flex items-center justify-center gap-3 border-2 border-border bg-card p-4 text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
-          <span>{t("models_validationMessage")}</span>
-        </div>
+        <LoadingButton label={t("loading_section")} />
       )}
 
       {!catalogLoading && Object.keys(catalog).length === 0 && (
@@ -122,7 +118,7 @@ export function ModelsClientView({
 
       {/* Agent Assignments */}
       {assignments.length === 0 && displayAssignments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center border-2 border-border bg-card p-8 text-center">
+        <div className="flex flex-col items-center justify-center border border-border bg-card p-8 text-center">
           <div className="flex h-10 w-10 items-center justify-center bg-primary/15">
             <AlertCircle className="h-5 w-5 text-primary" aria-hidden="true" />
           </div>
@@ -155,10 +151,10 @@ export function ModelsClientView({
           type="button"
           onClick={onSync}
           disabled={syncing}
-          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
+          className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-primary px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
         >
           {syncing ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Spinner data-icon="inline-start" aria-hidden="true" />
           ) : (
             <RefreshCw className="h-4 w-4" />
           )}
@@ -168,10 +164,10 @@ export function ModelsClientView({
           type="button"
           onClick={() => setResetDialogOpen(true)}
           disabled={resetting || assignments.length === 0}
-          className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-card light:!text-black light:shadow-[4px_4px_0_0_#000000]"
+          className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-4 py-3 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-card light:!text-black light:shadow-[4px_4px_0_0_#000000]"
         >
           {resetting ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <Spinner data-icon="inline-start" aria-hidden="true" />
           ) : (
             <RotateCcw className="h-4 w-4" />
           )}

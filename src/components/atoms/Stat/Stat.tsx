@@ -6,7 +6,7 @@ export function Stat({ label, value, icon: Icon, trend, className, markerClassNa
   return (
     <div
       className={cn(
-        "relative overflow-hidden border-2 border-border bg-card p-4 text-card-foreground transition-colors shadow-none",
+        "relative overflow-hidden border border-border bg-card p-4 text-card-foreground transition-colors shadow-none",
         className,
       )}
     >

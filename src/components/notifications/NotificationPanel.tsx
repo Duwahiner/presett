@@ -9,7 +9,7 @@ export function NotificationPanel() {
 
   return (
     <div className="flex flex-col">
-      <div className="border-b-2 border-border px-4 py-3">
+      <div className="border-b border-border px-4 py-3">
         <h2 className="font-mono text-xs font-bold uppercase tracking-wider text-foreground">
           // NOTIFICATIONS
         </h2>

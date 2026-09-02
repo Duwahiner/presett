@@ -44,14 +44,14 @@ export function ListingControls({
           >
             <Select.Trigger
               aria-label={t(f.labelKey)}
-              className={cn("flex h-9 items-center justify-between gap-1 border-2 border-border bg-card px-3 py-1 text-sm transition-colors", "focus-visible:outline-none focus-visible:border-primary", "light:border-black light:bg-white light:text-black light:focus-visible:border-primary")}
+              className={cn("flex h-9 items-center justify-between gap-1 border border-border bg-card px-3 py-1 text-sm transition-colors", "focus-visible:outline-none focus-visible:border-primary", "light:border-black light:bg-white light:text-black light:focus-visible:border-primary")}
             >
               <Select.Value placeholder={t(f.labelKey)} />
               <ChevronDown className="size-4 text-muted-foreground" />
             </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
-                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
+                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
                   {f.options.map((o) => (
                     <Select.Item key={o.value} value={o.value} className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                       <Select.ItemText>{t(o.labelKey)}</Select.ItemText>
@@ -69,14 +69,14 @@ export function ListingControls({
         <Select.Root value={state.sortField} onValueChange={(v) => v && onChange({ sortField: v })}>
           <Select.Trigger
             aria-label={t("listing_sort_label")}
-            className={cn("flex h-9 items-center justify-between gap-1 border-2 border-border bg-card px-3 py-1 text-sm transition-colors", "focus-visible:outline-none focus-visible:border-primary", "light:border-black light:bg-white light:text-black light:focus-visible:border-primary")}
+            className={cn("flex h-9 items-center justify-between gap-1 border border-border bg-card px-3 py-1 text-sm transition-colors", "focus-visible:outline-none focus-visible:border-primary", "light:border-black light:bg-white light:text-black light:focus-visible:border-primary")}
           >
             <Select.Value />
             <ChevronDown className="size-4 text-muted-foreground" />
           </Select.Trigger>
           <Select.Portal>
             <Select.Positioner className="z-50">
-              <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
+              <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
                 {config.sort.fields.map((f) => (
                   <Select.Item key={f.value} value={f.value} className="relative flex w-full cursor-pointer select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                     <Select.ItemText>{t(f.labelKey)}</Select.ItemText>

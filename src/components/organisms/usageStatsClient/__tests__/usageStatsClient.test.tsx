@@ -36,7 +36,7 @@ describe("UsageStatsClient", () => {
   it("loads usage stats on mount with the default 7d range", async () => {
     render(<UsageStatsClient />);
 
-    expect(screen.getByRole("status").textContent).toContain("Loading usage stats");
+    expect(screen.getByRole("status").textContent).toContain("Loading");
     await screen.findByText("anthropic");
 
     expect(getUsageStats).toHaveBeenCalledWith({ days: 7 });

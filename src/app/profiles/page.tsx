@@ -36,7 +36,7 @@ export default function ProfilesPage() {
       </div>
 
       <div className="flex-1 overflow-y-auto p-6 scrollbar-brutal">
-        <div className="border-2 border-border bg-card shadow-[4px_4px_0_0_var(--border)]">
+        <div className="border border-border bg-card shadow-[4px_4px_0_0_var(--border)]">
           <div className="flex items-center justify-between px-6 py-4">
             <h2 className="font-mono text-sm font-bold uppercase text-card-foreground">
               {t("profiles_cardTitle")}
@@ -44,7 +44,7 @@ export default function ProfilesPage() {
             <button
               type="button"
               onClick={() => { setModalKey((k) => k + 1); setShowForm(true); }}
-              className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none light:border-black light:text-black"
+              className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none light:border-black light:text-black"
               aria-label={t("profiles_create_title")}
             >
               <Plus className="h-3.5 w-3.5" aria-hidden="true" />

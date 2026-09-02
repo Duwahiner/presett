@@ -50,7 +50,7 @@ export function CreateProfilePanel({
   }
 
   return (
-    <div className="mb-6 border-2 border-dashed border-border bg-card/30 p-6">
+    <div className="mb-6 border border-dashed border-border bg-card/30 p-6">
       {/* Header */}
       <div className="mb-6 flex items-start gap-3">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/15">
@@ -84,7 +84,7 @@ export function CreateProfilePanel({
             onChange={(e) => setName(e.target.value)}
             aria-invalid={nameError}
             aria-describedby={nameError ? "profile-name-error" : undefined}
-            className="border-2 border-border focus-visible:border-primary light:border-black light:focus-visible:border-primary"
+            className="border border-border focus-visible:border-primary light:border-black light:focus-visible:border-primary"
           />
           {nameError && (
             <p id="profile-name-error" className="text-xs font-medium text-destructive">
@@ -97,7 +97,7 @@ export function CreateProfilePanel({
         </div>
 
         {/* Orchestrator Assignment Section */}
-        <div className="space-y-4 border-2 border-dashed border-primary/50 bg-primary/5 p-4">
+        <div className="space-y-4 border border-dashed border-primary/50 bg-primary/5 p-4">
           <div className="flex items-center gap-2">
             <div className="flex h-6 w-6 items-center justify-center rounded bg-primary/20">
               <Plus className="h-3 w-3 text-primary" />
@@ -122,7 +122,7 @@ export function CreateProfilePanel({
                  <Select.Trigger
                    aria-label={t("modelPicker_provider")}
                    className={cn(
-                     "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+                     "flex h-9 w-full items-center justify-between border border-border bg-card px-3 py-1 text-sm transition-colors",
                      "focus-visible:outline-none focus-visible:border-primary light:border-black light:bg-white light:text-black light:focus-visible:border-primary",
                    )}
                  >
@@ -131,7 +131,7 @@ export function CreateProfilePanel({
                 </Select.Trigger>
                 <Select.Portal>
                   <Select.Positioner className="z-50">
-                    <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
+                    <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
                        {providers.map((p) => (
                         <Select.Item
                           key={p}
@@ -162,7 +162,7 @@ export function CreateProfilePanel({
                  <Select.Trigger
                    aria-label={t("modelPicker_model")}
                    className={cn(
-                     "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+                     "flex h-9 w-full items-center justify-between border border-border bg-card px-3 py-1 text-sm transition-colors",
                      "focus-visible:outline-none focus-visible:border-primary",
                      "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white light:text-black light:focus-visible:border-primary",
                    )}
@@ -172,7 +172,7 @@ export function CreateProfilePanel({
                 </Select.Trigger>
                 <Select.Portal>
                   <Select.Positioner className="z-50">
-                    <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
+                    <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
                        {models.map((m) => (
                         <Select.Item
                           key={m}
@@ -203,7 +203,7 @@ export function CreateProfilePanel({
                  <Select.Trigger
                    aria-label={t("modelPicker_variant")}
                    className={cn(
-                     "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+                     "flex h-9 w-full items-center justify-between border border-border bg-card px-3 py-1 text-sm transition-colors",
                      "focus-visible:outline-none focus-visible:border-primary",
                      "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white light:text-black light:focus-visible:border-primary",
                    )}
@@ -213,7 +213,7 @@ export function CreateProfilePanel({
                 </Select.Trigger>
                 <Select.Portal>
                   <Select.Positioner className="z-50">
-                    <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
+                    <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
                        {variants.map((v) => (
                         <Select.Item
                           key={v}
@@ -242,7 +242,7 @@ export function CreateProfilePanel({
           <button
             type="submit"
             disabled={!canSubmit}
-            className="flex items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
+            className="flex items-center justify-center gap-2 border border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-all hover:shadow-[4px_4px_0_0_var(--primary)] disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
           >
             {pendingAction === "create" && (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
@@ -254,7 +254,7 @@ export function CreateProfilePanel({
           <button
             type="button"
             onClick={onCancel}
-            className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+            className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
           >
             {t("backups_cancel")}
           </button>

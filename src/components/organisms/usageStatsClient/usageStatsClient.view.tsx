@@ -2,7 +2,7 @@
 
 import { useId, useRef, useState } from "react";
 import type { FormEvent } from "react";
-import { BarChart2, ChevronDown, History, Loader2, Package, RotateCw } from "lucide-react";
+import { BarChart2, ChevronDown, History, Package, RotateCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
 import { t } from "@/resources/resources";
@@ -14,6 +14,8 @@ import type {
   UsageStatsData,
 } from "@/services/usageStatsService";
 import type { UsageStatsClientViewProps } from "./usageStatsClient.types";
+import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
+import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 
 const DAY_OPTIONS: Array<{
   value: DaysFilter;
@@ -52,7 +54,7 @@ function computeSummaryTokens(data: UsageStatsData): string {
 
 function SummaryStat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="border-2 border-border bg-card p-3">
+    <div className="border border-border bg-card p-3">
       <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
         {label}
       </p>
@@ -68,7 +70,7 @@ function ProviderCard({ provider }: { provider: ProviderUsage }) {
   return (
     <article
       data-testid={`usageStatsProvider-${provider.provider}`}
-      className="border-2 border-border bg-card shadow-[4px_4px_0_0_var(--border)]"
+      className="border border-border bg-card shadow-[4px_4px_0_0_var(--border)]"
     >
       <button
         type="button"
@@ -109,7 +111,7 @@ function ProviderCard({ provider }: { provider: ProviderUsage }) {
 
       {expanded && (
         <div id={panelId} role="region" aria-label={provider.provider}>
-          <div className="overflow-x-auto border-t-2 border-border p-4 scrollbar-brutal">
+          <div className="overflow-x-auto border-t border-border p-4 scrollbar-brutal">
             <table className="w-full text-sm">
             <thead>
               <tr className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -122,7 +124,7 @@ function ProviderCard({ provider }: { provider: ProviderUsage }) {
             </thead>
             <tbody>
               {provider.models.map((model) => (
-                <tr key={model.model} className="border-t-2 border-border">
+                <tr key={model.model} className="border-t border-border">
                   <td className="py-1 font-mono text-xs text-card-foreground">{model.model}</td>
                   <td className="py-1 text-right font-mono text-xs text-muted-foreground">
                     {formatTokens(model.inputTokens)}
@@ -161,7 +163,7 @@ function SessionCard({ session }: { session: RecentSession }) {
   return (
     <article
       data-testid={`usageStatsSession-${session.sessionId}`}
-      className="border-2 border-border bg-card shadow-[4px_4px_0_0_var(--border)]"
+      className="border border-border bg-card shadow-[4px_4px_0_0_var(--border)]"
     >
       <button
         type="button"
@@ -196,7 +198,7 @@ function SessionCard({ session }: { session: RecentSession }) {
 
       {expanded && (
         <div id={panelId} role="region" aria-label={session.sessionId}>
-          <dl className="grid gap-x-6 gap-y-3 border-t-2 border-border p-4 sm:grid-cols-2 sm:gap-x-10">
+          <dl className="grid gap-x-6 gap-y-3 border-t border-border p-4 sm:grid-cols-2 sm:gap-x-10">
           <div className="flex justify-between gap-3">
             <dt className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               {t("usage_stats_session_project")}
@@ -279,14 +281,15 @@ export function UsageStatsClientView({
 
   return (
     <div className="flex h-full min-h-0 flex-col gap-6">
+      {loading && data !== null && <FloatingLoadingIndicator label={t("loading_background")} />}
       {/* Fixed: filters + summary (never scroll) */}
       <div className="shrink-0 space-y-4">
-        <div className="flex flex-wrap items-end gap-6 border-2 border-border bg-card p-4 shadow-[4px_4px_0_0_var(--border)]">
+        <div className="flex flex-wrap items-end gap-6 border border-border bg-card p-4 shadow-[4px_4px_0_0_var(--border)]">
           <fieldset>
             <legend className="mb-2 font-mono text-[11px] font-bold uppercase tracking-widest text-muted-foreground">
               {t("usage_stats_filter_range")}
             </legend>
-            <div className="flex border-2 border-border">
+            <div className="flex border border-border">
               {DAY_OPTIONS.map((option) => {
                 const active = days === option.value;
                 return (
@@ -296,7 +299,7 @@ export function UsageStatsClientView({
                     aria-pressed={active}
                     onClick={() => onDaysChange(option.value)}
                     className={cn(
-                      "cursor-pointer border-r-2 border-border px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide transition-colors last:border-r-0",
+                      "cursor-pointer border-r border-border px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide transition-colors last:border-r-0",
                       active
                         ? "bg-primary text-primary-foreground"
                         : "bg-card text-muted-foreground hover:text-foreground",
@@ -323,13 +326,13 @@ export function UsageStatsClientView({
                 type="text"
                 defaultValue={project}
                 placeholder={t("usage_stats_project_placeholder")}
-                className="h-9 w-64 border-2 border-border bg-card px-3 font-mono text-sm text-card-foreground placeholder:text-muted-foreground/70 focus-visible:border-primary"
+                className="h-9 w-64 border border-border bg-card px-3 font-mono text-sm text-card-foreground placeholder:text-muted-foreground/70 focus-visible:border-primary"
               />
             </div>
             <button
               type="submit"
               aria-label={t("usage_stats_project_apply_aria")}
-              className="flex h-9 cursor-pointer items-center gap-2 border-2 border-border bg-primary px-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none"
+              className="flex h-9 cursor-pointer items-center gap-2 border border-border bg-primary px-3 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none"
             >
               {t("usage_stats_project_apply")}
             </button>
@@ -360,25 +363,22 @@ export function UsageStatsClientView({
         data-testid="usageStatsScroll"
         className="min-h-0 flex-1 overflow-y-auto pr-4 scrollbar-brutal"
       >
-        {loading ? (
-          <div className="flex items-center justify-center gap-3 border-2 border-border bg-card p-8 text-muted-foreground">
-            <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
-            <span role="status">{t("usage_stats_loading")}</span>
-          </div>
+{loading && data === null ? (
+          <PageSkeleton variant="usageStats" label={t("usage_stats_loading")} />
         ) : error ? (
-          <div className="flex flex-col items-center gap-4 border-2 border-border bg-card p-8">
+          <div className="flex flex-col items-center gap-4 border border-border bg-card p-8">
             <ErrorBanner title={t("usage_stats_loadError")} message={error} className="w-full" />
             <button
               type="button"
               onClick={onRetry}
-              className="flex cursor-pointer items-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none"
+              className="flex cursor-pointer items-center gap-2 border border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none"
             >
               <RotateCw className="h-4 w-4" aria-hidden="true" />
               {t("usage_stats_retry")}
             </button>
           </div>
         ) : !hasData ? (
-          <div className="flex flex-col items-center justify-center border-2 border-border bg-card p-8 text-center">
+          <div className="flex flex-col items-center justify-center border border-border bg-card p-8 text-center">
             <Package className="size-10 text-muted-foreground" aria-hidden="true" />
             <h3 className="mt-3 font-mono text-sm font-bold uppercase text-card-foreground">
               {t("usage_stats_empty_title")}

@@ -1,15 +1,17 @@
 "use client";
 
 import { useState } from "react";
-import { Loader2, Pencil, Trash2, UserCircle, Sparkles, Check, Info, RotateCcw, ChevronDown } from "lucide-react";
+import { Pencil, Trash2, UserCircle, Sparkles, Check, Info, RotateCcw, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/atoms/Badge/Badge";
 import { ErrorBanner } from "@/components/molecules/ErrorBanner/ErrorBanner";
 import { ListingControls } from "@/components/molecules/ListingControls/ListingControls";
 import { ListingEmptyState } from "@/components/molecules/ListingEmptyState/ListingEmptyState";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { t } from "@/resources/resources";
+import { LoadingButton, Spinner } from "@/components/ui/spinner";
+import { PageSkeleton } from "@/components/molecules/PageSkeleton/PageSkeleton";
+import { FloatingLoadingIndicator } from "@/components/molecules/FloatingLoadingIndicator/FloatingLoadingIndicator";
 import type { ProfilesClientViewProps } from "./ProfilesClient.types";
 import type { ModelCatalog } from "@/components/molecules/ModelPicker/ModelPicker";
 import { Select } from "@/components/ui/select";
@@ -45,7 +47,7 @@ function OrchestratorPicker({
               <Select.Trigger
                 aria-label={t("modelPicker_provider")}
                 className={cn(
-                  "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+                  "flex h-9 w-full items-center justify-between border border-border bg-card px-3 py-1 text-sm transition-colors",
                   "focus-visible:outline-none focus-visible:border-primary light:border-black light:bg-white light:text-black light:focus-visible:border-primary",
                 )}
               >
@@ -54,7 +56,7 @@ function OrchestratorPicker({
              </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
-                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
+                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
                    {providers.map((p) => (
                     <Select.Item key={p} value={p} className="relative flex w-full cursor-pointer select-none items-center px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                       <Select.ItemText>{p}</Select.ItemText>
@@ -78,7 +80,7 @@ function OrchestratorPicker({
               <Select.Trigger
                 aria-label={t("modelPicker_model")}
                 className={cn(
-                  "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+                  "flex h-9 w-full items-center justify-between border border-border bg-card px-3 py-1 text-sm transition-colors",
                   "focus-visible:outline-none focus-visible:border-primary",
                   "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white light:text-black light:focus-visible:border-primary",
                 )}
@@ -88,7 +90,7 @@ function OrchestratorPicker({
              </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
-                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
+                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
                    {models.map((m) => (
                     <Select.Item key={m} value={m} className="relative flex w-full cursor-pointer select-none items-center px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                       <Select.ItemText>{m}</Select.ItemText>
@@ -112,7 +114,7 @@ function OrchestratorPicker({
               <Select.Trigger
                 aria-label={t("modelPicker_variant")}
                 className={cn(
-                  "flex h-9 w-full items-center justify-between border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+                  "flex h-9 w-full items-center justify-between border border-border bg-card px-3 py-1 text-sm transition-colors",
                   "focus-visible:outline-none focus-visible:border-primary",
                   "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white light:text-black light:focus-visible:border-primary",
                 )}
@@ -122,7 +124,7 @@ function OrchestratorPicker({
              </Select.Trigger>
             <Select.Portal>
               <Select.Positioner className="z-50">
-                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border-2 border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
+                <Select.Popup className="max-h-60 min-w-[var(--anchor-width)] overflow-auto border border-border bg-popover p-1 text-popover-foreground shadow-[4px_4px_0_0_var(--border)] scrollbar-brutal light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]">
                    {variants.map((v) => (
                     <Select.Item key={v} value={v} className="relative flex w-full cursor-pointer select-none items-center px-2 py-1.5 text-sm outline-none focus:bg-accent focus:text-accent-foreground">
                       <Select.ItemText>{v}</Select.ItemText>
@@ -140,7 +142,7 @@ function OrchestratorPicker({
            type="button"
            onClick={() => onChange(value)}
            disabled={!isAssigned}
-           className="flex cursor-pointer items-center justify-center border-2 border-border bg-card p-2 text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black"
+           className="flex cursor-pointer items-center justify-center border border-border bg-card p-2 text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black"
          >
            <Check className="h-3.5 w-3.5" aria-hidden="true" />
          </button>
@@ -197,23 +199,16 @@ export function ProfilesClientView({
   const showNoMatch = profiles.length > 0 && visibleProfiles.length === 0 && isFiltered;
 
   if (loading) {
-    return (
-      <div className="flex min-h-[240px] items-center justify-center gap-3 border-2 border-border bg-card p-8 text-muted-foreground">
-        <Loader2 className="h-5 w-5 animate-spin text-primary" aria-hidden="true" />
-        <span>{t("profiles_loading")}</span>
-      </div>
-    );
+    return <PageSkeleton variant="profiles" label={t("profiles_loading")} />;
   }
 
   if (error) return <ErrorBanner title={t("profiles_loadError")} message={error} />;
 
   return (
     <div className="flex flex-col h-full min-h-0">
+      {pendingAction !== null && <FloatingLoadingIndicator label={t("loading_background")} />}
       {catalogLoading && (
-        <div className="mb-4 flex items-center justify-center gap-3 border-2 border-border bg-card p-4 text-muted-foreground">
-          <Loader2 className="h-4 w-4 animate-spin text-primary" aria-hidden="true" />
-          <span>{t("models_validationMessage")}</span>
-        </div>
+        <LoadingButton label={t("loading_section")} />
       )}
 
       {/* Delete Profile Confirmation Dialog */}
@@ -260,7 +255,7 @@ export function ProfilesClientView({
         {visibleProfiles.map((profile) => (
           <div
             key={profile.name}
-            className={`relative border-2 border-border bg-card p-4 transition-colors hover:border-border hover:bg-muted`}
+             className={`relative border border-border bg-card p-4 transition-colors hover:border-border hover:bg-muted`}
           >
             {editingProfile === profile.name ? (
               <div className="w-full space-y-4">
@@ -275,7 +270,7 @@ export function ProfilesClientView({
                      type="button"
                      onClick={() => onEditAssignmentChange("orchestrator", editAssignments["orchestrator"] ?? { provider: "", model: "", variant: "" })}
                      disabled={!editAssignments["orchestrator"]?.provider}
-                     className="flex cursor-pointer items-center justify-center border-2 border-border bg-card p-2 text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black"
+                     className="flex cursor-pointer items-center justify-center border border-border bg-card p-2 text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black"
                     >
                       <Check className="h-3.5 w-3.5" aria-hidden="true" />
                     </button>
@@ -291,17 +286,17 @@ export function ProfilesClientView({
                     type="button"
                     onClick={onEditSave}
                     disabled={!editAssignments["orchestrator"]?.provider || pendingAction === "edit"}
-                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
+                     className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-primary px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:!border-black light:!bg-primary light:!text-white light:shadow-[4px_4px_0_0_#000000]"
                   >
                     {pendingAction === "edit" && (
-                      <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                      <Spinner data-icon="inline-start" aria-hidden="true" />
                     )}
                     {t("profiles_save")}
                   </button>
                   <button
                     type="button"
                     onClick={onEditCancel}
-                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                     className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-4 py-2 font-mono text-sm font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                   >
                     {t("backups_cancel")}
                   </button>
@@ -338,7 +333,7 @@ export function ProfilesClientView({
                     type="button"
                     onClick={() => onEditStart(profile.name)}
                     aria-label={t("profiles_edit")}
-                    className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                     className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                   >
                     <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
                     {t("profiles_edit")}
@@ -348,10 +343,10 @@ export function ProfilesClientView({
                        type="button"
                        onClick={() => onSwitch(profile.name)}
                        disabled={pendingAction === `switch:${profile.name}`}
-                       className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                       className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                      >
                        {pendingAction === `switch:${profile.name}` && (
-                         <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" aria-hidden="true" />
+                         <Spinner data-icon="inline-start" aria-hidden="true" />
                        )}
                        {t("profiles_switch")}
                      </button>
@@ -362,10 +357,10 @@ export function ProfilesClientView({
                       onClick={() => onDeleteStart(profile.name)}
                       aria-label={t("profiles_delete")}
                       disabled={pendingAction === `delete:${profile.name}`}
-                      className="flex cursor-pointer items-center justify-center gap-2 border-2 border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                       className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                       >
                         {pendingAction === `delete:${profile.name}` ? (
-                          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+                          <Spinner data-icon="inline-start" aria-hidden="true" />
                         ) : (
                           <Trash2 className="h-4 w-4" aria-hidden="true" />
                         )}

@@ -12,7 +12,7 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
       <InputPrimitive
         type={type}
         className={cn(
-          "flex h-9 w-full border-2 border-border bg-card px-3 py-1 text-sm transition-colors",
+          "flex h-9 w-full border border-border bg-card px-3 py-1 text-sm transition-colors",
           "file:border-0 file:bg-transparent file:text-sm file:font-medium",
           "placeholder:text-muted-foreground",
           "focus-visible:outline-none focus-visible:border-primary",
