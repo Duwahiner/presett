@@ -1,6 +1,6 @@
 import { Search } from "lucide-react";
-import { Badge } from "@/components/atoms/Badge/Badge";
-import { SearchClient } from "@/components/organisms/SearchClient/SearchClient";
+import { Badge } from "@/components/atoms/Badge/badge";
+import { SearchClient } from "@/components/organisms/SearchClient/searchClient";
 import { t } from "@/resources/resources";
 
 export const dynamic = "force-dynamic";

@@ -6,7 +6,7 @@ import type { Result } from "@/lib/types";
 import { err, ok } from "@/lib/types";
 import { readModelCacheSafe } from "@/services/modelCacheService";
 import { readOpenCodeConfigSafe, listModelAssignments } from "@/adapters/opencode";
-import { readGentleAiConfigSafe } from "@/adapters/gentle-ai";
+import { readGentleAiConfigSafe } from "@/adapters/gentleAi";
 
 const exec = promisify(execCallback);
 const MODEL_CATALOG_CACHE_TTL_MS = 30_000;

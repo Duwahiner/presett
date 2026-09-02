@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
-import { ThemeProvider } from "@/lib/theme-provider";
-import { DashboardLayout } from "@/components/organisms/DashboardLayout/DashboardLayout";
+import { ThemeProvider } from "@/lib/themeProvider";
+import { DashboardLayout } from "@/components/organisms/DashboardLayout/dashboardLayout";
 import { IS_VISUAL_AUDIT_MODE } from "@/lib/visual-audit";
-import { AuditModeProvider } from "@/lib/visual-audit/audit-context";
+import { AuditModeProvider } from "@/lib/visual-audit/auditContext";
 import { AUDIT_FIXTURE_GENTLE_AI_VERSION } from "@/lib/visual-audit/fixtures";
 import { probeGentleAiVersion } from "@/services/processService";
 import "./globals.css";

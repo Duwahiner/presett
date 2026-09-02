@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { getUsageStats } from "@/services/usageStatsApiService";
 import type { DaysFilter, UsageStatsData } from "@/services/usageStatsService";
-import { UsageStatsClientView } from "./usageStatsClient.view";
+import { UsageStatsClientView } from "./usageStatsClientView";
 
 const INITIAL_DAYS: DaysFilter = 7;
 

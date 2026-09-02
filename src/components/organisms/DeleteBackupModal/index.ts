@@ -1,1 +1,1 @@
-export { DeleteBackupModal } from "./DeleteBackupModal";
+export { DeleteBackupModal } from "./deleteBackupModal";

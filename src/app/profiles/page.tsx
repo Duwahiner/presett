@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import { Layers, Plus } from "lucide-react";
-import { Badge } from "@/components/atoms/Badge/Badge";
-import { ProfilesClient } from "@/components/organisms/ProfilesClient/ProfilesClient";
+import { Badge } from "@/components/atoms/Badge/badge";
+import { ProfilesClient } from "@/components/organisms/ProfilesClient/profilesClient";
 import { t } from "@/resources/resources";
 
 export const dynamic = "force-dynamic";

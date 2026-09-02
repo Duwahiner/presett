@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { globalConfigPatchSchema } from "@/lib/validators";
-import { resolveDisplayLocale } from "@/components/organisms/GlobalConfigClient/GlobalConfigClient";
+import { resolveDisplayLocale } from "@/components/organisms/GlobalConfigClient/globalConfigClient";
 
 describe("global config contracts", () => {
   it("accepts only the approved OpenCode fields", () => {

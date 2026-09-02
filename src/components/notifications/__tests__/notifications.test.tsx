@@ -3,10 +3,10 @@ import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { type ReactNode } from "react";
 import { renderToString } from "react-dom/server";
 import { hydrateRoot } from "react-dom/client";
-import { NotificationProvider } from "@/contexts/NotificationContext";
-import { BellButton } from "@/components/notifications/BellButton";
-import { NotificationItem } from "@/components/notifications/NotificationItem";
-import { NotificationPanel } from "@/components/notifications/NotificationPanel";
+import { NotificationProvider } from "@/contexts/notificationContext";
+import { BellButton } from "@/components/notifications/bellButton";
+import { NotificationItem } from "@/components/notifications/notificationItem";
+import { NotificationPanel } from "@/components/notifications/notificationPanel";
 import type { Notification } from "@/services/notificationService";
 import * as svc from "@/services/notificationService";
 

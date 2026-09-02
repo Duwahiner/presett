@@ -1,8 +1,8 @@
 "use client";
 
 import { Cpu } from "lucide-react";
-import { Badge } from "@/components/atoms/Badge/Badge";
-import { ModelsClient } from "@/components/organisms/ModelsClient/ModelsClient";
+import { Badge } from "@/components/atoms/Badge/badge";
+import { ModelsClient } from "@/components/organisms/ModelsClient/modelsClient";
 import { t } from "@/resources/resources";
 
 export const dynamic = "force-dynamic";

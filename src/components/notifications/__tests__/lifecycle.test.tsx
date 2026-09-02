@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { render, screen, fireEvent, act } from "@testing-library/react";
 import { type ReactNode, useState } from "react";
-import { NotificationProvider, useNotifications } from "@/contexts/NotificationContext";
-import { NotificationPanel } from "@/components/notifications/NotificationPanel";
+import { NotificationProvider, useNotifications } from "@/contexts/notificationContext";
+import { NotificationPanel } from "@/components/notifications/notificationPanel";
 import * as svc from "@/services/notificationService";
 
 function wrapper({ children }: { children: ReactNode }) {

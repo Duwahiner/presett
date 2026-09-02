@@ -2,7 +2,7 @@
 
 import { useCallback } from "react";
 import { toast } from "sonner";
-import { useNotifications } from "@/contexts/NotificationContext";
+import { useNotifications } from "@/contexts/notificationContext";
 
 export function useNotificationToasts() {
   const { notifications, unreadCount, push, resolve, dismiss, markAllRead } =

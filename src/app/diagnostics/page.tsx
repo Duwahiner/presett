@@ -1,8 +1,8 @@
 "use client";
 
 import { Activity } from "lucide-react";
-import { Badge } from "@/components/atoms/Badge/Badge";
-import { DiagnosticsClient } from "@/components/organisms/DiagnosticsClient/DiagnosticsClient";
+import { Badge } from "@/components/atoms/Badge/badge";
+import { DiagnosticsClient } from "@/components/organisms/DiagnosticsClient/diagnosticsClient";
 import { t } from "@/resources/resources";
 
 export const dynamic = "force-dynamic";

@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ push: vi.fn() }),
 }));
 
-vi.mock("@/lib/theme-provider", () => ({
+vi.mock("@/lib/themeProvider", () => ({
   ThemeProvider: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="theme-provider">{children}</div>
   ),
@@ -22,7 +22,7 @@ vi.mock("@/lib/visual-audit", () => ({
   IS_VISUAL_AUDIT_MODE: false,
 }));
 
-vi.mock("@/lib/visual-audit/audit-context", () => ({
+vi.mock("@/lib/visual-audit/auditContext", () => ({
   AuditModeProvider: ({ children }: { children: React.ReactNode }) => (
     <div data-testid="audit-mode-provider">{children}</div>
   ),
