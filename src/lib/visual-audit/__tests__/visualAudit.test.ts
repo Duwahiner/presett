@@ -68,7 +68,7 @@ describe("visual-audit", () => {
       const mod1 = await import("../fixtures");
       const mod2 = await import("../fixtures");
       expect(mod1.AUDIT_FIXTURE_TIMESTAMP).toBe(mod2.AUDIT_FIXTURE_TIMESTAMP);
-      expect(mod1.AUDIT_FIXTURE_LAST_SYNC).toBe(mod2.AUDIT_FIXTURE_LAST_SYNC);
+      expect(mod1.AUDIT_FIXTURE_LAST_BACKUP).toBe(mod2.AUDIT_FIXTURE_LAST_BACKUP);
     });
 
     it("contain deterministic config data", async () => {

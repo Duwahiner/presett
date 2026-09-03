@@ -174,8 +174,8 @@ export function DashboardView({ className, stats, agents }: DashboardProps) {
           markerClassName="bg-muted-foreground"
         />
         <Stat
-          label={t("dashboard_stat_system_label")}
-          value={stats.lastSync}
+          label={t("dashboard_stat_last_backup_label")}
+          value={stats.lastBackup}
           icon={Activity}
           markerClassName="bg-primary"
         />

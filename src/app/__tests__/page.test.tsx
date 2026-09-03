@@ -48,7 +48,7 @@ describe("buildDashboardData", () => {
     expect(result.stats.modelCount).toBe(2);
     expect(result.stats.profileCount).toBe(2);
     expect(result.stats.backupCount).toBe(2);
-    expect(result.stats.lastSync).toMatch(/^\d+[mhd] ago$|^just now$/);
+    expect(result.stats.lastBackup).toMatch(/^\d+[mhd] ago$|^just now$/);
   });
 
   it("passes agents through unchanged", () => {
@@ -68,6 +68,6 @@ describe("buildDashboardData", () => {
       { backups: [] },
     );
 
-    expect(result.stats.lastSync).toBe("Never");
+    expect(result.stats.lastBackup).toBe("Never");
   });
 });

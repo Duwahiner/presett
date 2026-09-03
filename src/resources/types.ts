@@ -44,7 +44,7 @@ export interface Resources {
   "dashboard_stat_models_label": string;
   "dashboard_stat_profiles_label": string;
   "dashboard_stat_backups_label": string;
-  "dashboard_stat_system_label": string;
+  "dashboard_stat_last_backup_label": string;
   "dashboard_gentle_ai_version": string;
   "dashboard_quick_access_title": string;
   "dashboard_agents_title": string;
@@ -54,7 +54,7 @@ export interface Resources {
   "dashboard_agent_add": string;
   "dashboard_agent_models": string;
   "dashboard_agent_model_label": string;
-  "dashboard_last_sync_never": string;
+  "dashboard_last_backup_never": string;
   "dashboard_status_badge": string;
   "quick_action_models_title": string;
   "quick_action_models_desc": string;

@@ -20,7 +20,7 @@ const defaultStats: DashboardStats = {
   modelCount: 5,
   profileCount: 3,
   backupCount: 28,
-  lastSync: "2026-08-10T20:00:00Z",
+  lastBackup: "2026-08-10T20:00:00Z",
 };
 
 const defaultAgents = [
@@ -43,7 +43,9 @@ describe("Dashboard", () => {
     expect(screen.queryByText("5")).not.toBeNull();
     expect(screen.queryByText("3")).not.toBeNull();
     expect(screen.queryByText("28")).not.toBeNull();
-    expect(screen.queryByText(defaultStats.lastSync)).not.toBeNull();
+    expect(screen.queryByText(defaultStats.lastBackup)).not.toBeNull();
+    expect(screen.queryByText("Last backup")).not.toBeNull();
+    expect(screen.queryByText("Last Sync")).toBeNull();
   });
 
   it("renders different stat values from props", () => {
@@ -51,7 +53,7 @@ describe("Dashboard", () => {
       modelCount: 12,
       profileCount: 7,
       backupCount: 99,
-      lastSync: "Yesterday",
+      lastBackup: "Yesterday",
     };
 
     render(<Dashboard stats={stats} agents={defaultAgents} />);

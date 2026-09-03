@@ -16,10 +16,10 @@ import type { Notification } from "@/services/notificationService";
 export const AUDIT_FIXTURE_TIMESTAMP = "2026-01-15T10:30:00.000Z";
 
 /**
- * Pre-computed relative "last sync" string derived from the frozen timestamp.
+ * Pre-computed relative "last backup" string derived from the frozen timestamp.
  * Calculated once to ensure deterministic renders.
  */
-function computeAuditLastSync(): string {
+function computeAuditLastBackup(): string {
   const frozen = new Date(AUDIT_FIXTURE_TIMESTAMP).getTime();
   // 5 hours, 23 minutes before the frozen time
   const offset = 5 * 60 * 60_000 + 23 * 60_000;
@@ -29,7 +29,7 @@ function computeAuditLastSync(): string {
   return `${hours}h ago`;
 }
 
-export const AUDIT_FIXTURE_LAST_SYNC = computeAuditLastSync();
+export const AUDIT_FIXTURE_LAST_BACKUP = computeAuditLastBackup();
 export const AUDIT_FIXTURE_GENTLE_AI_VERSION = "v0.0.0";
 
 // ─── Dashboard ───────────────────────────────────────────────────────────────
