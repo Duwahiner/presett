@@ -37,6 +37,30 @@ export interface BackupInfo {
   pinned: boolean;
 }
 
+export interface BackupDetail extends BackupInfo {
+  files: Array<{ path: string | null }>;
+  changePreview: { available: false };
+}
+
+function safeEntryPath(originalPath: string, rootDir: string): string | null {
+  const normalizedPath = originalPath.replaceAll("\\", "/");
+  const normalizedRoot = rootDir.replaceAll("\\", "/").replace(/\/$/, "");
+  const isAbsolute = normalizedPath.startsWith("/") || /^[A-Za-z]:\//.test(normalizedPath);
+
+  if (!isAbsolute) {
+    const segments = normalizedPath.split("/");
+    return segments.some((segment) => segment === "..")
+      ? null
+      : segments.filter((segment) => segment && segment !== ".").join("/") || null;
+  }
+
+  const rootPrefix = `${normalizedRoot}/`;
+  if (!normalizedPath.startsWith(rootPrefix)) return null;
+
+  const relativePath = normalizedPath.slice(rootPrefix.length);
+  return relativePath && !relativePath.split("/").includes("..") ? relativePath : null;
+}
+
 export async function readBackupManifest(
   backupsDir: string,
   id: string,
@@ -107,6 +131,49 @@ export async function listBackups(
   }
 
   return results.sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+}
+
+export async function getBackupDetail(
+  backupsDir: string,
+  id: string,
+): Promise<Result<BackupDetail>> {
+  const backupDirResult = await ensureExistingBackupDir(backupsDir, id);
+  if (!backupDirResult.ok) return err(backupDirResult.error);
+
+  const manifestResult = await readBackupManifest(backupsDir, id);
+  if (!manifestResult.ok) return err(manifestResult.error);
+
+  const manifest = manifestResult.value;
+  if (
+    typeof manifest.created_at !== "string" ||
+    Number.isNaN(Date.parse(manifest.created_at)) ||
+    typeof manifest.root_dir !== "string" ||
+    manifest.root_dir.length === 0 ||
+    !Array.isArray(manifest.entries) ||
+    manifest.entries.some((entry) => typeof entry?.original_path !== "string")
+  ) {
+    return err({ code: "SCHEMA_INVALID", message: "Invalid backup manifest" });
+  }
+
+  let size = 0;
+  try {
+    size = (await stat(join(backupDirResult.value, "snapshot.tar.gz"))).size;
+  } catch {
+    size = 0;
+  }
+
+  return ok({
+    id,
+    source: manifest.root_dir,
+    timestamp: manifest.created_at,
+    fileCount: manifest.entries.length,
+    size,
+    pinned: await isPinned(backupsDir, id),
+    files: manifest.entries.map((entry) => ({
+      path: safeEntryPath(entry.original_path, manifest.root_dir),
+    })),
+    changePreview: { available: false },
+  });
 }
 
 function isPinned(backupsDir: string, id: string): Promise<boolean> {

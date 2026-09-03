@@ -9,11 +9,13 @@ import type {
   DashboardAgent,
 } from "@/components/organisms/Dashboard/dashboardTypes";
 import type { BackupInfo } from "@/services/backupsApiService";
+import { readSyncState } from "@/services/syncStateService";
 import { IS_VISUAL_AUDIT_MODE } from "@/lib/visual-audit";
 import {
   AUDIT_FIXTURE_CONFIG,
   AUDIT_FIXTURE_PROFILES,
   AUDIT_FIXTURE_BACKUPS,
+  AUDIT_FIXTURE_LAST_BACKUP,
   AUDIT_FIXTURE_LAST_SYNC,
 } from "@/lib/visual-audit/fixtures";
 
@@ -28,9 +30,9 @@ function relativeTime(timestamp: string): string {
   return `${days}d ago`;
 }
 
-function computeLastSync(backups: BackupInfo[]): string {
+function computeLastBackup(backups: BackupInfo[]): string {
   if (backups.length === 0) {
-    return t("dashboard_last_sync_never");
+    return t("dashboard_last_backup_never");
   }
 
   const latest = backups
@@ -42,20 +44,22 @@ function computeLastSync(backups: BackupInfo[]): string {
 
   return latest?.timestamp
     ? relativeTime(latest.timestamp)
-    : t("dashboard_last_sync_never");
+    : t("dashboard_last_backup_never");
 }
 
 export function buildDashboardData(
   config: { assignments: DashboardAgent[] },
   profiles: { profiles: { name: string }[] },
   backups: { backups: BackupInfo[] },
+  lastSyncAt?: string,
 ): { stats: DashboardStats; agents: DashboardAgent[] } {
   return {
     stats: {
       modelCount: config.assignments.length,
       profileCount: profiles.profiles.length,
       backupCount: backups.backups.length,
-      lastSync: computeLastSync(backups.backups),
+      lastBackup: computeLastBackup(backups.backups),
+      ...(lastSyncAt ? { lastSyncAt } : {}),
     },
     agents: config.assignments,
   };
@@ -79,11 +83,13 @@ async function fetchDashboardData(): Promise<{
   data: { stats: DashboardStats; agents: DashboardAgent[] };
   errors: ServiceErrors;
 }> {
-  const [configResult, profilesResult, backupsResult] = await Promise.allSettled([
-    getConfig(),
-    listProfiles(),
-    listBackups(),
-  ]);
+  const [configResult, profilesResult, backupsResult, syncResult] =
+    await Promise.allSettled([
+      getConfig(),
+      listProfiles(),
+      listBackups(),
+      readSyncState(),
+    ]);
 
   const errors: ServiceErrors = {};
 
@@ -111,8 +117,11 @@ async function fetchDashboardData(): Promise<{
     errors.backups = toErrorMessage(backupsResult.reason);
   }
 
+  const lastSyncAt =
+    syncResult.status === "fulfilled" ? syncResult.value : undefined;
+
   return {
-    data: buildDashboardData(config, profiles, backups),
+    data: buildDashboardData(config, profiles, backups, lastSyncAt),
     errors,
   };
 }
@@ -150,7 +159,8 @@ export default async function HomePage() {
       modelCount: AUDIT_FIXTURE_CONFIG.assignments.length,
       profileCount: AUDIT_FIXTURE_PROFILES.profiles.length,
       backupCount: AUDIT_FIXTURE_BACKUPS.backups.length,
-      lastSync: AUDIT_FIXTURE_LAST_SYNC,
+      lastBackup: AUDIT_FIXTURE_LAST_BACKUP,
+      lastSyncAt: AUDIT_FIXTURE_LAST_SYNC,
     };
     return <Dashboard stats={stats} agents={AUDIT_FIXTURE_CONFIG.assignments} />;
   }

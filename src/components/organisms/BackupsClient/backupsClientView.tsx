@@ -1,6 +1,8 @@
 "use client";
 
+import { useRef } from "react";
 import {
+  Eye,
   RefreshCw,
   HardDrive,
   Pin,
@@ -19,6 +21,7 @@ import { getBytes, formatDate } from "@/utils/formatting";
 import type { BackupsClientViewProps } from "./backupsClientTypes";
 import { Spinner } from "@/components/ui/spinner";
 import { PageSkeleton } from "@/components/molecules/PageSkeleton/pageSkeleton";
+import { BackupDetailModal } from "./backupDetailModal";
 
 export function BackupsClientView({
   backups,
@@ -27,15 +30,36 @@ export function BackupsClientView({
   syncOutput,
   syncing,
   pendingAction,
+  detailBackup,
+  backupDetail,
+  detailLoading,
+  detailError,
   onSync,
   onRestore,
   onPin,
   onUnpin,
   onDelete,
+  onViewDetails,
+  onDetailClose,
   deleteConfirmId,
   onDeleteConfirm,
   onDeleteCancel,
 }: BackupsClientViewProps) {
+  const listRef = useRef<HTMLDivElement>(null);
+  const savedScrollTop = useRef(0);
+
+  function handleViewDetails(id: string) {
+    savedScrollTop.current = listRef.current?.scrollTop ?? 0;
+    onViewDetails(id);
+  }
+
+  function handleDetailClose() {
+    onDetailClose();
+    requestAnimationFrame(() => {
+      if (listRef.current) listRef.current.scrollTop = savedScrollTop.current;
+    });
+  }
+
   if (loading) {
     return <PageSkeleton variant="backups" label={t("backups_loading")} />;
   }
@@ -78,7 +102,7 @@ export function BackupsClientView({
         )}
 </div>
 
-       <div className="min-h-0 flex-1 overflow-y-auto pr-4 scrollbar-brutal">
+       <div ref={listRef} data-testid="backups-list-scroll" className="min-h-0 flex-1 overflow-y-auto pr-4 scrollbar-brutal">
        {showNoData ? (
          <ListingEmptyState variant="no-data" entity="backups" />
         ) : (
@@ -116,9 +140,17 @@ export function BackupsClientView({
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button
                       type="button"
+                      onClick={() => handleViewDetails(backup.id)}
+                      className="flex min-h-11 cursor-pointer items-center justify-center gap-2 border border-border bg-primary px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-primary-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none focus-visible:outline-2 focus-visible:outline-offset-2 light:!border-black light:!text-white"
+                    >
+                      <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+                      {t("backups_view_details")}
+                    </button>
+                    <button
+                      type="button"
                       onClick={() => onRestore(backup.id, backup.source)}
                       disabled={pendingAction === `restore:${backup.id}`}
-                      className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                      className="flex min-h-11 cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                     >
                       {pendingAction === `restore:${backup.id}` ? (
                         <Spinner data-icon="inline-start" aria-hidden="true" />
@@ -131,7 +163,7 @@ export function BackupsClientView({
                       type="button"
                       onClick={() => (backup.pinned ? onUnpin(backup.id) : onPin(backup.id))}
                       disabled={pendingAction === `pin:${backup.id}` || pendingAction === `unpin:${backup.id}`}
-                      className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                      className="flex min-h-11 cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                     >
                       {pendingAction === `pin:${backup.id}` || pendingAction === `unpin:${backup.id}` ? (
                         <Spinner data-icon="inline-start" aria-hidden="true" />
@@ -146,7 +178,7 @@ export function BackupsClientView({
                       type="button"
                       onClick={() => onDelete(backup.id)}
                       disabled={pendingAction === `delete:${backup.id}`}
-                      className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
+                      className="flex min-h-11 cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
                     >
                       {pendingAction === `delete:${backup.id}` ? (
                         <Spinner data-icon="inline-start" aria-hidden="true" />
@@ -169,6 +201,16 @@ export function BackupsClientView({
           backupName={deleteConfirmId}
           onConfirm={onDeleteConfirm}
           onCancel={onDeleteCancel}
+        />
+      )}
+
+      {detailBackup && (
+        <BackupDetailModal
+          backup={detailBackup}
+          detail={backupDetail}
+          loading={detailLoading}
+          error={detailError}
+          onClose={handleDetailClose}
         />
       )}
     </div>

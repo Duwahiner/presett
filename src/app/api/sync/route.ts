@@ -1,9 +1,14 @@
 import { NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { runGentleAiSync } from "@/services/processService";
+import { writeSyncTimestamp } from "@/services/syncStateService";
 import { buildSafeError, requireMutationOrigin } from "@/lib/localApiSecurity";
 import { clearServerModelCatalogCache } from "@/services/modelCatalogService";
 
 export const dynamic = "force-dynamic";
+
+const SYNC_PERSIST_WARNING =
+  "Failed to persist the last successful sync timestamp";
 
 function syncCommand(): string {
   return process.env.PRESETT_TEST_SYNC_COMMAND ?? "gentle-ai";
@@ -41,7 +46,13 @@ export async function POST(request: Request) {
     });
   }
 
+  const persist = await writeSyncTimestamp();
   clearServerModelCatalogCache();
+  revalidatePath("/");
+
+  if (!persist.ok) {
+    return NextResponse.json({ ...result.value, warning: SYNC_PERSIST_WARNING });
+  }
 
   return NextResponse.json(result.value);
 }

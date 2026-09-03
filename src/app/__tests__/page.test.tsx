@@ -48,7 +48,7 @@ describe("buildDashboardData", () => {
     expect(result.stats.modelCount).toBe(2);
     expect(result.stats.profileCount).toBe(2);
     expect(result.stats.backupCount).toBe(2);
-    expect(result.stats.lastSync).toMatch(/^\d+[mhd] ago$|^just now$/);
+    expect(result.stats.lastBackup).toMatch(/^\d+[mhd] ago$|^just now$/);
   });
 
   it("passes agents through unchanged", () => {
@@ -68,6 +68,27 @@ describe("buildDashboardData", () => {
       { backups: [] },
     );
 
-    expect(result.stats.lastSync).toBe("Never");
+    expect(result.stats.lastBackup).toBe("Never");
+  });
+
+  it("includes lastSyncAt when a sync timestamp is provided", () => {
+    const result = buildDashboardData(
+      { assignments: agents },
+      { profiles: [] },
+      { backups },
+      "2026-08-10T21:00:00.000Z",
+    );
+
+    expect(result.stats.lastSyncAt).toBe("2026-08-10T21:00:00.000Z");
+  });
+
+  it("leaves lastSyncAt undefined when no sync timestamp is provided", () => {
+    const result = buildDashboardData(
+      { assignments: agents },
+      { profiles: [] },
+      { backups },
+    );
+
+    expect(result.stats.lastSyncAt).toBeUndefined();
   });
 });

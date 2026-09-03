@@ -2,7 +2,8 @@ export interface DashboardStats {
   modelCount: number;
   profileCount: number;
   backupCount: number;
-  lastSync: string;
+  lastBackup: string;
+  lastSyncAt?: string;
 }
 
 export interface DashboardAgent {

@@ -1,4 +1,24 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+
+const {
+  runGentleAiSync,
+  writeSyncTimestamp,
+  clearServerModelCatalogCache,
+  revalidatePath,
+} = vi.hoisted(() => ({
+  runGentleAiSync: vi.fn(),
+  writeSyncTimestamp: vi.fn(),
+  clearServerModelCatalogCache: vi.fn(),
+  revalidatePath: vi.fn(),
+}));
+
+vi.mock("@/services/processService", () => ({ runGentleAiSync }));
+vi.mock("@/services/syncStateService", () => ({ writeSyncTimestamp }));
+vi.mock("@/services/modelCatalogService", () => ({
+  clearServerModelCatalogCache,
+}));
+vi.mock("next/cache", () => ({ revalidatePath }));
+
 import { OPTIONS, POST } from "../route";
 
 function mutationRequest(origin?: string): Request {
@@ -7,30 +27,26 @@ function mutationRequest(origin?: string): Request {
   return request;
 }
 
-function commandFailureRequest(): Request {
-  return new Request("http://localhost/api/sync", {
-    method: "POST",
-  });
-}
-
 describe("POST /api/sync", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
   it("rejects missing Origin before running sync", async () => {
-    process.env.PRESETT_TEST_SYNC_COMMAND = "missing-command-xyz";
     const response = await POST(mutationRequest());
-    delete process.env.PRESETT_TEST_SYNC_COMMAND;
 
     expect(response.status).toBe(403);
+    expect(runGentleAiSync).not.toHaveBeenCalled();
     await expect(response.json()).resolves.toEqual({
       error: { message: "Forbidden local API origin" },
     });
   });
 
   it("rejects non-loopback Origin before running sync", async () => {
-    process.env.PRESETT_TEST_SYNC_COMMAND = "missing-command-xyz";
     const response = await POST(mutationRequest("http://evil.test"));
-    delete process.env.PRESETT_TEST_SYNC_COMMAND;
 
     expect(response.status).toBe(403);
+    expect(runGentleAiSync).not.toHaveBeenCalled();
     await expect(response.json()).resolves.toEqual({
       error: { message: "Forbidden local API origin" },
     });
@@ -44,25 +60,66 @@ describe("POST /api/sync", () => {
   });
 
   it("returns error when gentle-ai is missing", async () => {
-    process.env.PRESETT_TEST_SYNC_COMMAND = "missing-command-xyz";
-    const request = commandFailureRequest();
-    request.headers.set("Origin", "http://localhost:5173");
-    const response = await POST(request);
-    delete process.env.PRESETT_TEST_SYNC_COMMAND;
+    runGentleAiSync.mockResolvedValue({
+      ok: false,
+      error: { code: "FILE_MISSING", message: "unavailable" },
+    });
+    const response = await POST(mutationRequest("http://localhost:5173"));
 
     expect(response.status).toBe(503);
+    expect(writeSyncTimestamp).not.toHaveBeenCalled();
   });
 
   it("returns an error when gentle-ai exits unsuccessfully", async () => {
-    process.env.PRESETT_TEST_SYNC_COMMAND = "node";
-    const request = commandFailureRequest();
-    request.headers.set("Origin", "http://localhost:5173");
-    const response = await POST(request);
-    delete process.env.PRESETT_TEST_SYNC_COMMAND;
+    runGentleAiSync.mockResolvedValue({
+      ok: true,
+      value: { exitCode: 1, stdout: "", stderr: "boom" },
+    });
+    const response = await POST(mutationRequest("http://localhost:5173"));
 
     expect(response.status).toBe(500);
+    expect(writeSyncTimestamp).not.toHaveBeenCalled();
     await expect(response.json()).resolves.toEqual({
       error: { message: "Gentle-AI sync failed" },
     });
+  });
+
+  it("returns success and persists the timestamp when sync succeeds", async () => {
+    runGentleAiSync.mockResolvedValue({
+      ok: true,
+      value: { exitCode: 0, stdout: "ok", stderr: "" },
+    });
+    writeSyncTimestamp.mockResolvedValue({ ok: true, value: undefined });
+    const response = await POST(mutationRequest("http://localhost:5173"));
+
+    expect(response.status).toBe(200);
+    expect(writeSyncTimestamp).toHaveBeenCalledTimes(1);
+    expect(revalidatePath).toHaveBeenCalledWith("/");
+    expect(clearServerModelCatalogCache).toHaveBeenCalledTimes(1);
+    await expect(response.json()).resolves.toEqual({
+      exitCode: 0,
+      stdout: "ok",
+      stderr: "",
+    });
+  });
+
+  it("keeps HTTP success with a warning when persistence fails", async () => {
+    runGentleAiSync.mockResolvedValue({
+      ok: true,
+      value: { exitCode: 0, stdout: "ok", stderr: "" },
+    });
+    writeSyncTimestamp.mockResolvedValue({
+      ok: false,
+      error: { code: "ATOMIC_WRITE_FAILED", message: "disk full" },
+    });
+    const response = await POST(mutationRequest("http://localhost:5173"));
+
+    expect(response.status).toBe(200);
+    expect(writeSyncTimestamp).toHaveBeenCalledTimes(1);
+    expect(revalidatePath).toHaveBeenCalledWith("/");
+    const body = await response.json();
+    expect(body.exitCode).toBe(0);
+    expect(typeof body.warning).toBe("string");
+    expect(body.warning.length).toBeGreaterThan(0);
   });
 });

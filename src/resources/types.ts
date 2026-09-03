@@ -44,7 +44,8 @@ export interface Resources {
   "dashboard_stat_models_label": string;
   "dashboard_stat_profiles_label": string;
   "dashboard_stat_backups_label": string;
-  "dashboard_stat_system_label": string;
+  "dashboard_stat_last_backup_label": string;
+  "dashboard_stat_last_sync_label": string;
   "dashboard_gentle_ai_version": string;
   "dashboard_quick_access_title": string;
   "dashboard_agents_title": string;
@@ -54,6 +55,7 @@ export interface Resources {
   "dashboard_agent_add": string;
   "dashboard_agent_models": string;
   "dashboard_agent_model_label": string;
+  "dashboard_last_backup_never": string;
   "dashboard_last_sync_never": string;
   "dashboard_status_badge": string;
   "quick_action_models_title": string;
@@ -128,6 +130,20 @@ export interface Resources {
   "backups_pin": string;
   "backups_unpin": string;
   "backups_delete": string;
+  "backups_view_details": string;
+  "backups_detail_eyebrow": string;
+  "backups_detail_description": string;
+  "backups_detail_close": string;
+  "backups_detail_date": string;
+  "backups_detail_size": string;
+  "backups_detail_file_count": string;
+  "backups_detail_loading": string;
+  "backups_detail_error": string;
+  "backups_detail_files_title": string;
+  "backups_detail_files_empty": string;
+  "backups_detail_file_protected": string;
+  "backups_detail_preview_title": string;
+  "backups_detail_preview_unavailable": string;
   "backups_cancel": string;
   "backups_deleteConfirmTitle": string;
   "backups_deleteConfirmDesc": string;
