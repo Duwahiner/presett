@@ -9,6 +9,11 @@ export interface BackupInfo {
   pinned: boolean;
 }
 
+export interface BackupDetail extends BackupInfo {
+  files: Array<{ path: string | null }>;
+  changePreview: { available: false };
+}
+
 export interface SyncResult {
   exitCode: number;
   stdout: string;
@@ -17,6 +22,10 @@ export interface SyncResult {
 
 export async function listBackups(): Promise<{ backups: BackupInfo[] }> {
   return get("/backups");
+}
+
+export async function getBackupDetail(id: string): Promise<{ backup: BackupDetail }> {
+  return get(`/backups/${encodeURIComponent(id)}`);
 }
 
 export async function runSync(): Promise<SyncResult> {

@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { mkdtemp, mkdir, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { GET } from "../route";
-import { POST, OPTIONS } from "../[id]/route";
+import { GET as listBackupsGET } from "../route";
+import { GET as backupDetailGET, POST, OPTIONS } from "../[id]/route";
 
 const backupActions = vi.hoisted(() => ({
   restoreBackup: vi.fn(),
@@ -50,13 +50,70 @@ describe("GET /api/backups", () => {
     );
     await writeFile(join(backupDir, "snapshot.tar.gz"), "x");
 
-    const response = await GET();
+    const response = await listBackupsGET();
     const body = await response.json();
 
     expect(response.status).toBe(200);
     expect(body.backups).toHaveLength(1);
     expect(body.backups[0].fileCount).toBe(1);
   });
+});
+
+describe("GET /api/backups/[id]", () => {
+  let tempDir = "";
+
+  beforeEach(async () => {
+    tempDir = await mkdtemp(join(tmpdir(), "presett-backup-detail-api-"));
+    process.env.PRESETT_TEST_BACKUPS_DIR = tempDir;
+  });
+
+  afterEach(async () => {
+    delete process.env.PRESETT_TEST_BACKUPS_DIR;
+    await rm(tempDir, { recursive: true, force: true });
+  });
+
+  function params(id: string) {
+    return { params: Promise.resolve({ id }) };
+  }
+
+  it("returns safe detail without exposing out-of-root entry paths", async () => {
+    const backupDir = join(tempDir, "backup-detail");
+    await mkdir(backupDir, { recursive: true });
+    await writeFile(join(backupDir, "manifest.json"), JSON.stringify({
+      id: "backup-detail",
+      created_at: "2026-08-10T12:00:00Z",
+      root_dir: "/home/user/project",
+      entries: [
+        { original_path: "/home/user/project/settings.json" },
+        { original_path: "/home/user/private/token.json" },
+      ],
+    }));
+    await writeFile(join(backupDir, "snapshot.tar.gz"), "snapshot");
+
+    const response = await backupDetailGET(
+      new Request("http://localhost/api/backups/backup-detail"),
+      params("backup-detail"),
+    );
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.backup.files).toEqual([{ path: "settings.json" }, { path: null }]);
+    expect(body.backup.changePreview).toEqual({ available: false });
+    expect(JSON.stringify(body)).not.toContain("private/token");
+  });
+
+  it.each(["../backup", "backup/child", "backup tar;rm"])(
+    "rejects unsafe detail id: %s",
+    async (id) => {
+      const response = await backupDetailGET(
+        new Request("http://localhost/api/backups/invalid"),
+        params(id),
+      );
+
+      expect(response.status).toBe(400);
+      expect(await response.json()).toEqual({ error: { message: "Invalid backup id" } });
+    },
+  );
 });
 
 describe("POST /api/backups/[id]", () => {

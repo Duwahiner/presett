@@ -16,6 +16,7 @@ import {
   pinBackup,
   unpinBackup,
   deleteBackup,
+  getBackupDetail,
 } from "@/services/backupsService";
 
 const backupManifest = (overrides: Record<string, unknown> = {}) => ({
@@ -145,6 +146,58 @@ describe("readBackupManifest", () => {
   it("returns error for missing manifest", async () => {
     const result = await readBackupManifest(tempDir, "missing");
     expect(result.ok).toBe(false);
+  });
+});
+
+describe("getBackupDetail", () => {
+  let tempDir = "";
+
+  beforeEach(async () => {
+    tempDir = await mkdtemp(join(tmpdir(), "presett-backup-detail-"));
+  });
+
+  afterEach(async () => {
+    await rm(tempDir, { recursive: true, force: true });
+  });
+
+  it("returns manifest metadata and only safe display paths", async () => {
+    await createBackupFixture(tempDir, "backup-detail", {
+      rootDir: "/home/user/project",
+      snapshot: "snapshot",
+      entries: [
+        { original_path: "/home/user/project/config/settings.json" },
+        { original_path: "agents/reviewer.md" },
+        { original_path: "/home/user/private/token.json" },
+        { original_path: "../outside.txt" },
+      ],
+    });
+
+    const result = await getBackupDetail(tempDir, "backup-detail");
+
+    expect(result.ok).toBe(true);
+    if (result.ok) {
+      expect(result.value).toMatchObject({
+        id: "backup-detail",
+        source: "/home/user/project",
+        fileCount: 4,
+        size: 8,
+        changePreview: { available: false },
+      });
+      expect(result.value.files).toEqual([
+        { path: "config/settings.json" },
+        { path: "agents/reviewer.md" },
+        { path: null },
+        { path: null },
+      ]);
+      expect(JSON.stringify(result.value.files)).not.toContain("private/token");
+    }
+  });
+
+  it("rejects traversal before reading a manifest", async () => {
+    const result = await getBackupDetail(tempDir, "../outside");
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("SCHEMA_INVALID");
   });
 });
 

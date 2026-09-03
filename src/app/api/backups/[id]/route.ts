@@ -4,6 +4,7 @@ import {
   pinBackup,
   unpinBackup,
   deleteBackup,
+  getBackupDetail,
   DEFAULT_GENTLE_AI_BACKUPS_DIR,
 } from "@/services/backupsService";
 import {
@@ -43,11 +44,32 @@ export async function OPTIONS() {
   return new NextResponse(null, {
     status: 204,
     headers: {
-      Allow: "OPTIONS, POST",
-      "Access-Control-Allow-Methods": "OPTIONS, POST",
+      Allow: "OPTIONS, GET, POST",
+      "Access-Control-Allow-Methods": "OPTIONS, GET, POST",
       "Access-Control-Allow-Headers": "Content-Type",
     },
   });
+}
+
+export async function GET(
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  const { id } = await params;
+  const backupPathResult = await resolveBackupPath(backupsDir(), id);
+  if (!backupPathResult.ok) {
+    return NextResponse.json(buildSafeError(backupPathResult.message), {
+      status: backupPathResult.status,
+    });
+  }
+
+  const result = await getBackupDetail(backupsDir(), id);
+  if (!result.ok) {
+    const status = result.error.code === "FILE_MISSING" ? 404 : 422;
+    return NextResponse.json(buildSafeError("Backup detail unavailable"), { status });
+  }
+
+  return NextResponse.json({ backup: result.value });
 }
 
 export async function POST(

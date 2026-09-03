@@ -1,6 +1,7 @@
 import { beforeEach, describe, it, expect, vi } from "vitest";
 import {
   deleteBackup,
+  getBackupDetail,
   listBackups,
   pinBackup,
   restoreBackup,
@@ -34,6 +35,15 @@ describe("backupsApiService", () => {
 
     expect(mockedGet).toHaveBeenCalledWith("/backups");
     expect(result).toEqual({ backups: [] });
+  });
+
+  it("loads one encoded backup detail", async () => {
+    const mockedGet = vi.mocked(api.get);
+    mockedGet.mockResolvedValue({ backup: { id: "backup one" } });
+
+    await getBackupDetail("backup one");
+
+    expect(mockedGet).toHaveBeenCalledWith("/backups/backup%20one");
   });
 
   it("runs sync", async () => {
