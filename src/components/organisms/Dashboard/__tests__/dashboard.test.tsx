@@ -45,7 +45,8 @@ describe("Dashboard", () => {
     expect(screen.queryByText("28")).not.toBeNull();
     expect(screen.queryByText(defaultStats.lastBackup)).not.toBeNull();
     expect(screen.queryByText("Last backup")).not.toBeNull();
-    expect(screen.queryByText("Last Sync")).toBeNull();
+    expect(screen.queryByText("Last sync")).not.toBeNull();
+    expect(screen.queryByText("Never")).not.toBeNull();
   });
 
   it("renders different stat values from props", () => {
@@ -139,6 +140,46 @@ describe("Dashboard", () => {
     expect(container.firstElementChild?.className).toContain("min-h-0");
     expect(container.firstElementChild?.className).toContain("overflow-hidden");
     expect(container.firstElementChild?.className).not.toContain("overflow-y-auto");
+  });
+
+  it("shows the last sync value when lastSyncAt is provided", () => {
+    const lastSyncAt = "2026-08-10T21:00:00.000Z";
+    const stats: DashboardStats = {
+      ...defaultStats,
+      lastSyncAt,
+    };
+
+    render(<Dashboard stats={stats} agents={defaultAgents} />);
+
+    expect(screen.queryByText(new Intl.DateTimeFormat("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    }).format(new Date(lastSyncAt)))).not.toBeNull();
+    expect(screen.queryByText(lastSyncAt)).toBeNull();
+    expect(screen.queryByText("Last sync")).not.toBeNull();
+  });
+
+  it("shows Nunca for the sync card when lastSyncAt is missing", () => {
+    setLocale("es");
+    render(<Dashboard stats={defaultStats} agents={defaultAgents} />);
+
+    expect(screen.queryByText("Nunca")).not.toBeNull();
+    expect(screen.queryByText("Última sincronización")).not.toBeNull();
+  });
+
+  it("does not reuse the last backup timestamp for the sync card", () => {
+    render(<Dashboard stats={defaultStats} agents={defaultAgents} />);
+
+    // defaultStats.lastBackup is a timestamp, not "Never": the sync card must
+    // render its own fallback instead of reusing that backup timestamp.
+    expect(screen.queryByText("Never")).not.toBeNull();
+    expect(screen.queryByText(defaultStats.lastBackup)).not.toBeNull();
+    expect(screen.queryByText("Last sync")).not.toBeNull();
+    expect(screen.queryByText("Last backup")).not.toBeNull();
   });
 
 });

@@ -32,6 +32,13 @@ function computeAuditLastBackup(): string {
 export const AUDIT_FIXTURE_LAST_BACKUP = computeAuditLastBackup();
 export const AUDIT_FIXTURE_GENTLE_AI_VERSION = "v0.0.0";
 
+/**
+ * Frozen last-sync timestamp derived from the shared audit timestamp.
+ * Kept independent of the backup fixture to prove the sync card never
+ * reuses backup data.
+ */
+export const AUDIT_FIXTURE_LAST_SYNC = AUDIT_FIXTURE_TIMESTAMP;
+
 // ─── Dashboard ───────────────────────────────────────────────────────────────
 export const AUDIT_FIXTURE_CONFIG: { assignments: DashboardAgent[]; defaultAgent: string } = {
   defaultAgent: "sdd-orchestrator",

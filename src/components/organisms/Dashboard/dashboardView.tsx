@@ -11,6 +11,7 @@ import {
   CircleDashed,
   FolderClock,
   Plus,
+  RefreshCw,
   Settings2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -20,6 +21,21 @@ import { Badge } from "@/components/ui/badge";
 import { Stat } from "@/components/atoms/Stat/stat";
 import { t } from "@/resources/resources";
 import type { DashboardProps, DashboardAgent } from "./dashboardTypes";
+
+const lastSyncDateFormatter = new Intl.DateTimeFormat("es-ES", {
+  day: "2-digit",
+  month: "2-digit",
+  year: "numeric",
+  hour: "2-digit",
+  minute: "2-digit",
+  hourCycle: "h23",
+});
+
+function formatLastSyncAt(lastSyncAt: string | undefined): string {
+  return lastSyncAt
+    ? lastSyncDateFormatter.format(new Date(lastSyncAt))
+    : t("dashboard_last_sync_never");
+}
 
 function formatAgentName(agentKey: string): { prefix: string; suffix: string } {
   const idx = agentKey.indexOf("-");
@@ -178,6 +194,12 @@ export function DashboardView({ className, stats, agents }: DashboardProps) {
           value={stats.lastBackup}
           icon={Activity}
           markerClassName="bg-primary"
+        />
+        <Stat
+          label={t("dashboard_stat_last_sync_label")}
+          value={formatLastSyncAt(stats.lastSyncAt)}
+          icon={RefreshCw}
+          markerClassName="bg-chart-2"
         />
       </section>
 

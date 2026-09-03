@@ -46,3 +46,7 @@ export function presettBackupsDir(ctx: PathContext = {}): string {
 export function diagnosticsStatePath(ctx: PathContext = {}): string {
   return join(ctx.presettDir ?? defaultPresettDir(), "diagnostics.json");
 }
+
+export function syncStatePath(ctx: PathContext = {}): string {
+  return join(ctx.presettDir ?? defaultPresettDir(), "sync-state.json");
+}

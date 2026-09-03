@@ -70,4 +70,25 @@ describe("buildDashboardData", () => {
 
     expect(result.stats.lastBackup).toBe("Never");
   });
+
+  it("includes lastSyncAt when a sync timestamp is provided", () => {
+    const result = buildDashboardData(
+      { assignments: agents },
+      { profiles: [] },
+      { backups },
+      "2026-08-10T21:00:00.000Z",
+    );
+
+    expect(result.stats.lastSyncAt).toBe("2026-08-10T21:00:00.000Z");
+  });
+
+  it("leaves lastSyncAt undefined when no sync timestamp is provided", () => {
+    const result = buildDashboardData(
+      { assignments: agents },
+      { profiles: [] },
+      { backups },
+    );
+
+    expect(result.stats.lastSyncAt).toBeUndefined();
+  });
 });
