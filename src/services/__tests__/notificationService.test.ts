@@ -7,6 +7,8 @@ import {
   getAll,
   getUnreadCount,
   prune,
+  hasNotifiedUpdate,
+  markUpdateNotified,
   STORAGE_KEY,
   MAX_ENTRIES,
   TTL_MS,
@@ -225,5 +227,30 @@ describe("TTL constant", () => {
 describe("MAX_ENTRIES constant", () => {
   it("MAX_ENTRIES is 100", () => {
     expect(MAX_ENTRIES).toBe(100);
+  });
+});
+
+describe("update dedupe", () => {
+  it("returns false for an unseen release", () => {
+    expect(hasNotifiedUpdate("1.3.0", "stable")).toBe(false);
+  });
+
+  it("marks and recognizes a (version, channel) pair", () => {
+    markUpdateNotified("1.3.0", "stable");
+    expect(hasNotifiedUpdate("1.3.0", "stable")).toBe(true);
+    expect(hasNotifiedUpdate("1.3.0", "rc")).toBe(false);
+    expect(hasNotifiedUpdate("1.4.0", "stable")).toBe(false);
+  });
+
+  it("is idempotent across repeated marks", () => {
+    markUpdateNotified("1.3.0", "stable");
+    markUpdateNotified("1.3.0", "stable");
+    expect(hasNotifiedUpdate("1.3.0", "stable")).toBe(true);
+  });
+
+  it("persists across reads (simulated reload)", () => {
+    markUpdateNotified("2.0.0", "rc");
+    // A fresh read after unmount/reload sees the same state.
+    expect(hasNotifiedUpdate("2.0.0", "rc")).toBe(true);
   });
 });

@@ -3,6 +3,7 @@
 import { useCallback } from "react";
 import { toast } from "sonner";
 import { useNotifications } from "@/contexts/notificationContext";
+import { hasNotifiedUpdate, markUpdateNotified } from "@/services/notificationService";
 
 export function useNotificationToasts() {
   const { notifications, unreadCount, push, resolve, dismiss, markAllRead } =
@@ -31,6 +32,22 @@ export function useNotificationToasts() {
     [push],
   );
 
+  const onUpdate = useCallback(
+    (
+      title: string,
+      message: string,
+      notice: { version: string; channel: string },
+    ): string | null => {
+      // Semantic dedupe across reloads and components (dashboard + diagnostics).
+      if (hasNotifiedUpdate(notice.version, notice.channel)) return null;
+      markUpdateNotified(notice.version, notice.channel);
+      const id = push({ severity: "update", title, message });
+      toast.info(message);
+      return id;
+    },
+    [push],
+  );
+
   return {
     notifications,
     unreadCount,
@@ -41,5 +58,6 @@ export function useNotificationToasts() {
     onError,
     onSuccess,
     onInfo,
+    onUpdate,
   };
 }

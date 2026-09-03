@@ -52,4 +52,17 @@ describe("POST /api/sync", () => {
 
     expect(response.status).toBe(503);
   });
+
+  it("returns an error when gentle-ai exits unsuccessfully", async () => {
+    process.env.PRESETT_TEST_SYNC_COMMAND = "node";
+    const request = commandFailureRequest();
+    request.headers.set("Origin", "http://localhost:5173");
+    const response = await POST(request);
+    delete process.env.PRESETT_TEST_SYNC_COMMAND;
+
+    expect(response.status).toBe(500);
+    await expect(response.json()).resolves.toEqual({
+      error: { message: "Gentle-AI sync failed" },
+    });
+  });
 });

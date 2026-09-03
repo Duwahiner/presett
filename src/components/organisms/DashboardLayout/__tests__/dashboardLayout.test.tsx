@@ -36,12 +36,13 @@ vi.mock("@/services/diagnosticsApiService", () => ({
   })),
 }));
 
-const { mockToastSuccess, mockToastError } = vi.hoisted(() => ({
+const { mockToastSuccess, mockToastError, mockToastInfo } = vi.hoisted(() => ({
   mockToastSuccess: vi.fn(),
   mockToastError: vi.fn(),
+  mockToastInfo: vi.fn(),
 }));
 vi.mock("sonner", () => ({
-  toast: { success: mockToastSuccess, error: mockToastError },
+  toast: { success: mockToastSuccess, error: mockToastError, info: mockToastInfo },
   Toaster: () => null,
 }));
 
@@ -52,6 +53,7 @@ describe("DashboardLayout", () => {
     mockPush.mockClear();
     mockToastSuccess.mockClear();
     mockToastError.mockClear();
+    mockToastInfo.mockClear();
     mockPathname.mockReturnValue("/");
     vi.mocked(checkDiagnosticsUpdates).mockResolvedValue({ settings: { frequencyMinutes: 60 }, status: { phase: "idle" }, notice: null });
   });
@@ -73,11 +75,22 @@ describe("DashboardLayout", () => {
     expect(screen.queryByText("Agents")).toBeNull();
     expect(screen.queryByText("Sync Activity")).toBeNull();
     expect(screen.queryByText("Permissions")).toBeNull();
-    expect(screen.queryByRole("link", { name: "Diagnostics" })).toBeNull();
     expect(screen.queryByRole("link", { name: "Search" })).toBeNull();
     expect(screen.queryByText("Dashboard content")).not.toBeNull();
     expect(screen.getByText("Gentleman Stack")).not.toBeNull();
     expect(screen.getByText("full-gentleman")).not.toBeNull();
+  });
+
+  it("renders a Diagnostics sidebar link to /diagnostics", () => {
+    render(
+      <DashboardLayout>
+        <main>Child</main>
+      </DashboardLayout>,
+    );
+
+    const link = screen.getByRole("link", { name: "Diagnostics" });
+    expect(link).not.toBeNull();
+    expect(link.getAttribute("href")).toBe("/diagnostics");
   });
 
   it("renders the usage stats navigation entry linking to the camelCase route", () => {
@@ -160,20 +173,54 @@ describe("DashboardLayout", () => {
     expect(screen.getByRole("button", { name: "Dark mode" })).not.toBeNull();
   });
 
-  it("renders the brand logo image in the sidebar header", () => {
-    render(
+  it("exposes exactly one meaningful PreSett logo per theme in the sidebar header", () => {
+    const { container } = render(
       <DashboardLayout>
         <main>Child</main>
       </DashboardLayout>,
     );
 
-    const logo = screen.getByRole("img", { name: "PreSett" });
-    expect(logo.getAttribute("src")).toBe("/logo.svg");
+    const lightLogo = container.querySelector<HTMLImageElement>('img[src="/logo.svg"]');
+    const darkLogo = container.querySelector<HTMLImageElement>('img[src="/logo_dark.svg"]');
+    expect(lightLogo).not.toBeNull();
+    expect(darkLogo).not.toBeNull();
+
+    // Both theme variants carry the meaningful accessible brand name; dark is not decorative
+    expect(lightLogo?.getAttribute("alt")).toBe("PreSett");
+    expect(darkLogo?.getAttribute("alt")).toBe("PreSett");
+    expect(darkLogo?.getAttribute("aria-hidden")).toBeNull();
+    expect(darkLogo?.getAttribute("src")).toBe("/logo_dark.svg");
+
+    // Visibility classes implement the theme swap without aria-hidden/empty alt
+    expect(lightLogo?.className).toContain("h-7.5");
+    expect(lightLogo?.className).toContain("w-auto");
+    expect(lightLogo?.className).toContain("dark:hidden");
+    expect(lightLogo?.className).not.toContain("bg-white");
+    expect(lightLogo?.className).not.toContain("p-1");
+    expect(darkLogo?.className).toContain("hidden");
+    expect(darkLogo?.className).toContain("dark:block");
+    expect(darkLogo?.className).toContain("h-7.5");
+    expect(darkLogo?.className).toContain("w-auto");
+    expect(darkLogo?.className).not.toContain("bg-white");
+    expect(darkLogo?.className).not.toContain("p-1");
+
+    // LIGHT theme: dark logo is display:none (hidden), light logo exposed -> exactly one name
+    darkLogo!.style.display = "none";
+    const lightModeLogos = screen.getAllByRole("img", { name: "PreSett" });
+    expect(lightModeLogos).toHaveLength(1);
+    expect(lightModeLogos[0].getAttribute("src")).toBe("/logo.svg");
+
+    // DARK theme: light logo is display:none (dark:hidden), dark logo exposed -> exactly one name
+    lightLogo!.style.display = "none";
+    darkLogo!.style.display = "block";
+    const darkModeLogos = screen.getAllByRole("img", { name: "PreSett" });
+    expect(darkModeLogos).toHaveLength(1);
+    expect(darkModeLogos[0].getAttribute("src")).toBe("/logo_dark.svg");
   });
 
-  it("renders the brand logo image in the mobile navigation header", async () => {
+  it("exposes exactly one meaningful PreSett logo per theme in the mobile navigation header", async () => {
     const user = userEvent.setup();
-    render(
+    const { container } = render(
       <DashboardLayout>
         <main>Child</main>
       </DashboardLayout>,
@@ -181,8 +228,46 @@ describe("DashboardLayout", () => {
 
     await user.click(screen.getByRole("button", { name: "Open menu" }));
     const mobileNav = screen.getByRole("navigation", { name: "Menu" });
-    const logo = within(mobileNav).getByRole("img", { name: "PreSett" });
-    expect(logo.getAttribute("src")).toBe("/logo.svg");
+
+    const lightLogo = mobileNav.querySelector<HTMLImageElement>('img[src="/logo.svg"]');
+    const darkLogo = mobileNav.querySelector<HTMLImageElement>('img[src="/logo_dark.svg"]');
+    expect(lightLogo).not.toBeNull();
+    expect(darkLogo).not.toBeNull();
+
+    // Both theme variants carry the meaningful accessible brand name; dark is not decorative
+    expect(lightLogo?.getAttribute("src")).toBe("/logo.svg");
+    expect(darkLogo?.getAttribute("src")).toBe("/logo_dark.svg");
+    expect(darkLogo?.getAttribute("alt")).toBe("PreSett");
+    expect(darkLogo?.getAttribute("aria-hidden")).toBeNull();
+
+    // Visibility classes implement the theme swap without aria-hidden/empty alt
+    expect(lightLogo?.className).toContain("h-5.5");
+    expect(lightLogo?.className).toContain("w-auto");
+    expect(lightLogo?.className).toContain("dark:hidden");
+    expect(lightLogo?.className).not.toContain("bg-white");
+    expect(lightLogo?.className).not.toContain("p-1");
+    expect(darkLogo?.className).toContain("hidden");
+    expect(darkLogo?.className).toContain("dark:block");
+    expect(darkLogo?.className).toContain("h-5.5");
+    expect(darkLogo?.className).toContain("w-auto");
+    expect(darkLogo?.className).not.toContain("bg-white");
+    expect(darkLogo?.className).not.toContain("p-1");
+
+    // LIGHT theme: dark logo hidden -> exactly one name exposed within the mobile nav
+    darkLogo!.style.display = "none";
+    const lightModeLogos = within(mobileNav).getAllByRole("img", { name: "PreSett" });
+    expect(lightModeLogos).toHaveLength(1);
+    expect(lightModeLogos[0].getAttribute("src")).toBe("/logo.svg");
+
+    // DARK theme: light logo hidden -> exactly one name exposed (the dark logo)
+    lightLogo!.style.display = "none";
+    darkLogo!.style.display = "block";
+    const darkModeLogos = within(mobileNav).getAllByRole("img", { name: "PreSett" });
+    expect(darkModeLogos).toHaveLength(1);
+    expect(darkModeLogos[0].getAttribute("src")).toBe("/logo_dark.svg");
+
+    // Desktop and mobile each render the theme-swapped logo pair
+    expect(container.querySelectorAll('img[src="/logo_dark.svg"]').length).toBe(2);
   });
 
   it("keeps the Dashboard shell fixed without scrolling the shared main region", () => {
@@ -225,6 +310,45 @@ describe("DashboardLayout", () => {
 
     const settingsLink = screen.getByRole("link", { name: "Settings" });
     expect(settingsLink.getAttribute("aria-current")).toBe("page");
+  });
+
+  it("highlights the diagnostics route in the sidebar", () => {
+    mockPathname.mockReturnValue("/diagnostics");
+    render(
+      <DashboardLayout>
+        <main>Child</main>
+      </DashboardLayout>,
+    );
+
+    const diagnosticsLink = screen.getByRole("link", { name: "Diagnostics" });
+    expect(diagnosticsLink.getAttribute("aria-current")).toBe("page");
+    expect(diagnosticsLink.className).toContain("shadow-[2px_2px_0_0_var(--foreground)]");
+  });
+
+  it("exposes the diagnostics entry in the mobile navigation drawer", async () => {
+    const user = userEvent.setup();
+    render(
+      <DashboardLayout>
+        <main>Child</main>
+      </DashboardLayout>,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Open menu" }));
+    const mobileNav = screen.getByRole("navigation", { name: "Menu" });
+    const diagnosticsLink = within(mobileNav).getByRole("link", { name: "Diagnostics" });
+    expect(diagnosticsLink.getAttribute("href")).toBe("/diagnostics");
+  });
+
+  it("renders the translated diagnostics navigation label in Spanish", () => {
+    setLocale("es");
+    render(
+      <DashboardLayout>
+        <main>Child</main>
+      </DashboardLayout>,
+    );
+
+    const link = screen.getByRole("link", { name: "Diagnósticos" });
+    expect(link.getAttribute("href")).toBe("/diagnostics");
   });
 
   it("renders Spanish navigation when locale is es", () => {
@@ -299,7 +423,7 @@ describe("DashboardLayout", () => {
     expect(updateNotif.message).toContain("1.3.0");
   });
 
-  it("update detection does not invoke toast.success or toast.error (Sonner stays silent)", async () => {
+  it("surfaces a visible toast when an update is detected on page load", async () => {
     vi.mocked(checkDiagnosticsUpdates).mockResolvedValue({
       status: { phase: "success", checkedAt: "2026-08-13T10:00:00.000Z" },
       settings: { frequencyMinutes: 60 },
@@ -310,16 +434,51 @@ describe("DashboardLayout", () => {
 
     render(<DashboardLayout><main>Child</main></DashboardLayout>);
 
-    // Wait for the async update detection chain to complete
-    await waitFor(() => {
-      const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
-      const updateNotif = stored.find((n: { severity: string }) => n.severity === "update");
-      expect(updateNotif).toBeDefined();
-    });
-
-    // Sonner toast must NOT be invoked for update notifications
+    // Update is visibly surfaced at detection time via the Sonner toast mechanism.
+    await waitFor(() => expect(mockToastInfo).toHaveBeenCalledTimes(1));
+    expect(mockToastInfo).toHaveBeenCalledWith(expect.stringContaining("1.3.0"));
+    // It is NOT reported as a generic success/error toast.
     expect(mockToastSuccess).not.toHaveBeenCalled();
     expect(mockToastError).not.toHaveBeenCalled();
+    // And it remains available in the persistent bell store (not only a toast).
+    const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
+    expect(stored.some((n: { severity: string }) => n.severity === "update")).toBe(true);
+  });
+
+  it("does not duplicate the update notification for the same release across reloads", async () => {
+    vi.mocked(checkDiagnosticsUpdates).mockResolvedValue({
+      status: { phase: "success", checkedAt: "2026-08-13T10:00:00.000Z" },
+      settings: { frequencyMinutes: 60 },
+      installedVersion: "1.2.0",
+      channels: { stable: { latestVersion: "1.3.0", updateAvailable: true }, rc: { latestVersion: "1.4.0-rc.1", updateAvailable: true } },
+      notice: { channel: "stable", version: "1.3.0", pending: true },
+    });
+
+    // First mount: update detected and notified.
+    const { unmount } = render(<DashboardLayout><main>Child</main></DashboardLayout>);
+    await waitFor(() => expect(mockToastInfo).toHaveBeenCalledTimes(1));
+    unmount();
+
+    // Reload (fresh mount): same release must NOT re-notify.
+    render(<DashboardLayout><main>Child</main></DashboardLayout>);
+    await waitFor(() => {
+      const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
+      expect(stored.filter((n: { severity: string }) => n.severity === "update")).toHaveLength(1);
+    });
+    expect(mockToastInfo).toHaveBeenCalledTimes(1);
+  });
+
+  it("does not show a false update indication when the release check fails", async () => {
+    vi.mocked(checkDiagnosticsUpdates).mockRejectedValue(new Error("local service unavailable"));
+
+    render(<DashboardLayout><main>Child</main></DashboardLayout>);
+
+    expect(await screen.findByText("Child")).not.toBeNull();
+    expect(screen.queryByRole("alert")).toBeNull();
+    expect(mockToastInfo).not.toHaveBeenCalled();
+    expect(mockToastSuccess).not.toHaveBeenCalled();
+    const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
+    expect(stored.some((n: { severity: string }) => n.severity === "update")).toBe(false);
   });
 
   it("keeps the layout stable when the active update check fails", async () => {

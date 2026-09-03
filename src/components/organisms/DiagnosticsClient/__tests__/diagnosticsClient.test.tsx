@@ -5,6 +5,10 @@ import type { ReactNode } from "react";
 import { NotificationProvider } from "@/contexts/notificationContext";
 import { DiagnosticsClient } from "../diagnosticsClient";
 import { checkDiagnosticsUpdates, getDiagnostics } from "@/services/diagnosticsApiService";
+import { hasNotifiedUpdate } from "@/services/notificationService";
+
+const mockToast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }));
+vi.mock("sonner", () => ({ toast: mockToast }));
 
 function wrapper({ children }: { children: ReactNode }) {
   return <NotificationProvider>{children}</NotificationProvider>;
@@ -40,6 +44,7 @@ const updateState = {
 describe("DiagnosticsClient", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    localStorage.clear();
     vi.mocked(getDiagnostics).mockResolvedValue(diagnostics);
     vi.mocked(checkDiagnosticsUpdates).mockResolvedValue(updateState);
   });
@@ -77,6 +82,67 @@ describe("DiagnosticsClient", () => {
     await waitFor(() => expect(checkDiagnosticsUpdates).toHaveBeenCalledTimes(2));
     // Still no inline alert after manual check
     expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("surfaces a visible toast when an update is detected on page load", async () => {
+    render(<DiagnosticsClient />, { wrapper });
+
+    await screen.findByText("Gentle-AI CLI");
+    expect(mockToast.info).toHaveBeenCalledTimes(1);
+    expect(mockToast.info).toHaveBeenCalledWith(expect.stringContaining("1.3.0"));
+    // Update remains available in the persistent bell store, not only a toast.
+    const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
+    expect(stored.some((n: { severity: string }) => n.severity === "update")).toBe(true);
+  });
+
+  it("does not show a false success/update toast when the check fails", async () => {
+    vi.mocked(getDiagnostics).mockResolvedValue(diagnostics);
+    vi.mocked(checkDiagnosticsUpdates).mockRejectedValue(new Error("Network error"));
+
+    render(<DiagnosticsClient />, { wrapper });
+
+    await screen.findByText("Gentle-AI releases");
+    expect(mockToast.info).not.toHaveBeenCalled();
+    expect(mockToast.success).not.toHaveBeenCalled();
+    expect(mockToast.error).toHaveBeenCalled();
+  });
+
+  it("persists a single update notification across remounts (semantic dedupe)", async () => {
+    const { unmount } = render(<DiagnosticsClient />, { wrapper });
+    await screen.findByText("Gentle-AI CLI");
+    await waitFor(() => expect(mockToast.info).toHaveBeenCalledTimes(1));
+    unmount();
+
+    // Remount simulates navigation back to diagnostics; same release must not re-notify.
+    render(<DiagnosticsClient />, { wrapper });
+    await screen.findByText("Gentle-AI CLI");
+
+    expect(mockToast.info).toHaveBeenCalledTimes(1);
+    const stored = JSON.parse(localStorage.getItem("presett_notifications") ?? "[]");
+    expect(stored.filter((n: { severity: string }) => n.severity === "update")).toHaveLength(1);
+    expect(hasNotifiedUpdate("1.3.0", "stable")).toBe(true);
+  });
+
+  it("adopts the brutalist class/style contract", async () => {
+    const { container } = render(<DiagnosticsClient />, { wrapper });
+    await screen.findByText("Gentle-AI CLI");
+
+    // Sharp corners: no rounded-* utilities anywhere in the client.
+    const classNames = Array.from(container.querySelectorAll<HTMLElement>("[class]")).map((el) => el.className);
+    const flattened = classNames.join(" ");
+    expect(flattened).not.toMatch(/rounded-(sm|md|lg|xl|2xl|3xl|full)/);
+
+    // High-contrast borders and hard-shadow interaction treatment.
+    expect(flattened).toContain("border-border");
+    expect(flattened).toContain("shadow-[4px_4px_0_0_var(--foreground)]");
+    expect(flattened).toContain("active:shadow-none");
+
+    // Mono/uppercase structural labels.
+    expect(flattened).toContain("font-mono");
+    expect(flattened).toContain("uppercase");
+
+    // Semantic tokens only (no raw palette hex).
+    expect(flattened).not.toMatch(/#[0-9a-fA-F]{3,8}\b/);
   });
 
   it("shows an accessible error when diagnostics cannot load", async () => {

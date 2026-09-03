@@ -104,8 +104,8 @@ export function shouldRunDiagnosticsCheck(settings: UpdateSettings, lastCheckedA
 }
 
 function normalizeVersion(tag: string): string | null {
-  const version = tag.replace(/^v/i, "");
-  return /^\d+\.\d+\.\d+(?:[-.][0-9A-Za-z.-]+)?$/.test(version) ? version : null;
+  const match = tag.match(/\d+\.\d+\.\d+(?:[-.][0-9A-Za-z.-]+)?/);
+  return match?.[0] ?? null;
 }
 
 function compareVersions(a?: string, b?: string): number {
@@ -122,7 +122,7 @@ function compareVersions(a?: string, b?: string): number {
 }
 
 async function fetchOfficialReleases(signal: AbortSignal): Promise<unknown> {
-  const response = await fetch("https://api.github.com/repos/gentle-programming/gentle-ai/releases", {
+  const response = await fetch("https://api.github.com/repos/Gentleman-Programming/gentle-ai/releases", {
     headers: { Accept: "application/vnd.github+json" },
     signal,
   });
@@ -164,9 +164,10 @@ export async function checkGentleAiReleases(options: {
     }
     if (!latest.stable && !latest.rc) return fail("malformed", "Release response was not usable");
 
+    const installedVersion = normalizeVersion(options.installedVersion) ?? undefined;
     const channels = {
-      stable: { latestVersion: latest.stable, updateAvailable: compareVersions(latest.stable, options.installedVersion) > 0 },
-      rc: { latestVersion: latest.rc, updateAvailable: compareVersions(latest.rc, options.installedVersion) > 0 },
+      stable: { latestVersion: latest.stable, updateAvailable: compareVersions(latest.stable, installedVersion) > 0 },
+      rc: { latestVersion: latest.rc, updateAvailable: compareVersions(latest.rc, installedVersion) > 0 },
     };
     const pending = channels.stable.updateAvailable ? { channel: "stable" as const, version: latest.stable!, pending: true }
       : channels.rc.updateAvailable ? { channel: "rc" as const, version: latest.rc!, pending: true }
