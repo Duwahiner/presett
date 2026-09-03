@@ -49,9 +49,14 @@ vi.mock("@/components/organisms/ProfilesClient/profilesClientView", () => ({
 const mockToast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }));
 vi.mock("sonner", () => ({ toast: mockToast }));
 
-const { runSync } = vi.hoisted(() => ({ runSync: vi.fn() }));
-vi.mock("@/services/backupsApiService", () => ({
+const { runSync, listBackups, getBackupDetail } = vi.hoisted(() => ({
+  runSync: vi.fn(),
   listBackups: vi.fn().mockResolvedValue({ backups: [] }),
+  getBackupDetail: vi.fn(),
+}));
+vi.mock("@/services/backupsApiService", () => ({
+  listBackups,
+  getBackupDetail,
   runSync,
   pinBackup: vi.fn().mockResolvedValue(undefined),
   unpinBackup: vi.fn().mockResolvedValue(undefined),
@@ -179,6 +184,33 @@ describe("ModelsClient notification integration", () => {
 
 /* ── BackupsClient ── */
 describe("BackupsClient notification integration", () => {
+  it("loads the selected backup detail without navigation", async () => {
+    const backup = {
+      id: "backup-1",
+      source: "/project",
+      timestamp: "2026-08-10T20:00:00Z",
+      fileCount: 1,
+      size: 1024,
+      pinned: false,
+    };
+    listBackups.mockResolvedValueOnce({ backups: [backup] });
+    getBackupDetail.mockResolvedValueOnce({
+      backup: {
+        ...backup,
+        files: [{ path: "settings.json" }],
+        changePreview: { available: false },
+      },
+    });
+    const user = userEvent.setup();
+
+    render(<BackupsClient />, { wrapper });
+    await user.click(await screen.findByRole("button", { name: "View details" }));
+
+    expect(getBackupDetail).toHaveBeenCalledWith("backup-1");
+    expect(await screen.findByRole("dialog", { name: "backup-1" })).toBeTruthy();
+    expect(screen.getByText("settings.json")).toBeTruthy();
+  });
+
   it("sync error pushes persistent notification and shows error toast", async () => {
     const { runSync } = await import("@/services/backupsApiService");
     vi.mocked(runSync).mockRejectedValue(new Error("Connection refused"));

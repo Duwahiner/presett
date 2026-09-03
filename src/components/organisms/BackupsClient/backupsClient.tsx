@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   deleteBackup,
+  getBackupDetail,
   listBackups,
   pinBackup,
   restoreBackup,
@@ -13,6 +14,7 @@ import { t } from "@/resources/resources";
 import { useNotificationToasts } from "@/hooks/useNotificationToasts";
 import { BackupsClientView } from "./backupsClientView";
 import type { BackupInfo } from "./backupsClientTypes";
+import type { BackupDetail } from "@/services/backupsApiService";
 import { useAuditMode } from "@/lib/visual-audit/auditContext";
 import { AUDIT_FIXTURE_BACKUPS } from "@/lib/visual-audit/fixtures";
 
@@ -25,6 +27,11 @@ export function BackupsClient() {
   const [syncing, setSyncing] = useState(false);
   const [pendingAction, setPendingAction] = useState<string | null>(null);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [detailId, setDetailId] = useState<string | null>(null);
+  const [backupDetail, setBackupDetail] = useState<BackupDetail | null>(null);
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const detailRequestId = useRef(0);
   const { onError, onSuccess } = useNotificationToasts();
 
   async function refresh() {
@@ -135,6 +142,42 @@ export function BackupsClient() {
     }
   }
 
+  async function handleViewDetails(id: string) {
+    const requestId = ++detailRequestId.current;
+    setDetailId(id);
+    setBackupDetail(null);
+    setDetailError(null);
+
+    if (isAuditMode) {
+      setBackupDetail({
+        ...AUDIT_FIXTURE_BACKUPS.backups.find((backup) => backup.id === id)!,
+        files: [],
+        changePreview: { available: false },
+      });
+      return;
+    }
+
+    setDetailLoading(true);
+    try {
+      const data = await getBackupDetail(id);
+      if (detailRequestId.current === requestId) setBackupDetail(data.backup);
+    } catch (cause) {
+      if (detailRequestId.current === requestId) {
+        setDetailError(cause instanceof Error ? cause.message : String(cause));
+      }
+    } finally {
+      if (detailRequestId.current === requestId) setDetailLoading(false);
+    }
+  }
+
+  function handleDetailClose() {
+    detailRequestId.current += 1;
+    setDetailId(null);
+    setBackupDetail(null);
+    setDetailError(null);
+    setDetailLoading(false);
+  }
+
   return (
     <BackupsClientView
       backups={backups}
@@ -143,11 +186,17 @@ export function BackupsClient() {
       syncOutput={syncOutput}
       syncing={syncing}
       pendingAction={pendingAction}
+      detailBackup={backups.find((backup) => backup.id === detailId) ?? null}
+      backupDetail={backupDetail}
+      detailLoading={detailLoading}
+      detailError={detailError}
       onSync={handleSync}
       onRestore={handleRestore}
       onPin={handlePin}
       onUnpin={handleUnpin}
       onDelete={setDeleteConfirmId}
+      onViewDetails={handleViewDetails}
+      onDetailClose={handleDetailClose}
       deleteConfirmId={deleteConfirmId}
       onDeleteConfirm={handleDeleteConfirm}
       onDeleteCancel={() => setDeleteConfirmId(null)}
