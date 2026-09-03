@@ -111,6 +111,48 @@ describe("Gentle-AI release checks", () => {
     expect(writeState).toHaveBeenCalledWith(state);
   });
 
+  it("queries the official Gentleman-Programming releases endpoint and surfaces an available stable update", async () => {
+    const fetchMock = vi.fn(async (_input: unknown, _init?: unknown) =>
+      new Response(JSON.stringify([
+        { tag_name: "v1.0.0", prerelease: false, draft: false },
+        { tag_name: "v2.5.0", prerelease: false, draft: false },
+        { tag_name: "v2.6.0-rc.1", prerelease: true, draft: false },
+      ]), { status: 200, headers: { "Content-Type": "application/json" } }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    try {
+      const state = await checkGentleAiReleases({
+        installedVersion: "2.4.0",
+        now: new Date("2026-09-01T10:00:00Z"),
+        readState: async () => ({ settings: { frequencyMinutes: 60 } }),
+        writeState: async () => undefined,
+      });
+
+      const requestedUrl = String(fetchMock.mock.calls[0]?.[0]);
+      expect(requestedUrl).toBe("https://api.github.com/repos/Gentleman-Programming/gentle-ai/releases");
+      expect(requestedUrl).not.toContain("gentle-programming");
+
+      expect(state.status).toEqual({ phase: "success", checkedAt: "2026-09-01T10:00:00.000Z" });
+      expect(state.channels?.stable).toEqual({ latestVersion: "2.5.0", updateAvailable: true });
+      expect(state.notice).toEqual({ channel: "stable", version: "2.5.0", pending: true });
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+
+  it("extracts the version when the CLI includes its name in the output", async () => {
+    const state = await checkGentleAiReleases({
+      installedVersion: "gentle-ai 2.4.0",
+      fetchReleases: async () => [{ tag_name: "v2.5.0", prerelease: false, draft: false }],
+      readState: async () => ({ settings: { frequencyMinutes: 360 } }),
+      writeState: async () => undefined,
+    });
+
+    expect(state.channels?.stable).toEqual({ latestVersion: "2.5.0", updateAvailable: true });
+    expect(state.notice).toEqual({ channel: "stable", version: "2.5.0", pending: true });
+  });
+
   it("classifies timeout, rate limit and malformed release failures without leaking details", async () => {
     await expect(checkGentleAiReleases({
       installedVersion: "1.0.0",

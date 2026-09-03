@@ -35,6 +35,12 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: result.error }, { status });
   }
 
+  if (result.value.exitCode !== 0) {
+    return NextResponse.json(buildSafeError("Gentle-AI sync failed"), {
+      status: 500,
+    });
+  }
+
   clearServerModelCatalogCache();
 
   return NextResponse.json(result.value);

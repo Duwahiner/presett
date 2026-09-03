@@ -46,7 +46,7 @@ vi.mock("@/components/organisms/ProfilesClient/profilesClientView", () => ({
 }));
 
 /* ── Shared mocks ── */
-const mockToast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
+const mockToast = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn(), info: vi.fn() }));
 vi.mock("sonner", () => ({ toast: mockToast }));
 
 const { runSync } = vi.hoisted(() => ({ runSync: vi.fn() }));

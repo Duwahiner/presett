@@ -9,6 +9,7 @@ import {
   Layers,
   Archive,
   BarChart2,
+  Activity,
   Menu,
   Search,
   X,
@@ -44,6 +45,7 @@ const menuItems: { key: keyof Resources; href: string; icon: React.ComponentType
   { key: "nav_profiles", href: "/profiles", icon: Layers },
   { key: "nav_backups", href: "/backups", icon: Archive },
   { key: "nav_usage_stats", href: "/usageStats", icon: BarChart2 },
+  { key: "nav_diagnostics", href: "/diagnostics", icon: Activity },
 ];
 
 const workspaceItems: { key: keyof Resources; href: string; icon: React.ComponentType<{ className?: string }> }[] = [
@@ -66,8 +68,7 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
   const isDashboard = pathname === "/";
   const menuButtonRef = useRef<HTMLButtonElement | null>(null);
   const mobileNavRef = useRef<HTMLElement | null>(null);
-  const lastPushedUpdateRef = useRef<string | null>(null);
-  const { onError, onSuccess, onInfo, resolve, push } = useNotificationToasts();
+  const { onError, onSuccess, onInfo, onUpdate, resolve } = useNotificationToasts();
   // Always call both hooks (Rules of Hooks), use the appropriate one based on mode
   const auditNotifications = useAuditNotifications();
   const normalNotifications = useNotifications();
@@ -96,6 +97,11 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
   }, [mobileNavOpen]);
 
   useEffect(() => {
+    // DiagnosticsClient owns the check while this route is mounted. Keeping
+    // the layout from starting another one prevents the API's concurrent
+    // check guard from returning a misleading 202/checking response.
+    if (pathname === "/diagnostics") return;
+
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -118,15 +124,22 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
       cancelled = true;
       if (timer) clearTimeout(timer);
     };
-  }, []);
+  }, [pathname]);
 
-  // Push update detection as a persistent notification (not inline alert)
+  // Surface update detection as a persistent notification AND a visible toast.
+  // Semantic (version + channel) dedupe prevents duplicates across reloads and
+  // between the dashboard and diagnostics clients, while never suppressing a
+  // genuinely newer release.
   useEffect(() => {
-    if (updateState?.notice?.pending && lastPushedUpdateRef.current !== updateState.notice.version) {
-      lastPushedUpdateRef.current = updateState.notice.version;
-      push({ severity: "update", title: t("notif_update_available", { version: updateState.notice.version }), message: t("diagnostics_update_notice", { version: updateState.notice.version, channel: updateState.notice.channel }) });
+    const notice = updateState?.notice;
+    if (notice?.pending) {
+      onUpdate(
+        t("notif_update_available", { version: notice.version }),
+        t("diagnostics_update_notice", { version: notice.version, channel: notice.channel }),
+        { version: notice.version, channel: notice.channel },
+      );
     }
-  }, [updateState, push]);
+  }, [updateState, onUpdate]);
 
   async function handleManualUpdateCheck() {
     if (checkingUpdates) return;
@@ -190,21 +203,13 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
             <img
               src="/logo.svg"
               alt="PreSett"
-              className="h-10.5 w-auto bg-white p-1"
+              className="h-7.5 w-auto dark:hidden"
             />
-          </div>
-
-          <div className="border-b border-border p-3">
-            <button
-              type="button"
-              className="flex w-full items-center gap-3 border border-border bg-card px-3 py-2.5 text-left"
-            >
-              <span className="flex size-9 items-center justify-center bg-accent font-mono text-[13px] font-bold text-accent-foreground">GS</span>
-              <span className="min-w-0 flex-1">
-                <span className="block truncate text-sm font-bold text-foreground">{t("sidebar_workspace_name")}</span>
-                <span className="block truncate font-mono text-xs text-muted-foreground">{t("sidebar_workspace_preset")}</span>
-              </span>
-            </button>
+            <img
+              src="/logo_dark.svg"
+              alt="PreSett"
+              className="hidden h-7.5 w-auto dark:block"
+            />
           </div>
 
           <nav className="mt-4 flex flex-1 flex-col gap-6 overflow-y-auto px-3 pb-4 scrollbar-brutal">
@@ -235,7 +240,19 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
             )}
           </nav>
 
-          <div className="border-t border-border p-3 light:border-black">
+          <div className="space-y-3 border-t border-border p-3 light:border-black">
+            <div>
+              <button
+                type="button"
+                className="flex w-full items-center gap-3 border border-border bg-card px-3 py-2.5 text-left"
+              >
+                <span className="flex size-9 items-center justify-center bg-accent font-mono text-[13px] font-bold text-accent-foreground">GS</span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-bold text-foreground">{t("sidebar_workspace_name")}</span>
+                  <span className="block truncate font-mono text-xs text-muted-foreground">{t("sidebar_workspace_preset")}</span>
+                </span>
+              </button>
+            </div>
             {gentleAiVersion && (
               <div className="flex items-center justify-between gap-3 border border-border bg-card px-3 py-2 light:border-black light:bg-white">
                 <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground light:text-black">
@@ -380,7 +397,12 @@ function DashboardLayoutInner({ children, gentleAiVersion }: DashboardLayoutProp
                     <img
                       src="/logo.svg"
                       alt="PreSett"
-                      className="h-8.5 w-auto bg-white p-1"
+                      className="h-5.5 w-auto dark:hidden"
+                    />
+                    <img
+                      src="/logo_dark.svg"
+                      alt="PreSett"
+                      className="hidden h-5.5 w-auto dark:block"
                     />
                   </div>
                   <Button

@@ -63,6 +63,14 @@ Get-ChildItem $root -Directory | ForEach-Object {
 
 This project uses **npm** with `package-lock.json`. Do not switch package managers.
 
+## Language Policy (MANDATORY)
+
+- All project documentation MUST be written in neutral, professional Spanish.
+- Commit messages, issue titles/descriptions, pull request titles/descriptions, review notes, and other repository prose MUST be written in Spanish.
+- Delegated agents and sub-agents MUST follow this rule as well.
+- Keep code identifiers, required filenames, CLI commands, protocol fields, and external tool syntax unchanged when English is required by the technology.
+- Do not create English documentation or GitHub prose unless the user explicitly requests it.
+
 ## SDD Verification Envelope
 
 `gentle-ai sdd-verify-validate` parses only a **flat** fenced YAML envelope. Before persisting or validating a verification report, use scalar fields on one line:

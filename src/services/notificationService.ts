@@ -20,6 +20,7 @@ export type NotificationDraft = Omit<
 export const STORAGE_KEY = "presett_notifications";
 export const MAX_ENTRIES = 100;
 export const TTL_MS = 30 * 24 * 60 * 60 * 1000;
+export const UPDATE_NOTIFIED_KEY = "presett_notified_updates";
 
 const WIN_PATH_REGEX = /[A-Za-z]:\\(?:[\w.-]+\\)*[\w.-]+\.\w+(?::\d+)?/g;
 const NIX_PATH_REGEX = /\/(?:[\w.-]+\/)*[\w.-]+\.\w+(?::\d+)?/g;
@@ -106,6 +107,39 @@ export function markAllRead(): void {
 
 export function getAll(): Notification[] {
   return readStore();
+}
+
+function updateKey(version: string, channel: string): string {
+  return `${version}|${channel}`;
+}
+
+function readNotifiedUpdates(): string[] {
+  try {
+    const raw = localStorage.getItem(UPDATE_NOTIFIED_KEY);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Semantic dedupe for release update notifications. The key is the exact
+ * (version, channel) pair, so a genuinely newer release (different version or
+ * channel) is never suppressed. Persisted across reloads and shared between
+ * the dashboard and diagnostics clients.
+ */
+export function hasNotifiedUpdate(version: string, channel: string): boolean {
+  return readNotifiedUpdates().includes(updateKey(version, channel));
+}
+
+export function markUpdateNotified(version: string, channel: string): void {
+  const key = updateKey(version, channel);
+  const list = readNotifiedUpdates();
+  if (!list.includes(key)) {
+    list.push(key);
+    localStorage.setItem(UPDATE_NOTIFIED_KEY, JSON.stringify(list));
+  }
 }
 
 export function getUnreadCount(): number {
