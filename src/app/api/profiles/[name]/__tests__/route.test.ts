@@ -1,9 +1,45 @@
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { mkdtemp, writeFile, rm, readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { OPTIONS, PUT, DELETE as DELETE_HANDLER } from "../route";
-import { clearServerModelCatalogCache } from "@/services/modelCatalogService";
+import { GET, OPTIONS, PUT, DELETE as DELETE_HANDLER } from "../route";
+import {
+  clearServerModelCatalogCache,
+  loadMergedModelCatalogSafe,
+} from "@/services/modelCatalogService";
+
+vi.mock("@/services/modelCatalogService", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/services/modelCatalogService")>();
+  return {
+    ...actual,
+    loadMergedModelCatalogSafe: vi.fn(),
+  };
+});
+
+vi.mock("@/adapters/opencode", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/adapters/opencode")>();
+  return {
+    ...actual,
+    deleteProfile: vi.fn(actual.deleteProfile),
+  };
+});
+
+vi.mock("@/services/processService", () => ({
+  runGentleAiSync: vi.fn(),
+}));
+
+import { runGentleAiSync } from "@/services/processService";
+
+const mockedLoadMerged = vi.mocked(loadMergedModelCatalogSafe);
+const mockedRunSync = vi.mocked(runGentleAiSync);
+
+// Generated-multi fixtures include the base orchestrator so the write
+// guardrail (403 for `unknown`/`external-single-active`) lets the request pass.
+const GENERATED_MULTI_EXTRA_AGENTS = {
+  "gentle-orchestrator": { model: "openai/gpt-4", variant: "low" },
+};
 
 function updateProfileRequest(origin?: string): Request {
   const request = new Request("http://localhost/api/profiles/custom", {
@@ -26,6 +62,10 @@ function deleteProfileRequest(origin?: string): Request {
   return request;
 }
 
+function detailRequest(): Request {
+  return new Request("http://localhost/api/profiles/custom", { method: "GET" });
+}
+
 describe("/api/profiles/[name]", () => {
   let tempDir = "";
   let cacheDir = "";
@@ -33,6 +73,18 @@ describe("/api/profiles/[name]", () => {
 
   beforeEach(async () => {
     clearServerModelCatalogCache();
+    mockedRunSync.mockReset();
+    mockedRunSync.mockResolvedValue({
+      ok: true,
+      value: { exitCode: 0, stdout: "updated", stderr: "" },
+    });
+    mockedLoadMerged.mockResolvedValue({
+      ok: true,
+      value: {
+        openai: { "gpt-4": ["low", "high"] },
+        opencode: { "qwen3-max": ["high", "max"] },
+      },
+    });
     tempDir = await mkdtemp(join(tmpdir(), "presett-profile-name-"));
     cacheDir = await mkdtemp(join(tmpdir(), "presett-profile-name-cache-"));
     verboseFile = join(cacheDir, "opencode-models-verbose.txt");
@@ -57,11 +109,14 @@ describe("/api/profiles/[name]", () => {
     await rm(cacheDir, { recursive: true, force: true });
   });
 
-  it("edits a profile on PUT", async () => {
+  it("edits a profile on PUT by delegating to gentle-ai sync --profile", async () => {
     await writeFile(
       join(tempDir, "opencode.json"),
       JSON.stringify({
-        agent: { "sdd-orchestrator-custom": { model: "x/y", variant: "low" } },
+        agent: {
+          ...GENERATED_MULTI_EXTRA_AGENTS,
+          "sdd-orchestrator-custom": { model: "x/y", variant: "low" },
+        },
       }),
     );
 
@@ -70,15 +125,133 @@ describe("/api/profiles/[name]", () => {
     const response = await PUT(request, { params: Promise.resolve({ name: "custom" }) });
     expect(response.status).toBe(200);
 
+    expect(mockedRunSync).toHaveBeenCalledWith("gentle-ai", [
+      "--profile",
+      "custom:openai/gpt-4",
+    ]);
+    // PreSett must not rewrite the generated orchestrator agent directly.
     const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
-    expect(written.agent["sdd-orchestrator-custom"].variant).toBe("high");
+    expect(written.agent["sdd-orchestrator-custom"].model).toBe("x/y");
+    expect(written.agent["sdd-orchestrator-custom"].variant).toBe("low");
+  });
+
+  it("accepts an OpenCode Zen model assignment on PUT", async () => {
+    await writeFile(
+      join(tempDir, "opencode.json"),
+      JSON.stringify({
+        agent: {
+          ...GENERATED_MULTI_EXTRA_AGENTS,
+          "sdd-orchestrator-zen": { model: "x/y", variant: "low" },
+        },
+      }),
+    );
+    mockedLoadMerged.mockResolvedValue({
+      ok: true,
+      value: { opencode: { "qwen3-max": ["high", "max"] } },
+    });
+
+    const request = new Request("http://localhost/api/profiles/zen", {
+      method: "PUT",
+      body: JSON.stringify({
+        assignments: {
+          "sdd-orchestrator-zen": {
+            provider: "opencode",
+            model: "qwen3-max",
+            variant: "high",
+          },
+        },
+      }),
+    });
+    request.headers.set("Origin", "http://127.0.0.1:3000");
+
+    const response = await PUT(request, { params: Promise.resolve({ name: "zen" }) });
+    expect(response.status).toBe(200);
+
+    // The canonical `opencode` provider is delegated verbatim as the CLI ref.
+    expect(mockedRunSync).toHaveBeenCalledWith("gentle-ai", [
+      "--profile",
+      "zen:opencode/qwen3-max",
+    ]);
+    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
+    expect(written.agent["sdd-orchestrator-zen"].model).toBe("x/y");
+  });
+
+  it("preserves a real catalog error as HTTP 400 for an unknown model on PUT", async () => {
+    await writeFile(
+      join(tempDir, "opencode.json"),
+      JSON.stringify({
+        agent: {
+          ...GENERATED_MULTI_EXTRA_AGENTS,
+          "sdd-orchestrator-custom": { model: "x/y", variant: "low" },
+        },
+      }),
+    );
+    mockedLoadMerged.mockResolvedValue({
+      ok: true,
+      value: { opencode: { "qwen3-max": ["high", "max"] } },
+    });
+
+    const request = new Request("http://localhost/api/profiles/custom", {
+      method: "PUT",
+      body: JSON.stringify({
+        assignments: {
+          "sdd-orchestrator-custom": {
+            provider: "opencode",
+            model: "gpt-5",
+            variant: "high",
+          },
+        },
+      }),
+    });
+    request.headers.set("Origin", "http://127.0.0.1:3000");
+
+    const response = await PUT(request, { params: Promise.resolve({ name: "custom" }) });
+    expect(response.status).toBe(400);
+    const body = JSON.parse(await response.text());
+    expect(body.error.code).toBe("SCHEMA_INVALID");
+  });
+
+  it("preserves an unavailable catalog as HTTP 503 on PUT", async () => {
+    await writeFile(
+      join(tempDir, "opencode.json"),
+      JSON.stringify({
+        agent: {
+          ...GENERATED_MULTI_EXTRA_AGENTS,
+          "sdd-orchestrator-custom": { model: "x/y", variant: "low" },
+        },
+      }),
+    );
+    mockedLoadMerged.mockResolvedValue({
+      ok: false,
+      error: { code: "FILE_MISSING", message: "Model catalog unavailable" },
+    });
+
+    const request = new Request("http://localhost/api/profiles/custom", {
+      method: "PUT",
+      body: JSON.stringify({
+        assignments: {
+          "sdd-orchestrator-custom": {
+            provider: "opencode",
+            model: "qwen3-max",
+            variant: "high",
+          },
+        },
+      }),
+    });
+    request.headers.set("Origin", "http://127.0.0.1:3000");
+
+    const response = await PUT(request, { params: Promise.resolve({ name: "custom" }) });
+    expect(response.status).toBe(503);
   });
 
   it("deletes a profile on DELETE", async () => {
     await writeFile(
       join(tempDir, "opencode.json"),
       JSON.stringify({
-        agent: { "sdd-orchestrator-custom": { model: "x/y" } },
+        agent: {
+          ...GENERATED_MULTI_EXTRA_AGENTS,
+          "sdd-orchestrator-custom": { model: "x/y" },
+        },
       }),
     );
 
@@ -89,6 +262,70 @@ describe("/api/profiles/[name]", () => {
 
     const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
     expect(written.agent["sdd-orchestrator-custom"]).toBeUndefined();
+  });
+
+  it("rejects DELETE for the reserved name 'base' with 400 before invoking the adapter", async () => {
+    await writeFile(
+      join(tempDir, "opencode.json"),
+      JSON.stringify({
+        agent: { "gentle-orchestrator": { model: "openai/gpt-4", variant: "low" } },
+      }),
+    );
+    const { deleteProfile } = await import("@/adapters/opencode");
+    const deleteSpy = vi.mocked(deleteProfile);
+    deleteSpy.mockClear();
+
+    const response = await DELETE_HANDLER(
+      deleteProfileRequest("http://localhost:3000"),
+      { params: Promise.resolve({ name: "base" }) },
+    );
+
+    expect(response.status).toBe(400);
+    const body = JSON.parse(await response.text());
+    expect(body.error.code).toBe("SCHEMA_INVALID");
+    // The route guard must reject before the adapter is reached.
+    expect(deleteSpy).not.toHaveBeenCalled();
+  });
+
+  it("rejects PUT with 403 STRATEGY_READONLY on external-single-active without touching disk", async () => {
+    await writeFile(
+      join(tempDir, "opencode.json"),
+      JSON.stringify({
+        agent: { "external-work": { mode: "primary", model: "openai/gpt-4" } },
+      }),
+    );
+
+    const response = await PUT(updateProfileRequest("http://localhost:3000"), {
+      params: Promise.resolve({ name: "custom" }),
+    });
+    const body = JSON.parse(await response.text());
+
+    expect(response.status).toBe(403);
+    expect(body.error.code).toBe("STRATEGY_READONLY");
+
+    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
+    expect(written.agent["external-work"]).toBeDefined();
+    expect(written.agent["sdd-orchestrator-custom"]).toBeUndefined();
+  });
+
+  it("rejects DELETE with 403 STRATEGY_READONLY on unknown strategy without deleting the profile", async () => {
+    await writeFile(
+      join(tempDir, "opencode.json"),
+      JSON.stringify({
+        agent: { "review-risk": { mode: "subagent", model: "x/y" } },
+      }),
+    );
+
+    const response = await DELETE_HANDLER(deleteProfileRequest("http://localhost:3000"), {
+      params: Promise.resolve({ name: "custom" }),
+    });
+    const body = JSON.parse(await response.text());
+
+    expect(response.status).toBe(403);
+    expect(body.error.code).toBe("STRATEGY_READONLY");
+
+    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
+    expect(written.agent["review-risk"]).toEqual({ mode: "subagent", model: "x/y" });
   });
 
   it("rejects missing Origin before parsing JSON or editing a profile", async () => {
@@ -131,6 +368,100 @@ describe("/api/profiles/[name]", () => {
     const response = await OPTIONS();
 
     expect(response.status).toBe(204);
-    expect(response.headers.get("Access-Control-Allow-Methods")).toBe("DELETE, OPTIONS, PUT");
+    expect(response.headers.get("Access-Control-Allow-Methods")).toBe("DELETE, GET, OPTIONS, PUT");
+  });
+
+  it("returns only the orchestrator assignment on GET", async () => {
+    await writeFile(
+      join(tempDir, "opencode.json"),
+      JSON.stringify({
+        agent: {
+          "sdd-orchestrator-custom": { model: "openai/gpt-4", variant: "high" },
+          "sdd-init-custom": { model: "anthropic/claude-4", variant: "standard" },
+        },
+      }),
+    );
+
+    const response = await GET(detailRequest(), {
+      params: Promise.resolve({ name: "custom" }),
+    });
+    expect(response.status).toBe(200);
+
+    const body = JSON.parse(await response.text());
+    expect(body.name).toBe("custom");
+    expect(body.assignments["sdd-orchestrator-custom"]).toEqual({
+      provider: "openai",
+      model: "gpt-4",
+      variant: "high",
+    });
+    // Legacy phase assignments never surface in the detail contract.
+    expect(body.assignments["sdd-init-custom"]).toBeUndefined();
+  });
+
+  it("returns 404 for a nonexistent profile on GET", async () => {
+    await writeFile(
+      join(tempDir, "opencode.json"),
+      JSON.stringify({ agent: {} }),
+    );
+
+    const response = await GET(detailRequest(), {
+      params: Promise.resolve({ name: "ghost" }),
+    });
+    expect(response.status).toBe(404);
+  });
+
+  it("rejects an invalid profile name with 400 before reading the filesystem", async () => {
+    await writeFile(
+      join(tempDir, "opencode.json"),
+      JSON.stringify({ agent: {} }),
+    );
+
+    const response = await GET(detailRequest(), {
+      params: Promise.resolve({ name: "../../etc/passwd" }),
+    });
+    expect(response.status).toBe(400);
+
+    const body = JSON.parse(await response.text());
+    expect(body.error.code).toBe("SCHEMA_INVALID");
+  });
+
+  it("exposes the detected strategy on GET detail for read-only enforcement", async () => {
+    await writeFile(
+      join(tempDir, "opencode.json"),
+      JSON.stringify({
+        agent: {
+          "gentle-orchestrator": { model: "openai/gpt-4", variant: "low" },
+          "sdd-orchestrator-custom": { model: "openai/gpt-4", variant: "high" },
+        },
+      }),
+    );
+
+    const response = await GET(detailRequest(), {
+      params: Promise.resolve({ name: "custom" }),
+    });
+    const body = JSON.parse(await response.text());
+
+    expect(response.status).toBe(200);
+    expect(body.strategy).toBe("generated-multi");
+  });
+
+  it("keeps GET detail readable (not 403) on external-single-active", async () => {
+    await writeFile(
+      join(tempDir, "opencode.json"),
+      JSON.stringify({
+        agent: { "external-work": { mode: "primary", model: "openai/gpt-4" } },
+      }),
+    );
+
+    const response = await GET(detailRequest(), {
+      params: Promise.resolve({ name: "custom" }),
+    });
+    const body = JSON.parse(await response.text());
+
+    // Read-only enforcement: reads remain permitted in external mode — the
+    // guardrail only blocks writes. A generated profile simply does not exist
+    // here, so the detail resolves to NOT_FOUND (not a 403 STRATEGY_READONLY).
+    expect(response.status).toBe(404);
+    expect(body.error.code).toBe("NOT_FOUND");
   });
 });

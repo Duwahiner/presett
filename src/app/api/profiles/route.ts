@@ -1,3 +1,4 @@
+import { homedir } from "node:os";
 import { join } from "node:path";
 import { NextResponse } from "next/server";
 import {
@@ -5,11 +6,12 @@ import {
   createProfile,
   readOpenCodeConfigSafe,
 } from "@/adapters/opencode";
-import { readModelCacheSafe } from "@/services/modelCacheService";
 import { DEFAULT_OPEN_CODE_CONFIG_DIR } from "@/adapters/opencode";
 import { DEFAULT_MODEL_CACHE_DIR } from "@/services/modelCacheService";
 import { defaultPresettDir } from "@/lib/paths";
 import { buildSafeError, requireMutationOrigin } from "@/lib/localApiSecurity";
+import { loadMergedModelCatalogSafe } from "@/services/modelCatalogService";
+import { detectProfileStrategy, guardProfileMutation } from "@/services/profileStrategyService";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +30,18 @@ function backupDir(): string {
   );
 }
 
+function gentleAiDir(): string {
+  return process.env.PRESETT_TEST_GENTLE_AI_DIR ?? join(homedir(), ".gentle-ai");
+}
+
+function syncCommand(): string {
+  return process.env.PRESETT_TEST_SYNC_COMMAND ?? "gentle-ai";
+}
+
 export async function GET() {
+  // GET is strictly read-only. `sdd-<phase>-<profile>` keys are valid
+  // generated-multi assets owned by gentle-ai, so the listing must never
+  // mutate or delete them.
   const result = await readOpenCodeConfigSafe(configDir());
   if (!result.ok) {
     return NextResponse.json(
@@ -37,7 +50,10 @@ export async function GET() {
     );
   }
 
-  return NextResponse.json({ profiles: await listProfiles(result.value, configDir()) });
+  return NextResponse.json({
+    profiles: await listProfiles(result.value, configDir()),
+    strategy: detectProfileStrategy(result.value),
+  });
 }
 
 export async function OPTIONS() {
@@ -59,12 +75,33 @@ export async function POST(request: Request) {
     });
   }
 
+  const strategyRead = await readOpenCodeConfigSafe(configDir());
+  if (!strategyRead.ok) {
+    return NextResponse.json(
+      { error: strategyRead.error },
+      { status: strategyRead.error.code === "FILE_MISSING" ? 404 : 500 },
+    );
+  }
+  const strategyGuard = guardProfileMutation(
+    detectProfileStrategy(strategyRead.value),
+  );
+  if (!strategyGuard.ok) {
+    return NextResponse.json(
+      { error: { code: strategyGuard.code, message: strategyGuard.message } },
+      { status: 403 },
+    );
+  }
+
   const body = (await request.json()) as {
     name: string;
     assignments: Record<string, { provider: string; model: string; variant: string }>;
   };
 
-  const cacheResult = await readModelCacheSafe(cacheDir());
+  const cacheResult = await loadMergedModelCatalogSafe({
+    cacheDir: cacheDir(),
+    openCodeConfigDir: configDir(),
+    gentleAiDir: gentleAiDir(),
+  });
   if (!cacheResult.ok) {
     return NextResponse.json(
       { error: cacheResult.error },
@@ -73,11 +110,10 @@ export async function POST(request: Request) {
   }
 
   const result = await createProfile(
-    configDir(),
     body.name,
     body.assignments,
-    backupDir(),
     cacheResult.value,
+    syncCommand(),
   );
 
   if (!result.ok) {
@@ -88,6 +124,13 @@ export async function POST(request: Request) {
           ? 503
           : 500;
     return NextResponse.json({ error: result.error }, { status });
+  }
+
+  if (result.value.exitCode !== 0) {
+    return NextResponse.json(
+      buildSafeError("Gentle-AI failed to create the profile"),
+      { status: 500 },
+    );
   }
 
   return NextResponse.json({ ok: true });

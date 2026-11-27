@@ -121,11 +121,30 @@ describe("listModelAssignments", () => {
       variant: "low",
     });
   });
+
+  it("ingests a raw `opencode` provider verbatim", () => {
+    const config = {
+      agent: {
+        "gentle-orchestrator": { model: "opencode/qwen3-max", variant: "high" },
+      },
+    };
+
+    const list = listModelAssignments(config);
+
+    expect(list).toHaveLength(1);
+    expect(list[0]).toMatchObject({
+      agentKey: "gentle-orchestrator",
+      provider: "opencode",
+      model: "qwen3-max",
+      variant: "high",
+    });
+  });
 });
 
 describe("updateModelAssignment", () => {
   const cache: ModelCache = {
     openai: { "gpt-4": ["low", "high"] },
+    opencode: { "qwen3-max": ["high", "max"] },
   };
 
   it("updates an existing agent entry", async () => {
@@ -173,6 +192,34 @@ describe("updateModelAssignment", () => {
     );
 
     expect(result.ok).toBe(false);
+    await rm(tempDir, { recursive: true, force: true });
+  });
+
+  it("writes an `opencode` provider directly as the CLI ref `opencode/<model>`", async () => {
+    const tempDir = await mkdtemp(join(tmpdir(), "presett-opencode-"));
+    const backupDir = join(tempDir, "backups");
+    await writeFile(
+      join(tempDir, "opencode.json"),
+      JSON.stringify({ agent: { "sdd-init": { model: "x/y", variant: "low" } } }),
+    );
+
+    const result = await updateModelAssignment(
+      tempDir,
+      "sdd-init",
+      { provider: "opencode", model: "qwen3-max", variant: "high" },
+      backupDir,
+      cache,
+    );
+
+    expect(result.ok).toBe(true);
+    const config = await readOpenCodeConfig(tempDir);
+    expect(config.agent["sdd-init"]).toMatchObject({
+      model: "opencode/qwen3-max",
+      variant: "high",
+    });
+    // The canonical id is written verbatim; no `opencode-zen` is introduced.
+    expect(config.agent["sdd-init"].model).not.toContain("opencode-zen");
+
     await rm(tempDir, { recursive: true, force: true });
   });
 });

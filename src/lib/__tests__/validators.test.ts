@@ -62,7 +62,7 @@ describe("buildModelCache", () => {
 
 describe("validateModelAssignment", () => {
   const raw: ModelCache = {
-    openai: { "gpt-4": ["low", "high"] },
+    openai: { "gpt-4": ["low", "high"], "gpt-5": [] },
   };
   const cache = buildModelCache(raw);
 
@@ -107,5 +107,35 @@ describe("validateModelAssignment", () => {
 
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error.code).toBe("WRITE_BLOCKED");
+  });
+
+  it("accepts a missing variant when the model has no variants", () => {
+    const result = validateModelAssignment(cache, {
+      provider: "openai",
+      model: "gpt-5",
+    });
+
+    expect(result.ok).toBe(true);
+  });
+
+  it("rejects a missing variant when the model has variants", () => {
+    const result = validateModelAssignment(cache, {
+      provider: "openai",
+      model: "gpt-4",
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("SCHEMA_INVALID");
+  });
+
+  it("rejects an unknown variant for a model without variants", () => {
+    const result = validateModelAssignment(cache, {
+      provider: "openai",
+      model: "gpt-5",
+      variant: "foo",
+    });
+
+    expect(result.ok).toBe(false);
+    if (!result.ok) expect(result.error.code).toBe("SCHEMA_INVALID");
   });
 });

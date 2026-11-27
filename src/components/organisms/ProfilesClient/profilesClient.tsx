@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { listProfiles, createProfile, switchProfile, deleteProfile, updateProfile } from "@/services/profilesApiService";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { listProfiles, createProfile, switchProfile, deleteProfile, updateProfile, getProfileDetail, repairProfile } from "@/services/profilesApiService";
 import { clearModelCatalogCache, getCatalog } from "@/services/modelsApiService";
 import { t } from "@/resources/resources";
 import { useNotificationToasts } from "@/hooks/useNotificationToasts";
@@ -11,11 +11,6 @@ import type { Profile } from "./profilesClientTypes";
 import type { ListingControlsConfig, ListingControlsState } from "@/components/molecules/ListingControls/listingControlsTypes";
 import { useAuditMode } from "@/lib/visual-audit/auditContext";
 import { AUDIT_FIXTURE_PROFILES, AUDIT_FIXTURE_CATALOG } from "@/lib/visual-audit/fixtures";
-
-const SDD_PHASES = [
-  "init", "propose", "spec", "design", "tasks",
-  "apply", "verify", "archive", "explore", "onboard",
-];
 
 const profilesControlsConfig: ListingControlsConfig = {
   search: {
@@ -85,7 +80,9 @@ export function ProfilesClient({
 } = {}) {
   const isAuditMode = useAuditMode();
   const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [strategy, setStrategy] = useState<Profile["strategy"]>("generated-multi");
   const [catalog, setCatalog] = useState<ModelCatalog>({});
+  const [connectedProviders, setConnectedProviders] = useState<string[]>([]);
   const [catalogLoading, setCatalogLoading] = useState(true);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -97,7 +94,11 @@ export function ProfilesClient({
   const [editAssignments, setEditAssignments] = useState<
     Record<string, { provider: string; model: string; variant: string }>
   >({});
+  const [detailLoading, setDetailLoading] = useState(false);
+  const [detailError, setDetailError] = useState<string | null>(null);
+  const detailRequestRef = useRef(0);
   const [deleteConfirmProfile, setDeleteConfirmProfile] = useState<string | null>(null);
+  const [repairConfirmProfile, setRepairConfirmProfile] = useState<string | null>(null);
   const { onError, onSuccess } = useNotificationToasts();
 
   // Filter/sort state — mount-local, cleared on unmount
@@ -131,6 +132,7 @@ export function ProfilesClient({
       // Short-circuit to fixtures
       setProfiles(AUDIT_FIXTURE_PROFILES.profiles);
       setCatalog(AUDIT_FIXTURE_CATALOG);
+      setConnectedProviders([]);
       setCatalogLoading(false);
       setLoading(false);
       return;
@@ -144,9 +146,11 @@ export function ProfilesClient({
         const catalogData = await getCatalog(forceRefresh ? { forceRefresh: true } : undefined);
         if (!mounted) return;
         setCatalog(catalogData.catalog);
+        setConnectedProviders(catalogData.connectedProviders ?? []);
       } catch {
         if (!mounted) return;
         setCatalog({});
+        setConnectedProviders([]);
       } finally {
         if (mounted) setCatalogLoading(false);
       }
@@ -157,6 +161,7 @@ export function ProfilesClient({
         const profilesData = await listProfiles();
         if (!mounted) return;
         setProfiles(profilesData.profiles);
+        setStrategy(profilesData.strategy);
       } catch (cause) {
         if (!mounted) return;
         setError(cause instanceof Error ? cause.message : String(cause));
@@ -175,6 +180,7 @@ export function ProfilesClient({
     if (isAuditMode) return;
     const data = await listProfiles();
     setProfiles(data.profiles);
+    setStrategy(data.strategy);
   }
 
   async function handleCreate(name: string, assignment?: { provider: string; model: string; variant: string }) {
@@ -186,12 +192,6 @@ export function ProfilesClient({
     const assignments: Record<string, { provider: string; model: string; variant: string }> = {
       [`sdd-orchestrator-${nameToCreate}`]: assignment ?? newAssignments["orchestrator"] ?? { provider: "", model: "", variant: "" },
     };
-
-    for (const phase of SDD_PHASES) {
-      if (newAssignments[phase]?.provider) {
-        assignments[`sdd-${phase}-${nameToCreate}`] = newAssignments[phase];
-      }
-    }
 
     try {
       await createProfile({ name: nameToCreate, assignments });
@@ -244,20 +244,60 @@ export function ProfilesClient({
     setDeleteConfirmProfile(null);
   }
 
-  function handleEditStart(name: string) {
+  function handleRepairStart(name: string) {
     if (isAuditMode) return; // Deny writes in audit mode
+    setRepairConfirmProfile(name);
+  }
+
+  async function handleRepairConfirm() {
+    if (!repairConfirmProfile) return;
+    setPendingAction(`repair:${repairConfirmProfile}`);
+    try {
+      await repairProfile(repairConfirmProfile);
+      await refresh();
+      onSuccess(t("profiles_repairSuccess"));
+    } catch (cause) {
+      onError(t("profiles_repairError"), cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      setPendingAction(null);
+      setRepairConfirmProfile(null);
+    }
+  }
+
+  function handleRepairCancel() {
+    setRepairConfirmProfile(null);
+  }
+
+  async function handleEditStart(name: string) {
+    if (isAuditMode) return; // Deny writes in audit mode
+    const requestId = ++detailRequestRef.current;
     setEditingProfile(name);
     setEditAssignments({});
+    setDetailLoading(true);
+    setDetailError(null);
+    try {
+      const detail = await getProfileDetail(name);
+      if (detailRequestRef.current !== requestId) return; // stale response
+      setEditAssignments(detail.assignments);
+    } catch (cause) {
+      if (detailRequestRef.current !== requestId) return; // stale error
+      setDetailError(cause instanceof Error ? cause.message : String(cause));
+    } finally {
+      if (detailRequestRef.current === requestId) setDetailLoading(false);
+    }
   }
 
   async function handleEditSave() {
     if (isAuditMode) return; // Deny writes in audit mode
     if (!editingProfile) return;
+    if (detailLoading || detailError) return; // never mutate while detail is missing
     setPendingAction("edit");
     try {
       await updateProfile(editingProfile, editAssignments);
       setEditingProfile(null);
       setEditAssignments({});
+      setDetailError(null);
+      setDetailLoading(false);
       await refresh();
       onSuccess(t("profiles_updateSuccess"));
     } catch (cause) {
@@ -268,14 +308,19 @@ export function ProfilesClient({
   }
 
   function handleEditCancel() {
+    detailRequestRef.current += 1; // invalidate any in-flight detail request
     setEditingProfile(null);
     setEditAssignments({});
+    setDetailError(null);
+    setDetailLoading(false);
   }
 
   return (
     <ProfilesClientView
       profiles={profiles}
+      strategy={strategy}
       catalog={catalog}
+      connectedProviders={connectedProviders}
       catalogLoading={catalogLoading}
       loading={loading}
       error={error}
@@ -290,8 +335,14 @@ export function ProfilesClient({
       onDeleteConfirm={handleDeleteConfirm}
       onDeleteCancel={handleDeleteCancel}
       deleteConfirmProfile={deleteConfirmProfile}
+      repairConfirmProfile={repairConfirmProfile}
+      onRepairStart={handleRepairStart}
+      onRepairConfirm={handleRepairConfirm}
+      onRepairCancel={handleRepairCancel}
       editingProfile={editingProfile}
       editAssignments={editAssignments}
+      detailLoading={detailLoading}
+      detailError={detailError}
       onEditStart={handleEditStart}
       onEditSave={handleEditSave}
       onEditCancel={handleEditCancel}

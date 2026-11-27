@@ -12,8 +12,9 @@ import type { ModelsClientViewProps } from "@/components/organisms/ModelsClient/
 import type { ProfilesClientViewProps } from "@/components/organisms/ProfilesClient/profilesClientTypes";
 
 vi.mock("@/components/organisms/ModelsClient/modelsClientView", () => ({
-  ModelsClientView: ({ onSave, onSwitchProfile, onSync, onReset }: ModelsClientViewProps) => (
+  ModelsClientView: ({ activeProfile, onSave, onSwitchProfile, onSync, onReset }: ModelsClientViewProps) => (
     <>
+      <span data-testid="active-profile">{activeProfile}</span>
       <button onClick={() => void onSave("main", { provider: "openai", model: "gpt-5", variant: "high" })}>Save assignment</button>
       <button onClick={() => void onSwitchProfile("work")}>Switch profile</button>
       <button onClick={() => void onSync()}>Sync now</button>
@@ -74,12 +75,13 @@ const { getGlobalConfig, patchGlobalConfig, getCatalog, getConfig, saveAssignmen
 vi.mock("@/services/globalConfigApiService", () => ({ getGlobalConfig, patchGlobalConfig }));
 vi.mock("@/services/modelsApiService", () => ({ getCatalog, getConfig, saveAssignment, clearModelCatalogCache: vi.fn() }));
 
-const { listProfiles, createProfile, switchProfile, deleteProfile, updateProfile } = vi.hoisted(() => ({
+const { listProfiles, createProfile, switchProfile, deleteProfile, updateProfile, getProfileDetail } = vi.hoisted(() => ({
   listProfiles: vi.fn(),
   createProfile: vi.fn(),
   switchProfile: vi.fn(),
   deleteProfile: vi.fn(),
   updateProfile: vi.fn(),
+  getProfileDetail: vi.fn(),
 }));
 vi.mock("@/services/profilesApiService", () => ({
   listProfiles,
@@ -87,6 +89,7 @@ vi.mock("@/services/profilesApiService", () => ({
   switchProfile,
   deleteProfile,
   updateProfile,
+  getProfileDetail,
 }));
 
 const { mockGetDiagnostics, mockCheckUpdates } = vi.hoisted(() => ({
@@ -119,6 +122,12 @@ beforeEach(() => {
   createProfile.mockResolvedValue(undefined);
   deleteProfile.mockResolvedValue(undefined);
   updateProfile.mockResolvedValue(undefined);
+  getProfileDetail.mockResolvedValue({
+    name: "work",
+    assignments: {
+      "sdd-orchestrator-work": { provider: "openai", model: "gpt-5", variant: "high" },
+    },
+  });
   runSync.mockResolvedValue({ exitCode: 0, stdout: "ok", stderr: "" });
   vi.stubGlobal("confirm", vi.fn(() => true));
   getConfig.mockResolvedValue({
@@ -179,6 +188,22 @@ describe("ModelsClient notification integration", () => {
     await user.click(await screen.findByRole("button", { name: button }));
     await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(unsafeError));
     expectSafePersistentError(title);
+  });
+
+  it("normalizes activeProfile to the technical default-agent key after switching profile", async () => {
+    const user = userEvent.setup();
+    render(<ModelsClient />, { wrapper });
+
+    // The switch sends the profile name; the technical identity held for
+    // filtering/saving must be the full orchestrator key, never the name.
+    await user.click(await screen.findByRole("button", { name: "Switch profile" }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("active-profile").textContent).toBe(
+        "sdd-orchestrator-work",
+      );
+    });
+    expect(switchProfile).toHaveBeenCalledWith("work");
   });
 });
 
