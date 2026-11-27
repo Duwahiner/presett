@@ -351,6 +351,7 @@ export const es: Resources = {
   "usage_stats_session_providers": "Proveedores",
   "usage_stats_session_expand_aria": "Expandir sesión {{id}}",
   "usage_stats_session_untitled": "Sin título",
+  "usage_stats_session_unavailable": "No disponible",
   "usage_stats_model": "Modelo",
   "usage_stats_provider": "Proveedor",
 };

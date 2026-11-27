@@ -35,6 +35,11 @@ function formatTokens(value: number): string {
   return new Intl.NumberFormat("en-US").format(value);
 }
 
+/** Renders a per-session figure; null means the CLI does not expose it (never 0). */
+function formatSessionValue(value: number | null, format: (n: number) => string): string {
+  return value === null ? t("usage_stats_session_unavailable") : format(value);
+}
+
 function computeSummaryCost(data: UsageStatsData): string {
   const { providers } = data;
   if (providers.length > 0 && providers.every((p) => p.totalCostUsd === null)) {
@@ -219,7 +224,7 @@ function SessionCard({ session }: { session: RecentSession }) {
             <dt className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
               {t("usage_stats_messages")}
             </dt>
-            <dd className="text-right font-mono text-xs text-card-foreground">{session.messageCount}</dd>
+            <dd className="text-right font-mono text-xs text-card-foreground">{formatSessionValue(session.messageCount, String)}</dd>
           </div>
           <div className="flex justify-between gap-3">
             <dt className="font-mono text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
@@ -234,7 +239,7 @@ function SessionCard({ session }: { session: RecentSession }) {
               {t("usage_stats_summary_cost")}
             </dt>
             <dd className="text-right font-mono text-xs text-card-foreground">
-              {formatCost(session.totalCostUsd)}
+              {formatSessionValue(session.totalCostUsd, (n) => formatCost(n))}
             </dd>
           </div>
           <div className="flex justify-between gap-3">
@@ -242,7 +247,7 @@ function SessionCard({ session }: { session: RecentSession }) {
               {t("usage_stats_tokensIn")}
             </dt>
             <dd className="text-right font-mono text-xs text-card-foreground">
-              {formatTokens(session.totalInputTokens)}
+              {formatSessionValue(session.totalInputTokens, formatTokens)}
             </dd>
           </div>
           <div className="flex justify-between gap-3">
@@ -250,7 +255,7 @@ function SessionCard({ session }: { session: RecentSession }) {
               {t("usage_stats_tokensOut")}
             </dt>
             <dd className="text-right font-mono text-xs text-card-foreground">
-              {formatTokens(session.totalOutputTokens)}
+              {formatSessionValue(session.totalOutputTokens, formatTokens)}
             </dd>
           </div>
           </dl>

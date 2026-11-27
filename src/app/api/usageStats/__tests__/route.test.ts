@@ -2,11 +2,9 @@ import { describe, it, expect, beforeEach, vi } from "vitest";
 import { GET } from "../route";
 
 const collectUsageStatsMock = vi.fn();
-const escapeSqlLiteralMock = vi.fn((value: string) => value);
 
 vi.mock("@/services/usageStatsService", () => ({
   collectUsageStats: (opts: unknown) => collectUsageStatsMock(opts),
-  escapeSqlLiteral: (value: string) => escapeSqlLiteralMock(value),
   clearUsageStatsCache: vi.fn(),
 }));
 
@@ -28,8 +26,6 @@ async function getWithQuery(query: string): Promise<{ status: number; body: unkn
 describe("GET /api/usageStats", () => {
   beforeEach(() => {
     collectUsageStatsMock.mockReset();
-    escapeSqlLiteralMock.mockReset();
-    escapeSqlLiteralMock.mockImplementation((value: string) => value);
   });
 
   it("returns 200 with usage data for valid parameters", async () => {
