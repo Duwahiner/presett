@@ -4,7 +4,7 @@ import type { Result } from "@/lib/types";
 import { ok, err } from "@/lib/types";
 
 const execFile = promisify(execFileCallback) as unknown as ExecFileLike;
-const CLI_BIN = "opencode";
+const DEFAULT_CLI_BIN = "opencode";
 const CLI_TIMEOUT_MS = 10_000;
 const MAX_BUFFER = 2 * 1024 * 1024;
 const CACHE_TTL_MS = 30_000;
@@ -217,6 +217,17 @@ function statsArgs(days: DaysFilter, projectId?: string): string[] {
 
 const SESSION_LIST_ARGS = ["session", "list", "--format", "json", "-n", String(SESSION_LIST_LIMIT)];
 
+/**
+ * Executable used for every opencode call. On Windows, Node cannot spawn the npm
+ * `.cmd` shim without a shell, and the shell is intentionally disabled, so an
+ * explicit OPENCODE_BIN (path to a real opencode executable) can override the
+ * default PATH lookup. Blank values are ignored.
+ */
+function resolveCliBin(): string {
+  const configured = process.env.OPENCODE_BIN?.trim();
+  return configured ? configured : DEFAULT_CLI_BIN;
+}
+
 function execOptions(cwd?: string): ExecFileOptions {
   return {
     maxBuffer: MAX_BUFFER,
@@ -284,15 +295,15 @@ export async function collectUsageStats(
     // count) are scoped to that project unless a `project` path is given.
     if (project === undefined) {
       const [statsOut, sessionsOut] = await Promise.all([
-        execFn(CLI_BIN, statsArgs(opts.days), execOptions()),
-        execFn(CLI_BIN, SESSION_LIST_ARGS, execOptions()),
+        execFn(resolveCliBin(), statsArgs(opts.days), execOptions()),
+        execFn(resolveCliBin(), SESSION_LIST_ARGS, execOptions()),
       ]);
       statsModels = parseStatsModels(statsOut.stdout);
       sessionEntries = parseSessionList(sessionsOut.stdout);
     } else {
       // `opencode stats --project` needs a project id, not a path. Resolve it
       // from the sessions listed with the project path as the process cwd.
-      const sessionsOut = await execFn(CLI_BIN, SESSION_LIST_ARGS, execOptions(project));
+      const sessionsOut = await execFn(resolveCliBin(), SESSION_LIST_ARGS, execOptions(project));
       sessionEntries = parseSessionList(sessionsOut.stdout);
       const projectId = sessionEntries.find(
         (s) => typeof s.projectId === "string" && s.projectId.length > 0,
@@ -303,7 +314,7 @@ export async function collectUsageStats(
           message: "Could not resolve an OpenCode project for the given path",
         });
       }
-      const statsOut = await execFn(CLI_BIN, statsArgs(opts.days, projectId), execOptions());
+      const statsOut = await execFn(resolveCliBin(), statsArgs(opts.days, projectId), execOptions());
       statsModels = parseStatsModels(statsOut.stdout);
     }
 
