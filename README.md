@@ -7,6 +7,10 @@ Local web GUI for managing Gentle-AI / OpenCode configuration without hand-editi
 - **Dashboard**: shows Gentle-AI install state, OpenCode config status, backup count, and last sync info.
 - **Models**: view and edit `model` + `variant` assignments for `gentle-orchestrator`, SDD phase agents, and Judgment Day agents, validated against the `model-variants` cache.
 - **Profiles**: create, edit, switch, and delete SDD profiles following gentle-ai naming conventions (`sdd-orchestrator-{name}`, `sdd-{phase}-{name}`). The base profile is protected.
+
+### Reserved profile names
+
+`base` is a **reserved profile name**: it identifies the built-in Base profile, represented internally with the empty-name identity (`name: ""`) and surfaced through the dedicated routes `GET`/`PUT /api/profiles/base`. It **cannot** be used to create a named profile — `createProfile` rejects it with a `SCHEMA_INVALID` error. Because the static `base` route is resolved before the dynamic `[name]` route, the reserved path never collapses to the profile list or to a named-profile handler. Named profiles remain addressable through `/api/profiles/:name`.
 - **Backups**: viewer for `~/.gentle-ai/backups/` with derived metadata (`file_count`, `size`, `pinned`) and confirmed restore, pin/unpin, and delete actions.
 - **Sync**: thin wrapper around `gentle-ai sync` that surfaces stdout/stderr/exit code.
 
@@ -45,6 +49,19 @@ presett/
 - Node.js 22+
 - Gentle-AI CLI installed (`gentle-ai --version`)
 - OpenCode config present at `~/.config/opencode/opencode.json`
+
+### Variable `OPENCODE_BIN` (opcional)
+
+La página de uso ejecuta `opencode` sin shell, por seguridad. En Windows, Node solo
+encuentra archivos `.exe` en el PATH y no puede lanzar el atajo `opencode.cmd` de npm,
+por lo que la llamada falla con `ENOENT`. Para ese caso, define en `.env.local` la ruta
+al ejecutable real:
+
+```bash
+OPENCODE_BIN=C:/Program Files/nodejs/node_modules/@opencode/cli/bin/opencode.exe
+```
+
+Si no se define o está vacía, se usa `opencode` desde el PATH.
 
 ## Development
 

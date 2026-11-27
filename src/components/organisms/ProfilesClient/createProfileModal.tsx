@@ -10,14 +10,14 @@ import { t } from "@/resources/resources";
 interface CreateProfileModalProps {
   open: boolean;
   pendingAction: string | null;
-  onSubmit: (name: string) => void;
+  /** Retired: the modal never submits; kept so existing callers still type-check. */
+  onSubmit?: (name: string) => void;
   onClose: () => void;
 }
 
 export function CreateProfileModal({
   open,
   pendingAction,
-  onSubmit,
   onClose,
 }: CreateProfileModalProps) {
   const [name, setName] = useState("");
@@ -26,7 +26,9 @@ export function CreateProfileModal({
   const dialogRef = useRef<HTMLDivElement>(null);
 
   const nameError = touched && !name.trim();
-  const canSubmit = Boolean(name.trim()) && pendingAction !== "create";
+  // Profile creation is retired (gentle-ai removed the profile flags): the
+  // modal can no longer be submitted regardless of the form state.
+  const canSubmit = false;
 
   useEffect(() => {
     if (!open) return;
@@ -76,8 +78,7 @@ export function CreateProfileModal({
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setTouched(true);
-    if (!name.trim()) return;
-    onSubmit(name.trim());
+    // Retired: never forward the submission.
   }
 
   return (
@@ -131,6 +132,10 @@ export function CreateProfileModal({
               </p>
             )}
           </div>
+
+          <p className="mt-4 text-xs text-muted-foreground">
+            {t("profiles_retired")}
+          </p>
 
           <div className="mt-6 flex items-center justify-end gap-3">
             <button

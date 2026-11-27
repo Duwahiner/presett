@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AlertCircle, Check, ChevronDown, RefreshCw, RotateCcw, UserCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
@@ -14,11 +14,18 @@ import type { ModelsClientViewProps } from "./modelsClientTypes";
 import { Spinner } from "@/components/ui/spinner";
 import { LoadingIndicator } from "@/components/molecules/loadingIndicator/loadingIndicator";
 import { PageSkeleton } from "@/components/molecules/PageSkeleton/pageSkeleton";
+import {
+  activeProfileDisplayName,
+  activeProfileName,
+  assignmentRowLabel,
+  filterAssignmentsForProfile,
+} from "./modelsClient";
 
 export function ModelsClientView({
   assignments,
   catalog,
   connectedProviders,
+  providerAuthStatus,
   catalogLoading,
   loading,
   error,
@@ -35,13 +42,18 @@ export function ModelsClientView({
 }: ModelsClientViewProps) {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
+  // Only the active profile's own agents (orchestrator + its phases) are
+  // rendered; agents of other profiles and unrelated generals are filtered out.
+  const displayAssignments = useMemo(
+    () => filterAssignmentsForProfile(assignments, activeProfile),
+    [assignments, activeProfile],
+  );
+
   if (loading) {
     return <PageSkeleton variant="models" label={t("models_loading")} />;
   }
 
   if (error) return <ErrorBanner title={t("models_loadError")} message={error} />;
-
-  const displayAssignments = assignments;
 
   return (
     <div className="relative flex h-full min-h-0 flex-col space-y-4">
@@ -54,9 +66,14 @@ export function ModelsClientView({
           <p className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
             {t("models_activeProfile")}
           </p>
-          <p className="text-sm font-medium text-card-foreground">{activeProfile}</p>
+          <p className="text-sm font-medium text-card-foreground">
+            {activeProfileDisplayName(activeProfile)}
+          </p>
         </div>
-        <Select.Root value={activeProfile} onValueChange={(v) => { if (v) onSwitchProfile(v); }} disabled={switchingProfile}>
+        {/* The selector is keyed by profile name (its item values); the
+            technical default-agent key is only used internally for
+            filtering/saving. */}
+        <Select.Root value={activeProfileName(activeProfile)} onValueChange={(v) => { if (v) onSwitchProfile(v); }} disabled={switchingProfile}>
           <Select.Trigger
             aria-label={t("models_activeProfile")}
             className={cn(
@@ -76,7 +93,9 @@ export function ModelsClientView({
                   "focus-visible:outline-none light:border-black light:bg-white light:text-black light:shadow-[4px_4px_0_0_#000000]",
                 )}
               >
-                {profiles.map((p) => (
+                {[...profiles]
+                  .sort((a, b) => a.displayName.localeCompare(b.displayName))
+                  .map((p) => (
                   <Select.Item
                     key={p.name}
                     value={p.name}
@@ -99,6 +118,14 @@ export function ModelsClientView({
         </Select.Root>
       </div>
 
+      {providerAuthStatus && providerAuthStatus.ok === false && (
+        <ErrorBanner
+          variant="warning"
+          title={t("models_providerAuthTitle")}
+          message={t("models_providerAuthMessage")}
+        />
+      )}
+
       {catalogLoading && <LoadingIndicator label={t("loading_section")} />}
 
       {!catalogLoading && Object.keys(catalog).length === 0 && (
@@ -109,34 +136,42 @@ export function ModelsClientView({
         />
       )}
 
-      {/* Agent Assignments */}
-      {assignments.length === 0 && displayAssignments.length === 0 ? (
-        <div className="flex flex-col items-center justify-center border border-border bg-card p-8 text-center">
-          <div className="flex h-10 w-10 items-center justify-center bg-primary/15">
-            <AlertCircle className="h-5 w-5 text-primary" aria-hidden="true" />
+      {/* Content region — the vertical scroll boundary. When the unique
+          filtered agent rows exceed the available height, this container
+          scrolls instead of clipping; the action bar stays pinned. */}
+      <div
+        data-testid="models-content-scroll"
+        className="flex-1 min-h-0 space-y-4 overflow-y-auto scrollbar-brutal pr-3"
+      >
+        {displayAssignments.length === 0 ? (
+          <div className="flex flex-col items-center justify-center border border-border bg-card p-8 text-center">
+            <div className="flex h-10 w-10 items-center justify-center bg-primary/15">
+              <AlertCircle className="h-5 w-5 text-primary" aria-hidden="true" />
+            </div>
+            <h4 className="mt-4 font-mono text-sm font-bold uppercase text-card-foreground">{t("models_emptyAssignmentsTitle")}</h4>
+            <p className="mt-1 max-w-sm text-sm text-muted-foreground">
+              {t("models_emptyAssignmentsDesc")}
+            </p>
           </div>
-          <h4 className="mt-4 font-mono text-sm font-bold uppercase text-card-foreground">{t("models_emptyAssignmentsTitle")}</h4>
-          <p className="mt-1 max-w-sm text-sm text-muted-foreground">
-            {t("models_emptyAssignmentsDesc")}
-          </p>
-        </div>
-      ) : (
-        <div className="flex-1 min-h-0 overflow-y-auto scrollbar-brutal space-y-3 pr-3">
-          {displayAssignments.map((assignment) => (
-            <AgentAssignmentRow
-              key={assignment.agentKey}
-              agentKey={assignment.agentKey}
-              provider={assignment.provider}
-              model={assignment.model}
-              variant={assignment.variant}
-              catalog={catalog}
-              connectedProviders={connectedProviders}
-              disabled={catalogLoading || saving === assignment.agentKey || Object.keys(catalog).length === 0}
-              onSave={(a) => onSave(assignment.agentKey, a)}
-            />
-          ))}
-        </div>
-      )}
+        ) : (
+          <div className="space-y-3">
+            {displayAssignments.map((assignment) => (
+              <AgentAssignmentRow
+                key={assignment.agentKey}
+                agentKey={assignment.agentKey}
+                label={assignmentRowLabel(assignment.agentKey, activeProfile)}
+                provider={assignment.provider}
+                model={assignment.model}
+                variant={assignment.variant}
+                catalog={catalog}
+                connectedProviders={connectedProviders}
+                disabled={catalogLoading || saving === assignment.agentKey || Object.keys(catalog).length === 0}
+                onSave={(a) => onSave(assignment.agentKey, a)}
+              />
+            ))}
+          </div>
+        )}
+      </div>
 
       {/* Action Buttons */}
       <div className="flex items-center gap-2 pt-4">

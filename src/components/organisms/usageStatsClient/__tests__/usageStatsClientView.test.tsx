@@ -219,6 +219,66 @@ describe("UsageStatsClientView", () => {
     expect(sessionButton.textContent).toContain("Untitled · fbeeb882cf");
   });
 
+  describe("sessions without per-session usage (opencode 2.x)", () => {
+    const unavailableData: UsageStatsData = {
+      ...data,
+      recentSessions: [
+        {
+          sessionId: "ses_nulls",
+          title: "No usage",
+          projectPath: "/proj",
+          lastUpdatedAt: "2026-08-25T10:00:00.000Z",
+          messageCount: null,
+          totalCostUsd: null,
+          totalInputTokens: null,
+          totalOutputTokens: null,
+          providers: [],
+        },
+      ],
+    };
+
+    it("renders \"Not available\" for null cost, tokens and message count, never 0", async () => {
+      const user = userEvent.setup();
+      renderView({ data: unavailableData });
+
+      await user.click(screen.getByRole("button", { name: /expand session ses_nulls/i }));
+
+      const region = screen.getByRole("region", { name: "ses_nulls" });
+      expect(within(region).getAllByText("Not available")).toHaveLength(4);
+      expect(within(region).queryByText("0")).toBeNull();
+      expect(within(region).queryByText("Cost unavailable")).toBeNull();
+    });
+
+    it("renders the Spanish unavailable label", async () => {
+      setLocale("es");
+      const user = userEvent.setup();
+      renderView({ data: unavailableData });
+
+      await user.click(screen.getByRole("button", { name: /expandir sesión ses_nulls/i }));
+
+      const region = screen.getByRole("region", { name: "ses_nulls" });
+      expect(within(region).getAllByText("No disponible")).toHaveLength(4);
+    });
+
+    it("still renders real numbers when a session value is present", async () => {
+      const user = userEvent.setup();
+      renderView({
+        data: {
+          ...unavailableData,
+          recentSessions: [
+            { ...unavailableData.recentSessions[0], messageCount: 0, totalCostUsd: 0, totalInputTokens: 0, totalOutputTokens: 0 },
+          ],
+        },
+      });
+
+      await user.click(screen.getByRole("button", { name: /expand session ses_nulls/i }));
+
+      const region = screen.getByRole("region", { name: "ses_nulls" });
+      expect(within(region).queryByText("Not available")).toBeNull();
+      expect(within(region).getAllByText("0").length).toBeGreaterThanOrEqual(3);
+    });
+  });
+
   it("renders the provider cost-unavailable state as 'Costo no disponible' in Spanish", async () => {
     setLocale("es");
     const user = userEvent.setup();

@@ -9,6 +9,12 @@ import type { ModelCatalog } from "@/components/molecules/ModelPicker/modelPicke
 
 export interface AgentAssignmentRowProps {
   agentKey: string;
+  /**
+   * Optional human-readable label. When provided it replaces the raw agentKey
+   * for the visible text and aria-label, keeping the agentKey internal to the
+   * save path. Omit it to render the agentKey as today.
+   */
+  label?: string;
   provider: string;
   model: string;
   variant: string;
@@ -40,6 +46,7 @@ function formatAgentName(agentKey: string): { prefix: string; suffix: string } {
 
 export function AgentAssignmentRow({
   agentKey,
+  label,
   provider,
   model,
   variant,
@@ -49,7 +56,10 @@ export function AgentAssignmentRow({
   onSave,
 }: AgentAssignmentRowProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const { prefix, suffix } = useMemo(() => formatAgentName(agentKey), [agentKey]);
+  const { prefix, suffix } = useMemo(
+    () => formatAgentName(label ?? agentKey),
+    [label, agentKey],
+  );
   const prefixColor = useMemo(() => getAgentPrefixColor(agentKey), [agentKey]);
 
   return (
@@ -60,7 +70,7 @@ export function AgentAssignmentRow({
             <Bot className="h-4 w-4 text-primary" aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <h4 className="truncate font-semibold text-card-foreground" aria-label={agentKey}>
+            <h4 className="truncate font-semibold text-card-foreground" aria-label={label ?? agentKey}>
               {prefix && <span className={prefixColor}>{prefix}</span>}
               <span>{suffix}</span>
             </h4>

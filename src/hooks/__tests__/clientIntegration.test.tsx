@@ -12,8 +12,9 @@ import type { ModelsClientViewProps } from "@/components/organisms/ModelsClient/
 import type { ProfilesClientViewProps } from "@/components/organisms/ProfilesClient/profilesClientTypes";
 
 vi.mock("@/components/organisms/ModelsClient/modelsClientView", () => ({
-  ModelsClientView: ({ onSave, onSwitchProfile, onSync, onReset }: ModelsClientViewProps) => (
+  ModelsClientView: ({ activeProfile, onSave, onSwitchProfile, onSync, onReset }: ModelsClientViewProps) => (
     <>
+      <span data-testid="active-profile">{activeProfile}</span>
       <button onClick={() => void onSave("main", { provider: "openai", model: "gpt-5", variant: "high" })}>Save assignment</button>
       <button onClick={() => void onSwitchProfile("work")}>Switch profile</button>
       <button onClick={() => void onSync()}>Sync now</button>
@@ -35,12 +36,13 @@ vi.mock("@/components/organisms/ProfilesClient/profilesClientView", () => ({
   }: ProfilesClientViewProps) => (
     <>
       <button onClick={() => onAssignmentChange("orchestrator", { provider: "openai", model: "gpt-5", variant: "high" })}>Prepare create</button>
-      <button onClick={() => void onCreate("new")}>Create profile</button>
+      <button onClick={() => void onCreate?.("new")}>Create profile</button>
       <button onClick={() => void onSwitch("work")}>Switch profile</button>
       <button onClick={() => void onDeleteStart("work")}>Delete profile</button>
       <button onClick={() => void onDeleteConfirm()}>Confirm delete</button>
-      <button onClick={() => onEditStart("work")}>Start update</button>
-      {editingProfile && <button onClick={() => void onEditSave()}>Update profile</button>}
+      <button onClick={() => onEditStart("work")}>Start named update</button>
+      <button onClick={() => onEditStart("")}>Start update</button>
+      {editingProfile !== null && <button onClick={() => void onEditSave()}>Update profile</button>}
     </>
   ),
 }));
@@ -74,12 +76,13 @@ const { getGlobalConfig, patchGlobalConfig, getCatalog, getConfig, saveAssignmen
 vi.mock("@/services/globalConfigApiService", () => ({ getGlobalConfig, patchGlobalConfig }));
 vi.mock("@/services/modelsApiService", () => ({ getCatalog, getConfig, saveAssignment, clearModelCatalogCache: vi.fn() }));
 
-const { listProfiles, createProfile, switchProfile, deleteProfile, updateProfile } = vi.hoisted(() => ({
+const { listProfiles, createProfile, switchProfile, deleteProfile, updateProfile, getProfileDetail } = vi.hoisted(() => ({
   listProfiles: vi.fn(),
   createProfile: vi.fn(),
   switchProfile: vi.fn(),
   deleteProfile: vi.fn(),
   updateProfile: vi.fn(),
+  getProfileDetail: vi.fn(),
 }));
 vi.mock("@/services/profilesApiService", () => ({
   listProfiles,
@@ -87,6 +90,7 @@ vi.mock("@/services/profilesApiService", () => ({
   switchProfile,
   deleteProfile,
   updateProfile,
+  getProfileDetail,
 }));
 
 const { mockGetDiagnostics, mockCheckUpdates } = vi.hoisted(() => ({
@@ -119,6 +123,12 @@ beforeEach(() => {
   createProfile.mockResolvedValue(undefined);
   deleteProfile.mockResolvedValue(undefined);
   updateProfile.mockResolvedValue(undefined);
+  getProfileDetail.mockResolvedValue({
+    name: "work",
+    assignments: {
+      "sdd-orchestrator-work": { provider: "openai", model: "gpt-5", variant: "high" },
+    },
+  });
   runSync.mockResolvedValue({ exitCode: 0, stdout: "ok", stderr: "" });
   vi.stubGlobal("confirm", vi.fn(() => true));
   getConfig.mockResolvedValue({
@@ -179,6 +189,22 @@ describe("ModelsClient notification integration", () => {
     await user.click(await screen.findByRole("button", { name: button }));
     await waitFor(() => expect(mockToast.error).toHaveBeenCalledWith(unsafeError));
     expectSafePersistentError(title);
+  });
+
+  it("normalizes activeProfile to the technical default-agent key after switching profile", async () => {
+    const user = userEvent.setup();
+    render(<ModelsClient />, { wrapper });
+
+    // The switch sends the profile name; the technical identity held for
+    // filtering/saving must be the full orchestrator key, never the name.
+    await user.click(await screen.findByRole("button", { name: "Switch profile" }));
+
+    await waitFor(() => {
+      expect(screen.getByTestId("active-profile").textContent).toBe(
+        "sdd-orchestrator-work",
+      );
+    });
+    expect(switchProfile).toHaveBeenCalledWith("work");
   });
 });
 
@@ -291,11 +317,24 @@ describe("DiagnosticsClient notification integration", () => {
 
 /* ── ProfilesClient ── */
 const profileOperations = [
-  { name: "create", button: "Create profile", success: "Profile created.", title: "Unable to create profile", prepare: async (user: ReturnType<typeof userEvent.setup>) => user.click(screen.getByRole("button", { name: "Prepare create" })), reject: () => createProfile.mockRejectedValueOnce(new Error(unsafeError)) },
   { name: "switch", button: "Switch profile", success: "Profile switched.", title: "Profile switched.", prepare: async () => {}, reject: () => switchProfile.mockRejectedValueOnce(new Error(unsafeError)) },
   { name: "delete", button: "Confirm delete", success: "Profile deleted.", title: "Unable to delete profile", prepare: async (user: ReturnType<typeof userEvent.setup>) => user.click(screen.getByRole("button", { name: "Delete profile" })), reject: () => deleteProfile.mockRejectedValueOnce(new Error(unsafeError)) },
-  { name: "update", button: "Update profile", success: "Profile updated.", title: "Unable to update profile", prepare: async (user: ReturnType<typeof userEvent.setup>) => user.click(screen.getByRole("button", { name: "Start update" })), reject: () => updateProfile.mockRejectedValueOnce(new Error(unsafeError)) },
 ];
+
+describe("ProfilesClient retired profile operations", () => {
+  it("does not create a profile and does not update a named profile", async () => {
+    const user = userEvent.setup();
+    render(<ProfilesClient />, { wrapper });
+
+    await user.click(await screen.findByRole("button", { name: "Create profile" }));
+    await user.click(screen.getByRole("button", { name: "Start named update" }));
+    await user.click(await screen.findByRole("button", { name: "Update profile" }));
+
+    expect(createProfile).not.toHaveBeenCalled();
+    expect(updateProfile).not.toHaveBeenCalled();
+    expect(mockToast.success).not.toHaveBeenCalled();
+  });
+});
 
 describe("ProfilesClient notification integration", () => {
   it.each(profileOperations)("$name success shows Sonner feedback without persistence", async ({ button, success, prepare }) => {

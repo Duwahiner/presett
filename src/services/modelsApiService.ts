@@ -1,4 +1,5 @@
 import { get, put } from "./api";
+import type { ProviderAuthStatus } from "@/lib/types";
 
 export interface Assignment {
   agentKey: string;
@@ -18,6 +19,8 @@ export interface CatalogResponse {
   providers: string[];
   catalog: ModelCatalog;
   connectedProviders: string[];
+  /** Additive: distinguishes a real empty list from a detection failure. */
+  providerAuthStatus?: ProviderAuthStatus;
 }
 
 const CLIENT_CATALOG_CACHE_TTL_MS = 30_000;

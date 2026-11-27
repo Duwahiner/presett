@@ -55,9 +55,11 @@ export async function probeGentleAiVersion(
 
 export async function runGentleAiSync(
   command: string = "gentle-ai",
+  args: string[] = [],
+  timeoutMs: number = 120_000,
 ): Promise<Result<SyncResult>> {
   return new Promise((resolve) => {
-    const child = spawn(command, ["sync"]);
+    const child = spawn(command, ["sync", ...args]);
     let stdout = "";
     let stderr = "";
     let killed = false;
@@ -65,7 +67,7 @@ export async function runGentleAiSync(
     const timeout = setTimeout(() => {
       killed = true;
       child.kill();
-    }, 120_000);
+    }, timeoutMs);
 
     child.stdout.on("data", (data: Buffer) => {
       stdout += data.toString("utf-8");
@@ -92,7 +94,7 @@ export async function runGentleAiSync(
         resolve(
           err({
             code: "ATOMIC_WRITE_FAILED",
-            message: "gentle-ai sync timed out after 120s",
+            message: `gentle-ai sync timed out after ${timeoutMs}ms`,
           }),
         );
         return;
