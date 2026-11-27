@@ -109,6 +109,63 @@ describe("providerAuthService", () => {
       expect(ids).toEqual(["opencode-go", "openai", "google", "anthropic", "xai"]);
     });
 
+    it("parses the opencode 2.x `auth list` rows (CRLF, no bullets, no header)", () => {
+      const output =
+        "Anthropic  OAuth                       stored\r\n" +
+        "Google     OAuth                       stored\r\n" +
+        "OpenAI     OAuth                       stored\r\n" +
+        "OpenCode   API key                     stored\r\n";
+
+      const result = parseConnectedProviders(output);
+
+      expect(result).toEqual([
+        { name: "Anthropic", authType: "oauth" },
+        { name: "Google", authType: "oauth" },
+        { name: "OpenAI", authType: "oauth" },
+        { name: "OpenCode", authType: "api" },
+      ]);
+      expect(result.map((p) => normalizeProviderName(p.name))).toEqual([
+        "anthropic",
+        "google",
+        "openai",
+        "opencode",
+      ]);
+    });
+
+    it("parses 2.x rows with ANSI codes and multi-word provider names", () => {
+      const output =
+        "\u001b[0m\u001b[1mOpenCode Go\u001b[0m  API key  stored\r\n" +
+        "X AI  OAuth  stored\r\n";
+
+      expect(parseConnectedProviders(output)).toEqual([
+        { name: "OpenCode Go", authType: "api" },
+        { name: "X AI", authType: "oauth" },
+      ]);
+    });
+
+    it("ignores noise, headers and decoration lines in 2.x output", () => {
+      const output = [
+        "",
+        "   ",
+        "\u001b[90m┌\u001b[39m  Credentials  ~/.local/share/opencode/auth.json",
+        "│",
+        "└  3 credentials",
+        "Provider  Type  Status",
+        "No credentials found",
+        "Anthropic  OAuth  stored",
+      ].join("\r\n");
+
+      expect(parseConnectedProviders(output)).toEqual([{ name: "Anthropic", authType: "oauth" }]);
+    });
+
+    it("keeps parsing the legacy bullet format with CRLF line endings", () => {
+      const output = "●  OpenAI oauth\r\n•  OpenCode Go api\r\n";
+      expect(parseConnectedProviders(output)).toEqual([
+        { name: "OpenAI", authType: "oauth" },
+        { name: "OpenCode Go", authType: "api" },
+      ]);
+    });
+
     it("handles empty output", () => {
       const result = parseConnectedProviders("");
       expect(result).toEqual([]);
@@ -291,7 +348,7 @@ describe("providerAuthService", () => {
       mockExecSuccess("");
       await getConnectedProvidersSafe();
       const [cmd] = execMock.exec.mock.calls[0];
-      expect(cmd).toBe("opencode providers list");
+      expect(cmd).toBe("opencode auth list");
     });
 
     it("passes a whitelisted env with HOME, USERPROFILE and PATH only", async () => {

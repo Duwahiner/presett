@@ -7,7 +7,7 @@ const exec = promisify(execCallback);
 
 // Literal constant command: never interpolated with user input, so `shell: true`
 // on Windows cannot be leveraged for command injection.
-const PROVIDER_AUTH_COMMAND = "opencode providers list";
+const PROVIDER_AUTH_COMMAND = "opencode auth list";
 const PROVIDER_AUTH_TIMEOUT_MS = 10_000;
 const PROVIDER_AUTH_MAX_BUFFER = 1024 * 1024;
 
@@ -108,6 +108,7 @@ export function parseConnectedProviders(output: string): ConnectedProvider[] {
 
   for (const line of lines) {
     const trimmed = line.trim();
+    if (!trimmed) continue;
     // Lines with • (U+2022) or ● (U+25CF) indicate a connected provider
     if (/^[•●]/.test(trimmed)) {
       const content = trimmed.replace(/^[•●]/, "").trim();
@@ -122,10 +123,39 @@ export function parseConnectedProviders(output: string): ConnectedProvider[] {
           authType: authType === "api" || authType === "oauth" ? authType : "unknown",
         });
       }
+      continue;
     }
+
+    const column = parseTabularRow(trimmed);
+    if (column) providers.push(column);
   }
 
   return providers;
+}
+
+/**
+ * Parse one row of the opencode 2.x `auth list` table, e.g.
+ * `Anthropic  OAuth                       stored`.
+ *
+ * Columns are separated by two or more spaces (provider names may contain single
+ * spaces). A row is accepted only when the credential type is recognized
+ * (`OAuth` / `API key`) or the row ends with the `stored` status column; this
+ * keeps headers, summaries and box-drawing decoration out of the result.
+ */
+function parseTabularRow(line: string): ConnectedProvider | null {
+  const columns = line.split(/\s{2,}/).filter((column) => column.length > 0);
+  if (columns.length < 2) return null;
+
+  const name = columns[0];
+  if (/^[┌│└├─◇◆]/.test(name)) return null;
+
+  const type = columns[1].toLowerCase();
+  const hasStoredStatus = columns.length >= 3 && columns[columns.length - 1].toLowerCase() === "stored";
+
+  if (type === "oauth") return { name, authType: "oauth" };
+  if (type === "api key" || type === "api") return { name, authType: "api" };
+  if (hasStoredStatus) return { name, authType: "unknown" };
+  return null;
 }
 
 /**
