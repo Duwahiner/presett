@@ -117,11 +117,36 @@ export function parseVerboseOpencodeModelsOutput(output: string): ModelCache {
   return catalog;
 }
 
-async function readVerboseOpencodeModelsOutput(): Promise<string> {
+/**
+ * Parse plain `opencode models` output (opencode 2.x): one `provider/model` id per
+ * line and no metadata, so every model gets an empty variant list. The first `/`
+ * separates provider from model; blank or malformed lines are ignored.
+ */
+export function parsePlainOpencodeModelsOutput(output: string): ModelCache {
+  const catalog: ModelCache = {};
+  for (const line of output.split(/\r?\n/)) {
+    const ref = line.trim();
+    const separator = ref.indexOf("/");
+    if (separator <= 0 || separator === ref.length - 1 || /\s/.test(ref)) continue;
+    addKnownAssignment(catalog, { provider: ref.slice(0, separator), model: ref.slice(separator + 1) });
+  }
+  return catalog;
+}
+
+const OPENCODE_MODELS_EXEC_OPTIONS = { maxBuffer: 16 * 1024 * 1024, timeout: 30000 };
+
+async function readLiveOpencodeModelCatalog(): Promise<ModelCache> {
   const fixturePath = process.env.PRESETT_TEST_OPENCODE_MODELS_FILE;
-  if (fixturePath) return readFile(fixturePath, "utf8");
-  const { stdout } = await exec("opencode models --verbose", { maxBuffer: 16 * 1024 * 1024, timeout: 30000 });
-  return stdout;
+  if (fixturePath) return parseVerboseOpencodeModelsOutput(await readFile(fixturePath, "utf8"));
+
+  try {
+    const { stdout } = await exec("opencode models --verbose", OPENCODE_MODELS_EXEC_OPTIONS);
+    return parseVerboseOpencodeModelsOutput(stdout);
+  } catch {
+    // opencode 2.x rejects `--verbose`; fall back to ids only.
+    const { stdout } = await exec("opencode models", OPENCODE_MODELS_EXEC_OPTIONS);
+    return parsePlainOpencodeModelsOutput(stdout);
+  }
 }
 
 export function clearServerModelCatalogCache(): void {
@@ -132,7 +157,7 @@ export function clearServerModelCatalogCache(): void {
 
 export async function readLiveOpencodeModelCatalogSafe(): Promise<Result<ModelCache>> {
   try {
-    return ok(parseVerboseOpencodeModelsOutput(await readVerboseOpencodeModelsOutput()));
+    return ok(await readLiveOpencodeModelCatalog());
   } catch (cause) {
     return err({ code: "FILE_MISSING", message: "OpenCode model catalog unavailable", cause });
   }
