@@ -68,52 +68,46 @@ describe("ProfilesClientView", () => {
     onEditAssignmentChange: vi.fn(),
   };
 
-  it("renders the create profile button using Button primitive", () => {
+  it("renders the create profile button disabled so it cannot open the creation form", async () => {
     render(<ProfilesClientView {...defaultProps} />);
 
     const createBtn = screen.getByRole("button", { name: /create profile/i });
-    expect(createBtn).not.toBeNull();
     expect(createBtn.tagName).toBe("BUTTON");
+    expect((createBtn as HTMLButtonElement).disabled).toBe(true);
+
+    await userEvent.click(createBtn);
+
+    expect(screen.queryByPlaceholderText("Profile name")).toBeNull();
   });
 
-  it("shows form and input when clicking create button", async () => {
+  it("explains that creating, editing and repairing named profiles is retired", () => {
     render(<ProfilesClientView {...defaultProps} />);
 
-    await userEvent.click(screen.getByText("Create Profile"));
-
-    expect(screen.queryByPlaceholderText("Profile name")).not.toBeNull();
+    expect(
+      screen.getByText(
+        "Creating, editing and repairing named profiles is no longer available: Gentle-AI retired the profile flags.",
+      ),
+    ).not.toBeNull();
   });
 
-  it("updates the input value when typing", async () => {
-    render(<ProfilesClientView {...defaultProps} />);
+  it("never submits the creation panel, even with a valid name and orchestrator assignment", async () => {
+    const onCreate = vi.fn();
+    render(
+      <ProfilesClientView
+        {...defaultProps}
+        onCreate={onCreate}
+        showForm={true}
+        newAssignments={{ orchestrator: { provider: "openai", model: "gpt-4", variant: "high" } }}
+        catalog={{ openai: { "gpt-4": ["high"] } }}
+      />,
+    );
 
-    await userEvent.click(screen.getByText("Create Profile"));
     await userEvent.type(screen.getByPlaceholderText("Profile name"), "work");
 
-    const input = screen.getByPlaceholderText("Profile name") as HTMLInputElement;
-    expect(input.value).toBe("work");
-  });
-
-  it("describes the profile name rules and disabled create state", async () => {
-    render(<ProfilesClientView {...defaultProps} />);
-
-    await userEvent.click(screen.getByText("Create Profile"));
-
-    expect(screen.getByText("Profile name")).not.toBeNull();
-    expect(screen.getByRole("button", { name: "SAVE PROFILE" }).hasAttribute("disabled")).toBe(true);
-    expect(screen.getByRole("button", { name: "Cancel" })).not.toBeNull();
-  });
-
-  it("passes the submitted profile name directly to the creation handler", async () => {
-    const onCreate = vi.fn();
-    render(<ProfilesClientView {...defaultProps} onCreate={onCreate} />);
-
-    await userEvent.click(screen.getByText("Create Profile"));
-    await userEvent.type(screen.getByPlaceholderText("Profile name"), "  work  ");
-    
-    // Since the orchestrator assignment is required, the button should remain disabled
-    // until all fields are filled
-    expect(screen.getByRole("button", { name: "SAVE PROFILE" }).hasAttribute("disabled")).toBe(true);
+    const save = screen.getByRole("button", { name: "SAVE PROFILE" }) as HTMLButtonElement;
+    expect(save.disabled).toBe(true);
+    await userEvent.click(save);
+    expect(onCreate).not.toHaveBeenCalled();
   });
 
   describe("delete action for the base profile", () => {
@@ -359,7 +353,7 @@ describe("ProfilesClientView", () => {
       expect((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(true);
     });
 
-it("renders an empty orchestrator picker and enables save after assigning it", async () => {
+it("renders an empty orchestrator picker and keeps save disabled for a named profile after assigning it", async () => {
       const onEditAssignmentChange = vi.fn();
 
       function EditProfileHarness() {
@@ -403,7 +397,28 @@ it("renders an empty orchestrator picker and enables save after assigning it", a
         model: "gpt-4",
         variant: "high",
       });
-      expect((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(false);
+      // Named profile edits are retired: a complete assignment still cannot be saved.
+      expect((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(true);
+    });
+
+    it("keeps save disabled and never calls onEditSave for a named profile with a valid assignment", async () => {
+      const onEditSave = vi.fn();
+      render(
+        <ProfilesClientView
+          {...editProps}
+          catalog={{ openai: { "gpt-4": ["high"] } }}
+          editAssignments={{
+            "sdd-orchestrator-alpha": { provider: "openai", model: "gpt-4", variant: "high" },
+          }}
+          onEditSave={onEditSave}
+        />,
+      );
+
+      const save = screen.getByRole("button", { name: "Save" }) as HTMLButtonElement;
+      expect(save.disabled).toBe(true);
+      await userEvent.click(save);
+      expect(onEditSave).not.toHaveBeenCalled();
+      expect(screen.getByText(/no longer available/i)).not.toBeNull();
     });
   });
 
@@ -578,14 +593,14 @@ it("renders an empty orchestrator picker and enables save after assigning it", a
       expect(providerOptions).toEqual(["alpha-prov", "zebra"]);
     });
 
-    it("enables edit save when the model has no variants and no variant is selected", async () => {
+    it("enables Base edit save when the model has no variants and no variant is selected", async () => {
       const editProps = {
         ...defaultProps,
-        profiles: [{ name: "alpha", displayName: "Alpha", active: true, modelCount: 1, updatedAt: "2026-01-01T00:00:00.000Z" }],
-        editingProfile: "alpha",
+        profiles: [{ name: "", displayName: "Gentle-Orchestrator", active: true, modelCount: 1, updatedAt: "2026-01-01T00:00:00.000Z" }],
+        editingProfile: "",
         catalog: { openai: { "gpt-5": [] } },
         editAssignments: {
-          "sdd-orchestrator-alpha": { provider: "openai", model: "gpt-5", variant: "" },
+          "gentle-orchestrator": { provider: "openai", model: "gpt-5", variant: "" },
         },
       };
 
@@ -711,7 +726,7 @@ describe("orchestratorAgentKey (pure function)", () => {
   });
 });
 
-describe("ProfilesClientView incomplete repair", () => {
+describe("ProfilesClientView retired repair", () => {
   const baseProps = {
     catalog: {},
     catalogLoading: false,
@@ -720,7 +735,6 @@ describe("ProfilesClientView incomplete repair", () => {
     pendingAction: null,
     newAssignments: {},
     onAssignmentChange: vi.fn(),
-    onCreate: vi.fn(),
     onSwitch: vi.fn(),
     onDeleteStart: vi.fn(),
     onDeleteConfirm: vi.fn(),
@@ -735,7 +749,7 @@ describe("ProfilesClientView incomplete repair", () => {
     onEditCancel: vi.fn(),
     onEditAssignmentChange: vi.fn(),
   };
-  const repairProps = {
+  const incompleteProps = {
     ...baseProps,
     profiles: [
       { name: "alpha", displayName: "Alpha", active: false, modelCount: 1, updatedAt: "2026-01-01T00:00:00.000Z", incomplete: true, strategy: "generated-multi" as const },
@@ -743,35 +757,34 @@ describe("ProfilesClientView incomplete repair", () => {
     ],
   };
 
-  it("renders an Incomplete badge and a Repair trigger for incomplete profiles only", () => {
-    render(<ProfilesClientView {...repairProps} />);
-
-    expect(screen.getByText("Incomplete")).not.toBeNull();
-    // Only the incomplete profile exposes the repair trigger.
-    expect(screen.getAllByRole("button", { name: /repair/i })).toHaveLength(1);
+  beforeEach(() => {
+    setLocale("en");
   });
 
-  it("opens an explicit confirmation before starting the repair", async () => {
-    const onRepairStart = vi.fn();
-    render(<ProfilesClientView {...repairProps} onRepairStart={onRepairStart} />);
+  it("offers no Repair button and no Incomplete badge, and shows the retired notice instead", () => {
+    render(<ProfilesClientView {...incompleteProps} />);
 
-    await userEvent.click(screen.getByRole("button", { name: /repair/i }));
-
-    expect(onRepairStart).toHaveBeenCalledWith("alpha");
+    expect(screen.queryByRole("button", { name: /repair/i })).toBeNull();
+    expect(screen.queryByText("Incomplete")).toBeNull();
+    expect(screen.getByText(/no longer available/i)).not.toBeNull();
   });
 
-  it("shows the repair confirmation dialog with the profile name when pending", () => {
+  it("keeps switch and delete available for incomplete profiles", async () => {
+    const onSwitch = vi.fn();
+    const onDeleteStart = vi.fn();
     render(
       <ProfilesClientView
-        {...repairProps}
-        repairConfirmProfile="alpha"
-        onRepairConfirm={vi.fn()}
-        onRepairCancel={vi.fn()}
+        {...incompleteProps}
+        onSwitch={onSwitch}
+        onDeleteStart={onDeleteStart}
       />,
     );
 
-    expect(screen.getByText(/Repair profile "Alpha"\?/i)).not.toBeNull();
-    expect(screen.getByRole("button", { name: /confirm repair/i })).not.toBeNull();
+    await userEvent.click(screen.getAllByRole("button", { name: /switch/i })[0]);
+    await userEvent.click(screen.getAllByRole("button", { name: /delete/i })[0]);
+
+    expect(onSwitch).toHaveBeenCalledWith("alpha");
+    expect(onDeleteStart).toHaveBeenCalledWith("alpha");
   });
 });
 

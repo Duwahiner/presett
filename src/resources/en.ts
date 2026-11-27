@@ -141,6 +141,7 @@ export const en: Resources = {
   "profiles_repairError": "Unable to repair profile",
   "profiles_readonly": "Read-only: this profile strategy is managed externally and cannot be modified here.",
   "profiles_readonlyUnknown": "Read-only: the profile strategy is unknown, so modifications are disabled.",
+  "profiles_retired": "Creating, editing and repairing named profiles is no longer available: Gentle-AI retired the profile flags.",
   "backups_title": "Backups",
   "backups_status_badge": "Active",
   "backups_header_description": "View and restore Gentle-AI backups.",

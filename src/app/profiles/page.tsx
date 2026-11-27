@@ -43,8 +43,10 @@ export default function ProfilesPage() {
             </h2>
             <button
               type="button"
+              disabled
+              title={t("profiles_retired")}
               onClick={() => { setModalKey((k) => k + 1); setShowForm(true); }}
-              className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none light:border-black light:text-black"
+              className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
               aria-label={t("profiles_create_title")}
             >
               <Plus className="h-3.5 w-3.5" aria-hidden="true" />

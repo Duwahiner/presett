@@ -17,9 +17,15 @@ vi.mock("@/components/organisms/ProfilesClient/profilesClientView", () => ({
       })}>
         Assign orchestrator
       </button>
-      <button type="button" onClick={() => props.onCreate("work")}>
-        Create work
-      </button>
+      <span data-testid="has-create-handler">{String("onCreate" in props && props.onCreate !== undefined)}</span>
+      <span data-testid="has-repair-handlers">
+        {String(
+          "onRepairStart" in props ||
+            "onRepairConfirm" in props ||
+            "onRepairCancel" in props ||
+            "repairConfirmProfile" in props,
+        )}
+      </span>
       <span data-testid="new-assignments">
         {JSON.stringify(props.newAssignments)}
       </span>
@@ -35,18 +41,6 @@ vi.mock("@/components/organisms/ProfilesClient/profilesClientView", () => ({
       <button type="button" onClick={() => props.onDeleteConfirm()}>
         Confirm delete
       </button>
-      <button type="button" onClick={() => props.onRepairStart?.("work")}>
-        Start repair
-      </button>
-      <button type="button" onClick={() => props.onRepairConfirm?.()}>
-        Confirm repair
-      </button>
-      <button type="button" onClick={() => props.onRepairCancel?.()}>
-        Cancel repair
-      </button>
-      <span data-testid="repair-confirm-profile">
-        {props.repairConfirmProfile ?? ""}
-      </span>
       <span data-testid="pending-action">{props.pendingAction ?? ""}</span>
       {props.editingProfile !== null && (
         <>
@@ -173,7 +167,30 @@ describe("ProfilesClient edit hydration", () => {
     });
   });
 
-  it("sends the hydrated orchestrator-only payload on save", async () => {
+  it("never writes from the Base update screen: save is a no-op that does not call updateProfile", async () => {
+    getProfileDetail.mockResolvedValue({
+      name: "",
+      assignments: {
+        "gentle-orchestrator": { provider: "openai", model: "gpt-4", variant: "low" },
+      },
+    });
+    const user = userEvent.setup();
+
+    render(<ProfilesClient />, { wrapper });
+    await user.click(await screen.findByRole("button", { name: "Start base update" }));
+    await waitFor(() => {
+      expect(screen.getByTestId("edit-assignments").textContent).toContain(
+        "gentle-orchestrator",
+      );
+    });
+
+    await user.click(screen.getByRole("button", { name: "Update profile" }));
+
+    expect(updateProfile).not.toHaveBeenCalled();
+    expect(screen.getByTestId("pending-action").textContent).toBe("");
+  });
+
+  it("never saves a named profile: the retired save is a no-op that does not call updateProfile", async () => {
     getProfileDetail.mockResolvedValue(WORK_DETAIL);
     const user = userEvent.setup();
 
@@ -187,43 +204,8 @@ describe("ProfilesClient edit hydration", () => {
 
     await user.click(screen.getByRole("button", { name: "Update profile" }));
 
-    await waitFor(() =>
-      expect(updateProfile).toHaveBeenCalledWith("work", WORK_DETAIL.assignments),
-    );
-  });
-
-  it("preserves an out-of-catalog assignment in the PUT payload", async () => {
-    getProfileDetail.mockResolvedValue({
-      name: "work",
-      assignments: {
-        "sdd-orchestrator-work": {
-          provider: "acme",
-          model: "legacy-model",
-          variant: "legacy",
-        },
-      },
-    });
-    const user = userEvent.setup();
-
-    render(<ProfilesClient />, { wrapper });
-    await user.click(await screen.findByRole("button", { name: "Start update" }));
-    await waitFor(() => {
-      expect(screen.getByTestId("edit-assignments").textContent).toContain(
-        "acme",
-      );
-    });
-
-    await user.click(screen.getByRole("button", { name: "Update profile" }));
-
-    await waitFor(() =>
-      expect(updateProfile).toHaveBeenCalledWith("work", {
-        "sdd-orchestrator-work": {
-          provider: "acme",
-          model: "legacy-model",
-          variant: "legacy",
-        },
-      }),
-    );
+    expect(updateProfile).not.toHaveBeenCalled();
+    expect(screen.getByTestId("pending-action").textContent).toBe("");
   });
 
   it("clears local state on cancel without calling updateProfile", async () => {
@@ -299,75 +281,22 @@ describe("ProfilesClient edit hydration", () => {
   });
 });
 
-describe("ProfilesClient orchestrator-only creation", () => {
-  it("persists only the orchestrator assignment when creating a profile", async () => {
-    const user = userEvent.setup();
-
+describe("ProfilesClient retired operations", () => {
+  it("does not hand the view a create handler and never calls createProfile", async () => {
     render(<ProfilesClient />, { wrapper });
 
-    await user.click(await screen.findByRole("button", { name: "Assign orchestrator" }));
-    await user.click(screen.getByRole("button", { name: "Create work" }));
+    await screen.findByRole("button", { name: "Assign orchestrator" });
 
-    await waitFor(() =>
-      expect(createProfile).toHaveBeenCalledWith({
-        name: "work",
-        assignments: {
-          "sdd-orchestrator-work": { provider: "openai", model: "gpt-4", variant: "high" },
-        },
-      }),
-    );
+    expect(screen.getByTestId("has-create-handler").textContent).toBe("false");
+    expect(createProfile).not.toHaveBeenCalled();
   });
-});
 
-describe("ProfilesClient manual repair", () => {
-  it("asks for explicit confirmation before repairing an incomplete profile", async () => {
-    repairProfile.mockResolvedValue({ ok: true });
-    const user = userEvent.setup();
-
+  it("does not hand the view any repair handler and never calls repairProfile", async () => {
     render(<ProfilesClient />, { wrapper });
-    await user.click(await screen.findByRole("button", { name: "Start repair" }));
 
-    await waitFor(() =>
-      expect(screen.getByTestId("repair-confirm-profile").textContent).toBe("work"),
-    );
-    // No repair yet — confirmation is pending.
+    await screen.findByRole("button", { name: "Assign orchestrator" });
+
+    expect(screen.getByTestId("has-repair-handlers").textContent).toBe("false");
     expect(repairProfile).not.toHaveBeenCalled();
-  });
-
-  it("triggers the repair only after explicit confirmation", async () => {
-    repairProfile.mockResolvedValue({ ok: true });
-    const user = userEvent.setup();
-
-    render(<ProfilesClient />, { wrapper });
-    await user.click(await screen.findByRole("button", { name: "Start repair" }));
-    await user.click(screen.getByRole("button", { name: "Confirm repair" }));
-
-    await waitFor(() => expect(repairProfile).toHaveBeenCalledWith("work"));
-  });
-
-  it("clears the confirmation when the user cancels without repairing", async () => {
-    repairProfile.mockResolvedValue({ ok: true });
-    const user = userEvent.setup();
-
-    render(<ProfilesClient />, { wrapper });
-    await user.click(await screen.findByRole("button", { name: "Start repair" }));
-    await user.click(screen.getByRole("button", { name: "Cancel repair" }));
-
-    await waitFor(() =>
-      expect(screen.getByTestId("repair-confirm-profile").textContent).toBe(""),
-    );
-    expect(repairProfile).not.toHaveBeenCalled();
-  });
-
-  it("refreshes the profile list after a successful repair", async () => {
-    repairProfile.mockResolvedValue({ ok: true });
-    const user = userEvent.setup();
-
-    render(<ProfilesClient />, { wrapper });
-    await user.click(await screen.findByRole("button", { name: "Start repair" }));
-    await user.click(screen.getByRole("button", { name: "Confirm repair" }));
-
-    await waitFor(() => expect(repairProfile).toHaveBeenCalledWith("work"));
-    expect(listProfiles).toHaveBeenCalledTimes(2); // initial load + refresh
   });
 });

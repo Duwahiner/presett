@@ -141,6 +141,7 @@ export interface Resources {
   "profiles_repairError": string;
   "profiles_readonly": string;
   "profiles_readonlyUnknown": string;
+  "profiles_retired": string;
   "backups_title": string;
   "backups_status_badge": string;
   "backups_header_description": string;

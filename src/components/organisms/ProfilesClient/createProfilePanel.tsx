@@ -24,7 +24,8 @@ interface CreateProfilePanelProps {
   connectedProviders?: string[];
   newAssignments: Record<string, Assignment>;
   onAssignmentChange: (key: string, value: Assignment) => void;
-  onSubmit: (name: string) => void;
+  /** Retired: the panel never submits; kept so existing callers still type-check. */
+  onSubmit?: (name: string) => void;
   onCancel: () => void;
 }
 
@@ -180,7 +181,6 @@ export function CreateProfilePanel({
   connectedProviders = [],
   newAssignments,
   onAssignmentChange,
-  onSubmit,
   onCancel,
 }: CreateProfilePanelProps) {
   const [name, setName] = useState("");
@@ -191,30 +191,16 @@ export function CreateProfilePanel({
   const reservedPrefix = normalizedName.startsWith(SDD_ORCHESTRATOR_PREFIX);
   const nameError = (touched && !normalizedName) || reservedPrefix;
 
-  const orchestratorAssignment = newAssignments["orchestrator"] ?? EMPTY_ASSIGNMENT;
-  const orchestratorVariants = [
-    ...(catalog[orchestratorAssignment.provider]?.[orchestratorAssignment.model] ?? []),
-  ];
-  const orchestratorAssigned = Boolean(
-    orchestratorAssignment.provider &&
-      orchestratorAssignment.model &&
-      (orchestratorVariants.length === 0 || orchestratorAssignment.variant),
-  );
-  const canSubmit =
-    Boolean(normalizedName) &&
-    !reservedPrefix &&
-    orchestratorAssigned &&
-    pendingAction !== "create";
+  // Profile creation is retired (gentle-ai removed the profile flags): the
+  // panel can no longer be submitted regardless of the form state.
+  const canSubmit = false;
 
   if (!open) return null;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     setTouched(true);
-    if (!normalizedName || reservedPrefix || !orchestratorAssigned) return;
-    onSubmit(normalizedName);
-    setName("");
-    setTouched(false);
+    // Retired: never forward the submission.
   }
 
   return (
@@ -303,7 +289,7 @@ export function CreateProfilePanel({
           </button>
 
           <p className="flex-grow text-right text-xs text-muted-foreground">
-            {t("profiles_createDisabledHelp")}
+            {t("profiles_retired")}
           </p>
         </div>
       </form>
