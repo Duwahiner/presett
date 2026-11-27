@@ -96,6 +96,7 @@ describe("usageStatsService", () => {
 
   afterEach(() => {
     vi.useRealTimers();
+    vi.unstubAllEnvs();
   });
 
   describe("resolveCost", () => {
@@ -128,6 +129,29 @@ describe("usageStatsService", () => {
       }
       expect(statsCall(calls)?.args).toEqual(["stats", "--days", "7", "--models", "--cost", "--json"]);
       expect(sessionCall(calls)?.args).toEqual(["session", "list", "--format", "json", "-n", "1000"]);
+    });
+
+    it("uses OPENCODE_BIN as the executable for every CLI call when it is set", async () => {
+      const bin = "C:\\Program Files\\nodejs\\node_modules\\@opencode\\cli\\bin\\opencode.exe";
+      vi.stubEnv("OPENCODE_BIN", bin);
+      const calls: ExecCall[] = [];
+      await collectUsageStats({ days: 7 }, fakeExecFile(STATS_MODELS, SESSIONS, calls));
+
+      expect(calls).toHaveLength(2);
+      for (const call of calls) {
+        expect(call.file).toBe(bin);
+        expect(call.options.shell).toBe(false);
+      }
+    });
+
+    it("trims OPENCODE_BIN and falls back to opencode when it is blank", async () => {
+      vi.stubEnv("OPENCODE_BIN", "   ");
+      const calls: ExecCall[] = [];
+      await collectUsageStats({ days: 7 }, fakeExecFile(STATS_MODELS, SESSIONS, calls));
+
+      for (const call of calls) {
+        expect(call.file).toBe("opencode");
+      }
     });
 
     it("maps days=30 to --days 30", async () => {

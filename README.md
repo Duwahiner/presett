@@ -50,6 +50,19 @@ presett/
 - Gentle-AI CLI installed (`gentle-ai --version`)
 - OpenCode config present at `~/.config/opencode/opencode.json`
 
+### Variable `OPENCODE_BIN` (opcional)
+
+La página de uso ejecuta `opencode` sin shell, por seguridad. En Windows, Node solo
+encuentra archivos `.exe` en el PATH y no puede lanzar el atajo `opencode.cmd` de npm,
+por lo que la llamada falla con `ENOENT`. Para ese caso, define en `.env.local` la ruta
+al ejecutable real:
+
+```bash
+OPENCODE_BIN=C:/Program Files/nodejs/node_modules/@opencode/cli/bin/opencode.exe
+```
+
+Si no se define o está vacía, se usa `opencode` desde el PATH.
+
 ## Development
 
 ```bash
