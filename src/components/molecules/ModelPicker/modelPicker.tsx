@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Select } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { t } from "@/resources/resources";
+import { resolveProviderLabel } from "@/lib/providerIdentity";
 
 export type ModelCatalog = Record<string, Record<string, string[]>>;
 
@@ -56,7 +57,16 @@ function PickerField({
              "disabled:cursor-not-allowed disabled:opacity-50 light:border-black light:bg-white light:text-black light:focus-visible:border-primary",
            )}
          >
-          <Select.Value placeholder={placeholder} />
+          <span className="flex items-center gap-2 min-w-0">
+            <Select.Value placeholder={placeholder} />
+            {value && connectedSet?.has(value) && (
+              <span
+                aria-hidden="true"
+                className="inline-flex size-2 shrink-0 rounded-full bg-success"
+                title="Connected"
+              />
+            )}
+          </span>
           <ChevronDown className="size-4 text-muted-foreground" />
         </Select.Trigger>
         <Select.Portal>
@@ -68,7 +78,7 @@ function PickerField({
                 )}
              >
               {options.map((option) => {
-                const isConnected = connectedSet?.has(option);
+                const isConnected = connectedSet?.has(option) ?? false;
                 return (
                   <Select.Item
                     key={option}
@@ -84,7 +94,7 @@ function PickerField({
                       </Select.ItemIndicator>
                     </span>
                     <Select.ItemText className="pl-6 flex items-center gap-2">
-                      {option}
+                      {resolveProviderLabel(option, isConnected)}
                       {isConnected && (
                         <span className="inline-flex size-2 rounded-full bg-success" title="Connected" />
                       )}
@@ -119,7 +129,7 @@ export function ModelPicker({
     [catalog, provider],
   );
   const variants = useMemo(
-    () => catalog[provider]?.[model] ?? [],
+    () => [...(catalog[provider]?.[model] ?? [])].sort(),
     [catalog, provider, model],
   );
   
@@ -128,7 +138,7 @@ export function ModelPicker({
     [connectedProviders],
   );
 
-  const isValid = provider && model && variant;
+  const isValid = Boolean(provider && model && (variants.length === 0 || variant));
 
   return (
     <div className="space-y-3">

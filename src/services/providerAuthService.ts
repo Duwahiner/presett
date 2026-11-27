@@ -1,9 +1,26 @@
 import { promisify } from "node:util";
 import { exec as execCallback } from "node:child_process";
-import type { Result } from "@/lib/types";
+import type { Result, ProviderAuthError, ProviderAuthErrorCode } from "@/lib/types";
 import { ok, err } from "@/lib/types";
 
 const exec = promisify(execCallback);
+
+// Literal constant command: never interpolated with user input, so `shell: true`
+// on Windows cannot be leveraged for command injection.
+const PROVIDER_AUTH_COMMAND = "opencode providers list";
+const PROVIDER_AUTH_TIMEOUT_MS = 10_000;
+const PROVIDER_AUTH_MAX_BUFFER = 1024 * 1024;
+
+const PROVIDER_AUTH_MESSAGES: Record<
+  Exclude<ProviderAuthErrorCode, "PARSE_ERROR">,
+  string
+> = {
+  CLI_NOT_FOUND: "OpenCode CLI not found or not on PATH.",
+  CLI_TIMEOUT: "OpenCode providers list timed out.",
+  CLI_ERROR: "Failed to retrieve connected providers from OpenCode.",
+};
+
+const PARSE_ERROR_MESSAGE = "Failed to parse OpenCode providers output.";
 
 export interface ConnectedProvider {
   name: string;
@@ -11,10 +28,62 @@ export interface ConnectedProvider {
 }
 
 /**
+ * Build a minimal environment for the subprocess containing only the variables
+ * the OpenCode CLI needs to locate credentials (`HOME`, `USERPROFILE`, `PATH`).
+ * Any other variable — including API keys, tokens and secrets — is deliberately
+ * dropped so nothing sensitive is leaked to the child process.
+ */
+export function buildSafeEnv(env: Record<string, string | undefined>): Record<string, string> {
+  const safeEnv: Record<string, string> = {};
+  for (const key of ["HOME", "USERPROFILE", "PATH"] as const) {
+    const value = env[key];
+    if (typeof value === "string" && value.length > 0) {
+      safeEnv[key] = value;
+    }
+  }
+  return safeEnv;
+}
+
+/**
+ * Map a raw `child_process` failure to a sanitized `ProviderAuthError`. The
+ * `cause` is never surfaced; only a generic constant message is returned.
+ */
+export function classifyProviderAuthError(cause: unknown): ProviderAuthError {
+  if (cause && typeof cause === "object") {
+    const record = cause as Record<string, unknown>;
+    const code = record.code;
+    if (code === "ENOENT" || code === 127) {
+      return { code: "CLI_NOT_FOUND", message: PROVIDER_AUTH_MESSAGES.CLI_NOT_FOUND };
+    }
+    const killed = record.killed === true;
+    const signal = typeof record.signal === "string" ? record.signal : "";
+    const message = typeof record.message === "string" ? record.message : "";
+    if (killed || signal.length > 0 || /timed?\s*out|ETIMEDOUT/i.test(message)) {
+      return { code: "CLI_TIMEOUT", message: PROVIDER_AUTH_MESSAGES.CLI_TIMEOUT };
+    }
+  }
+  return { code: "CLI_ERROR", message: PROVIDER_AUTH_MESSAGES.CLI_ERROR };
+}
+
+/**
+ * Parse CLI output into a `Result`, mapping any parser failure to `PARSE_ERROR`
+ * with a sanitized message. `parse` is injectable for testability.
+ */
+export function parseConnectedProvidersSafe(
+  output: string,
+  parse: (output: string) => ConnectedProvider[] = parseConnectedProviders,
+): Result<ConnectedProvider[], ProviderAuthError> {
+  try {
+    return ok(parse(output));
+  } catch {
+    return err({ code: "PARSE_ERROR", message: PARSE_ERROR_MESSAGE });
+  }
+}
+
+/**
  * Remove ANSI color codes from a string.
  */
 function stripAnsiCodes(text: string): string {
-  // eslint-disable-next-line no-control-regex
   return text.replace(/\u001b\[[0-9;]*m/g, "");
 }
 
@@ -39,9 +108,9 @@ export function parseConnectedProviders(output: string): ConnectedProvider[] {
 
   for (const line of lines) {
     const trimmed = line.trim();
-    // Lines with ● indicate a connected provider
-    if (trimmed.startsWith("●")) {
-      const content = trimmed.substring(1).trim();
+    // Lines with • (U+2022) or ● (U+25CF) indicate a connected provider
+    if (/^[•●]/.test(trimmed)) {
+      const content = trimmed.replace(/^[•●]/, "").trim();
       const parts = content.split(/\s+/);
       
       if (parts.length >= 2) {
@@ -61,21 +130,35 @@ export function parseConnectedProviders(output: string): ConnectedProvider[] {
 
 /**
  * Get the list of connected providers from OpenCode CLI.
+ *
+ * The CLI is invoked deterministically: with a whitelisted environment that
+ * preserves `HOME`/`USERPROFILE`/`PATH` (so Windows resolves the binary) and an
+ * explicit timeout. `exec` always spawns through the platform default shell, so
+ * the constant command resolves correctly on every OS without overriding it. Any
+ * failure is returned as a typed `ProviderAuthError` instead of being silently
+ * flattened.
  */
-export async function getConnectedProvidersSafe(): Promise<Result<ConnectedProvider[]>> {
+export async function getConnectedProvidersSafe(): Promise<
+  Result<ConnectedProvider[], ProviderAuthError>
+> {
+  const options: {
+    env: NodeJS.ProcessEnv;
+    timeout: number;
+    maxBuffer: number;
+  } = {
+    // buildSafeEnv deliberately drops NODE_ENV; re-cast to the exec option type,
+    // which (augmented by Next) requires NODE_ENV, even though only the three
+    // whitelisted keys are meaningful to the child process.
+    env: buildSafeEnv(process.env) as unknown as NodeJS.ProcessEnv,
+    timeout: PROVIDER_AUTH_TIMEOUT_MS,
+    maxBuffer: PROVIDER_AUTH_MAX_BUFFER,
+  };
+
   try {
-    const { stdout } = await exec("opencode providers list", {
-      maxBuffer: 1024 * 1024,
-      timeout: 10000,
-    });
-    
-    return ok(parseConnectedProviders(stdout));
+    const { stdout } = await exec(PROVIDER_AUTH_COMMAND, options);
+    return parseConnectedProvidersSafe(stdout);
   } catch (cause) {
-    return err({
-      code: "FILE_MISSING",
-      message: "Failed to retrieve connected providers from OpenCode",
-      cause,
-    });
+    return err(classifyProviderAuthError(cause));
   }
 }
 

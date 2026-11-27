@@ -96,7 +96,7 @@ export function buildModelCache(raw: ModelCache): ModelCacheIndex {
 export interface ModelAssignmentInput {
   provider: string;
   model: string;
-  variant: string;
+  variant?: string;
 }
 
 export function validateModelAssignment(
@@ -125,7 +125,19 @@ export function validateModelAssignment(
   }
 
   const variants = cache.getVariants(input.provider, input.model);
-  if (!variants.includes(input.variant)) {
+  const hasVariant = input.variant !== undefined && input.variant !== "";
+  if (variants.length === 0) {
+    // Model has no variants: variant is optional and must be absent/empty.
+    if (hasVariant) {
+      return err({
+        code: "SCHEMA_INVALID",
+        message: `Variant "${input.variant}" is not valid for ${input.provider}/${input.model}`,
+      });
+    }
+    return ok(undefined);
+  }
+
+  if (!hasVariant || !variants.includes(input.variant!)) {
     return err({
       code: "SCHEMA_INVALID",
       message: `Variant "${input.variant}" is not valid for ${input.provider}/${input.model}`,

@@ -3,6 +3,7 @@ import { mkdtemp, writeFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { ok, err } from "@/lib/types";
+import type { ProviderAuthError } from "@/lib/types";
 import type { ConnectedProvider } from "@/services/providerAuthService";
 
 // Hoisted by Vitest before any import of the route. Only `getConnectedProvidersSafe`
@@ -129,10 +130,10 @@ describe("GET /api/models", () => {
         '  "providerID": "anthropic",',
         '  "variants": {}',
         "}",
-        "opencode-zen/qwen3.8-max",
+        "opencode/qwen3.8-max",
         "{",
         '  "id": "qwen3.8-max",',
-        '  "providerID": "opencode-zen",',
+        '  "providerID": "opencode",',
         '  "variants": {',
         '    "high": {},',
         '    "max": {}',
@@ -145,10 +146,11 @@ describe("GET /api/models", () => {
     const body = await response.json();
 
     expect(response.status).toBe(200);
-    expect(body.providers).toEqual(expect.arrayContaining(["openai", "anthropic", "opencode-zen"]));
+    expect(body.providers).toEqual(expect.arrayContaining(["openai", "anthropic", "opencode"]));
     expect(body.catalog.openai["gpt-5.4"]).toEqual(["high", "low", "medium"]);
     expect(body.catalog.anthropic["claude-sonnet-5"]).toEqual([]);
-    expect(body.catalog["opencode-zen"]["qwen3.8-max"]).toEqual(["high", "max"]);
+    expect(body.catalog["opencode"]["qwen3.8-max"]).toEqual(["high", "max"]);
+    expect(body.catalog["opencode-zen"]).toBeUndefined();
   });
 
   it("maps connected providers from the mocked provider list without invoking the CLI", async () => {
@@ -166,13 +168,32 @@ describe("GET /api/models", () => {
     expect(body.providers).toContain("openai");
     // "OpenAI" display name normalizes to the catalog id "openai".
     expect(body.connectedProviders).toContain("openai");
+    // Successful detection is reported with ok: true.
+    expect(body.providerAuthStatus).toEqual({ ok: true });
     // The double was used; no real `opencode providers list` was executed.
     expect(mockedGetConnectedProviders).toHaveBeenCalled();
   });
 
+  it("exposes providerAuthStatus ok: true for a legitimate empty list", async () => {
+    // Default double resolves ok([]); providerAuthStatus must still signal success.
+    await writeFile(
+      join(tempDir, "model-variants.json"),
+      JSON.stringify({ openai: { "gpt-4": ["low"] } }),
+    );
+    await writeFile(verboseFile, "");
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.connectedProviders).toEqual([]);
+    // An empty list is NOT a failure: detection succeeded.
+    expect(body.providerAuthStatus).toEqual({ ok: true });
+  });
+
   it("returns the catalog when the connected providers lookup fails", async () => {
     mockedGetConnectedProviders.mockResolvedValue(
-      err({ code: "FILE_MISSING", message: "Proveedor no disponible (test)" }),
+      err<ProviderAuthError>({ code: "CLI_ERROR", message: "Proveedor no disponible (test)" }),
     );
     await writeFile(
       join(tempDir, "model-variants.json"),
@@ -187,11 +208,65 @@ describe("GET /api/models", () => {
     expect(body.providers).toContain("openai");
     // Provider failure must not block the catalog; no connected providers are listed.
     expect(body.connectedProviders).toEqual([]);
+    // A detection failure is distinguishable from an empty list via providerAuthStatus.
+    expect(body.providerAuthStatus).toEqual({
+      ok: false,
+      code: "CLI_ERROR",
+      message: "Proveedor no disponible (test)",
+    });
     expect(mockedGetConnectedProviders).toHaveBeenCalled();
   });
 
   it("returns 503 when the catalog is missing", async () => {
     const response = await GET();
     expect(response.status).toBe(503);
+  });
+
+  it("correlates the `OpenCode Zen` auth signal to the `opencode` catalog id", async () => {
+    mockedGetConnectedProviders.mockResolvedValue(
+      ok([{ name: "OpenCode Zen", authType: "oauth" }]),
+    );
+    await writeFile(
+      join(tempDir, "model-variants.json"),
+      JSON.stringify({ openai: { "gpt-4": ["low"] } }),
+    );
+    await writeFile(verboseFile, "");
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    // The correlated signal is the canonical `opencode`, never `opencode-zen`.
+    expect(body.connectedProviders).toContain("opencode");
+    expect(body.connectedProviders).not.toContain("opencode-zen");
+  });
+
+  it("keeps a raw `opencode` providerID as `opencode` without canonicalization", async () => {
+    await writeFile(
+      join(tempDir, "model-variants.json"),
+      JSON.stringify({ openai: { "gpt-5.6-luna": ["medium"] } }),
+    );
+    await writeFile(
+      verboseFile,
+      [
+        "opencode/qwen3-max",
+        "{",
+        '  "id": "qwen3-max",',
+        '  "providerID": "opencode",',
+        '  "variants": {',
+        '    "high": {},',
+        '    "max": {}',
+        "  }",
+        "}",
+      ].join("\n"),
+    );
+
+    const response = await GET();
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.providers).toContain("opencode");
+    expect(body.catalog["opencode"]).toEqual({ "qwen3-max": ["high", "max"] });
+    expect(body.catalog["opencode-zen"]).toBeUndefined();
   });
 });

@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { homedir } from "node:os";
 import { join } from "node:path";
+import type { ProviderAuthStatus } from "@/lib/types";
 import { DEFAULT_MODEL_CACHE_DIR } from "@/services/modelCacheService";
 import { DEFAULT_OPEN_CODE_CONFIG_DIR } from "@/adapters/opencode";
 import { loadMergedModelCatalogSafe } from "@/services/modelCatalogService";
@@ -37,17 +38,27 @@ export async function GET() {
     );
   }
 
-  // Map connected provider display names to catalog IDs
+  // Map connected provider display names to catalog IDs and expose detection
+  // status additively so clients can distinguish a real empty list from a failure.
   const connectedProviders = new Set<string>();
+  let providerAuthStatus: ProviderAuthStatus;
   if (connectedResult.ok) {
     for (const provider of connectedResult.value) {
       connectedProviders.add(normalizeProviderName(provider.name));
     }
+    providerAuthStatus = { ok: true };
+  } else {
+    providerAuthStatus = {
+      ok: false,
+      code: connectedResult.error.code,
+      message: connectedResult.error.message,
+    };
   }
 
   return NextResponse.json({
     providers: Object.keys(catalogResult.value),
     catalog: catalogResult.value,
     connectedProviders: Array.from(connectedProviders),
+    providerAuthStatus,
   });
 }

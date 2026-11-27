@@ -1,5 +1,6 @@
 import type { ModelCatalog } from "@/components/molecules/ModelPicker/modelPicker";
 import type { Profile } from "@/services/profilesApiService";
+import type { ProviderAuthStatus } from "@/lib/types";
 
 export interface Assignment {
   agentKey: string;
@@ -12,6 +13,11 @@ export interface ModelsClientViewProps {
   assignments: Assignment[];
   catalog: ModelCatalog;
   connectedProviders?: string[];
+  /**
+   * Additive detection status from `GET /api/models`. When `ok: false`, the
+   * page shows a warning but keeps the catalog available.
+   */
+  providerAuthStatus?: ProviderAuthStatus;
   catalogLoading: boolean;
   loading: boolean;
   error: string | null;
