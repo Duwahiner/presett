@@ -25,16 +25,13 @@ export interface ProfilesClientViewProps {
   pendingAction: string | null;
   newAssignments: Record<string, { provider: string; model: string; variant: string }>;
   onAssignmentChange: (key: string, assignment: { provider: string; model: string; variant: string }) => void;
-  onCreate: (name: string, assignment?: { provider: string; model: string; variant: string }) => void;
+  /** Retired: profile creation is disabled, so the client no longer provides it. */
+  onCreate?: (name: string, assignment?: { provider: string; model: string; variant: string }) => void;
   onSwitch: (name: string) => void;
   onDeleteStart: (name: string) => void;
   onDeleteConfirm: () => void;
   onDeleteCancel: () => void;
   deleteConfirmProfile: string | null;
-  repairConfirmProfile?: string | null;
-  onRepairStart?: (name: string) => void;
-  onRepairConfirm?: () => void;
-  onRepairCancel?: () => void;
   editingProfile: string | null;
   editAssignments: Record<string, { provider: string; model: string; variant: string }>;
   detailLoading: boolean;

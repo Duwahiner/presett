@@ -69,32 +69,42 @@ describe("CreateProfilePanel single-orchestrator form", () => {
     setLocale("en");
   });
 
-  it("submits only the normalized name when the orchestrator is assigned", async () => {
+  it("never submits, even with a valid name and an assigned orchestrator", async () => {
     const { user, props } = renderPanel({
       newAssignments: { orchestrator: ASSIGNED },
     });
 
     await user.type(screen.getByPlaceholderText("Profile name"), "Mi Perfil");
-    await user.click(screen.getByRole("button", { name: /save profile/i }));
 
-    expect(props.onSubmit.mock.calls[0]).toEqual(["miperfil"]);
-  });
-
-  it("blocks submit when the normalized name collapses to empty", async () => {
-    const { user, props } = renderPanel({
-      newAssignments: { orchestrator: ASSIGNED },
-    });
-
-    await user.type(screen.getByPlaceholderText("Profile name"), "!!!");
-
-    const save = screen.getByRole("button", { name: /save profile/i });
-    expect((save as HTMLButtonElement).disabled).toBe(true);
+    const save = screen.getByRole("button", { name: /save profile/i }) as HTMLButtonElement;
+    expect(save.disabled).toBe(true);
     await user.click(save);
     expect(props.onSubmit).not.toHaveBeenCalled();
   });
 
-  it("blocks submit when the name starts with the reserved internal prefix and shows a specific error", async () => {
+  it("does not submit when the form is submitted with the keyboard", async () => {
     const { user, props } = renderPanel({
+      newAssignments: { orchestrator: ASSIGNED },
+    });
+
+    await user.type(screen.getByPlaceholderText("Profile name"), "work{Enter}");
+
+    expect(props.onSubmit).not.toHaveBeenCalled();
+  });
+
+  it("shows the retired notice as the help text instead of the old enablement hint", () => {
+    renderPanel();
+
+    expect(
+      screen.getByText(
+        "Creating, editing and repairing named profiles is no longer available: Gentle-AI retired the profile flags.",
+      ),
+    ).not.toBeNull();
+    expect(screen.queryByText(/to enable profile creation/i)).toBeNull();
+  });
+
+  it("still flags the reserved internal prefix with a specific error", async () => {
+    const { user } = renderPanel({
       newAssignments: { orchestrator: ASSIGNED },
     });
 
@@ -103,40 +113,9 @@ describe("CreateProfilePanel single-orchestrator form", () => {
       "sdd-orchestrator-free",
     );
 
-    const save = screen.getByRole("button", { name: /save profile/i });
-    expect((save as HTMLButtonElement).disabled).toBe(true);
-    // The reserved-prefix message is shown instead of the generic required one.
     expect(
       screen.getByText(/cannot start with the reserved internal prefix/i),
     ).toBeTruthy();
-
-    await user.click(save);
-    expect(props.onSubmit).not.toHaveBeenCalled();
-  });
-
-  it("allows a plain name that merely contains the word orchestrator", async () => {
-    const { user, props } = renderPanel({
-      newAssignments: { orchestrator: ASSIGNED },
-    });
-
-    await user.type(screen.getByPlaceholderText("Profile name"), "orchestrator-free");
-
-    const save = screen.getByRole("button", { name: /save profile/i });
-    expect((save as HTMLButtonElement).disabled).toBe(false);
-
-    await user.click(save);
-    expect(props.onSubmit.mock.calls[0]).toEqual(["orchestrator-free"]);
-  });
-
-  it("blocks submit when the orchestrator assignment is missing", async () => {
-    const { user, props } = renderPanel();
-
-    await user.type(screen.getByPlaceholderText("Profile name"), "work");
-
-    const save = screen.getByRole("button", { name: /save profile/i });
-    expect((save as HTMLButtonElement).disabled).toBe(true);
-    await user.click(save);
-    expect(props.onSubmit).not.toHaveBeenCalled();
   });
 
   it("renders only the orchestrator section — no phase sections and no copy button", () => {
@@ -183,18 +162,13 @@ describe("CreateProfilePanel single-orchestrator form", () => {
     expect(option.querySelector('[title="Connected"]')).not.toBeNull();
   });
 
-  it("keeps the variant field visible and disabled when the selected model has no variants", async () => {
-    const { user, props } = renderPanel({
+  it("keeps the variant field visible and disabled when the selected model has no variants", () => {
+    renderPanel({
       newAssignments: { orchestrator: { provider: "openai", model: "gpt-5", variant: "" } },
     });
 
     const variantTrigger = screen.getByLabelText("Variant") as HTMLButtonElement;
     expect(variantTrigger.disabled).toBe(true);
-
-    await user.type(screen.getByPlaceholderText("Profile name"), "work");
-    await user.click(screen.getByRole("button", { name: /save profile/i }));
-
-    expect(props.onSubmit.mock.calls[0]).toEqual(["work"]);
   });
 
   it("renders the orchestrator as a flat, always-visible block without an accordion toggle", () => {

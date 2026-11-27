@@ -4,12 +4,24 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { OPTIONS, POST } from "../route";
 import * as processService from "@/services/processService";
+import { readOpenCodeConfigSafe, repairProfile } from "@/adapters/opencode";
 
 vi.mock("@/services/processService", () => ({
   runGentleAiSync: vi.fn(),
 }));
 
+vi.mock("@/adapters/opencode", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/adapters/opencode")>();
+  return {
+    ...actual,
+    readOpenCodeConfigSafe: vi.fn(actual.readOpenCodeConfigSafe),
+    repairProfile: vi.fn(actual.repairProfile),
+  };
+});
+
 const mockedRunSync = vi.mocked(processService.runGentleAiSync);
+const mockedReadConfig = vi.mocked(readOpenCodeConfigSafe);
+const mockedRepair = vi.mocked(repairProfile);
 
 function repairRequest(origin?: string): Request {
   const request = new Request("http://localhost/api/profiles/cheap/repair", {
@@ -24,6 +36,8 @@ describe("POST /api/profiles/[name]/repair", () => {
 
   beforeEach(async () => {
     mockedRunSync.mockReset();
+    mockedReadConfig.mockClear();
+    mockedRepair.mockClear();
     mockedRunSync.mockResolvedValue({
       ok: true,
       value: { exitCode: 0, stdout: "repaired", stderr: "" },
@@ -43,128 +57,66 @@ describe("POST /api/profiles/[name]/repair", () => {
     await writeFile(join(tempDir, "opencode.json"), JSON.stringify({ agent }));
   }
 
-  it("returns 403 STRATEGY_READONLY on external-single-active without delegating or writing a backup", async () => {
-    await writeConfig({ "external-work": { mode: "primary", model: "openai/gpt-4" } });
+  it("answers 410 FEATURE_RETIRED for an incomplete profile without reading config, spawning gentle-ai or writing a backup", async () => {
+    // An incomplete generated-multi profile used to trigger a repair.
+    await writeConfig({
+      "gentle-orchestrator": { model: "openai/gpt-4" },
+      "sdd-orchestrator-cheap": { model: "anthropic/claude-sonnet-4", variant: "high" },
+    });
+    const configPath = join(tempDir, "opencode.json");
+    const before = await readFile(configPath, "utf-8");
 
     const response = await POST(repairRequest("http://127.0.0.1:3000"), {
       params: Promise.resolve({ name: "cheap" }),
     });
     const body = JSON.parse(await response.text());
 
-    expect(response.status).toBe(403);
-    expect(body.error.code).toBe("STRATEGY_READONLY");
+    expect(response.status).toBe(410);
+    expect(body.error.code).toBe("FEATURE_RETIRED");
+    expect(typeof body.error.message).toBe("string");
+    expect(mockedRunSync).not.toHaveBeenCalled();
+    expect(mockedReadConfig).not.toHaveBeenCalled();
+    expect(mockedRepair).not.toHaveBeenCalled();
+    expect(await readFile(configPath, "utf-8")).toBe(before);
+    await expect(readdir(join(tempDir, "backups"))).rejects.toThrow();
+  });
+
+  it("answers 410 regardless of config presence, strategy or profile name", async () => {
+    // No opencode.json at all.
+    const missing = await POST(repairRequest("http://127.0.0.1:3000"), {
+      params: Promise.resolve({ name: "cheap" }),
+    });
+    expect(missing.status).toBe(410);
+
+    await writeConfig({ "review-risk": { mode: "subagent", model: "x/y" } });
+    const invalidName = await POST(repairRequest("http://127.0.0.1:3000"), {
+      params: Promise.resolve({ name: "../../evil" }),
+    });
+    expect(invalidName.status).toBe(410);
+
+    expect(mockedReadConfig).not.toHaveBeenCalled();
     expect(mockedRunSync).not.toHaveBeenCalled();
     await expect(readdir(join(tempDir, "backups"))).rejects.toThrow();
   });
 
-  it("returns 403 STRATEGY_READONLY on unknown strategy without delegating", async () => {
-    await writeConfig({ "review-risk": { mode: "subagent", model: "x/y" } });
-
-    const response = await POST(repairRequest("http://127.0.0.1:3000"), {
-      params: Promise.resolve({ name: "cheap" }),
-    });
-    const body = JSON.parse(await response.text());
-
-    expect(response.status).toBe(403);
-    expect(body.error.code).toBe("STRATEGY_READONLY");
-    expect(mockedRunSync).not.toHaveBeenCalled();
-  });
-
-  it("repairs an incomplete generated-multi profile by delegating to sync after an atomic backup", async () => {
-    // Cheap is generated-multi and incomplete: it lacks its ten phase agents.
-    await writeConfig({
-      "gentle-orchestrator": { model: "openai/gpt-4" },
-      "sdd-orchestrator-cheap": { model: "anthropic/claude-sonnet-4", variant: "high" },
-    });
-
-    const response = await POST(repairRequest("http://127.0.0.1:3000"), {
-      params: Promise.resolve({ name: "cheap" }),
-    });
-
-    expect(response.status).toBe(200);
-    const body = JSON.parse(await response.text());
-    expect(body.ok).toBe(true);
-    expect(mockedRunSync).toHaveBeenCalledWith(
-      "gentle-ai",
-      ["--profile", "cheap:anthropic/claude-sonnet-4"],
-      30_000,
-    );
-
-    // A pre-repair backup exists so rollback is possible.
-    const backups = await readdir(join(tempDir, "backups"));
-    expect(backups).toHaveLength(1);
-  });
-
-  it("keeps opencode.json unchanged when repair succeeds (sync owns the phase agents)", async () => {
-    await writeConfig({
-      "gentle-orchestrator": { model: "openai/gpt-4" },
-      "sdd-orchestrator-cheap": { model: "anthropic/claude-sonnet-4", variant: "high" },
-    });
-
-    const response = await POST(repairRequest("http://127.0.0.1:3000"), {
-      params: Promise.resolve({ name: "cheap" }),
-    });
-
-    expect(response.status).toBe(200);
-    // PreSett must not rewrite the generated profile; gentle-ai owns it.
-    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
-    expect(written.agent["sdd-orchestrator-cheap"].model).toBe("anthropic/claude-sonnet-4");
-    expect(written.agent["sdd-apply-cheap"]).toBeUndefined();
-  });
-
-  it("reports a CLI failure as HTTP 500 and leaves the backup recoverable for rollback", async () => {
-    await writeConfig({
-      "gentle-orchestrator": { model: "openai/gpt-4" },
-      "sdd-orchestrator-cheap": { model: "anthropic/claude-sonnet-4" },
-    });
-    mockedRunSync.mockResolvedValue({
-      ok: true,
-      value: { exitCode: 1, stdout: "", stderr: "repair failed" },
-    });
-
-    const response = await POST(repairRequest("http://127.0.0.1:3000"), {
-      params: Promise.resolve({ name: "cheap" }),
-    });
-
-    expect(response.status).toBe(500);
-    const backups = await readdir(join(tempDir, "backups"));
-    expect(backups).toHaveLength(1);
-    const backupContent = JSON.parse(
-      await readFile(join(tempDir, "backups", backups[0]), "utf-8"),
-    );
-    expect(backupContent.agent["sdd-orchestrator-cheap"].model).toBe(
-      "anthropic/claude-sonnet-4",
-    );
-  });
-
-  it("returns 400 for an invalid profile name before delegating", async () => {
-    await writeConfig({
-      "gentle-orchestrator": { model: "openai/gpt-4" },
-      "sdd-orchestrator-cheap": { model: "anthropic/claude-sonnet-4" },
-    });
-
-    const response = await POST(repairRequest("http://127.0.0.1:3000"), {
-      params: Promise.resolve({ name: "../../evil" }),
-    });
-    const body = JSON.parse(await response.text());
-
-    expect(response.status).toBe(400);
-    expect(body.error.code).toBe("SCHEMA_INVALID");
-    expect(mockedRunSync).not.toHaveBeenCalled();
-  });
-
-  it("rejects missing Origin before delegating", async () => {
-    await writeConfig({
-      "gentle-orchestrator": { model: "openai/gpt-4" },
-      "sdd-orchestrator-cheap": { model: "anthropic/claude-sonnet-4" },
-    });
-
+  it("rejects missing Origin with 403 before the retired answer", async () => {
     const response = await POST(repairRequest(), {
       params: Promise.resolve({ name: "cheap" }),
     });
 
     expect(response.status).toBe(403);
     expect(mockedRunSync).not.toHaveBeenCalled();
+    expect(mockedReadConfig).not.toHaveBeenCalled();
+  });
+
+  it("rejects non-loopback Origin with 403 before the retired answer", async () => {
+    const response = await POST(repairRequest("http://evil.test"), {
+      params: Promise.resolve({ name: "cheap" }),
+    });
+
+    expect(response.status).toBe(403);
+    expect(mockedRunSync).not.toHaveBeenCalled();
+    expect(mockedReadConfig).not.toHaveBeenCalled();
   });
 
   it("allows OPTIONS preflight without origin enforcement", async () => {

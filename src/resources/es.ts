@@ -141,6 +141,7 @@ export const es: Resources = {
   "profiles_repairError": "No se pudo reparar el perfil",
   "profiles_readonly": "Solo lectura: esta estrategia de perfil se gestiona externamente y no se puede modificar aquí.",
   "profiles_readonlyUnknown": "Solo lectura: la estrategia de perfil es desconocida, por lo que las modificaciones están deshabilitadas.",
+  "profiles_retired": "Crear, editar y reparar perfiles con nombre ya no está disponible: Gentle-AI retiró los flags de perfiles.",
   "backups_title": "Backups",
   "backups_status_badge": "Activo",
   "backups_header_description": "Ver y restaurar backups de Gentle-AI.",

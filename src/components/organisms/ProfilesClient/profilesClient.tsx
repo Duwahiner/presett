@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { listProfiles, createProfile, switchProfile, deleteProfile, updateProfile, getProfileDetail, repairProfile } from "@/services/profilesApiService";
+import { listProfiles, switchProfile, deleteProfile, getProfileDetail } from "@/services/profilesApiService";
 import { clearModelCatalogCache, getCatalog } from "@/services/modelsApiService";
 import { t } from "@/resources/resources";
 import { useNotificationToasts } from "@/hooks/useNotificationToasts";
@@ -98,7 +98,6 @@ export function ProfilesClient({
   const [detailError, setDetailError] = useState<string | null>(null);
   const detailRequestRef = useRef(0);
   const [deleteConfirmProfile, setDeleteConfirmProfile] = useState<string | null>(null);
-  const [repairConfirmProfile, setRepairConfirmProfile] = useState<string | null>(null);
   const { onError, onSuccess } = useNotificationToasts();
 
   // Filter/sort state — mount-local, cleared on unmount
@@ -183,28 +182,6 @@ export function ProfilesClient({
     setStrategy(data.strategy);
   }
 
-  async function handleCreate(name: string, assignment?: { provider: string; model: string; variant: string }) {
-    if (isAuditMode) return; // Deny writes in audit mode
-    const nameToCreate = name.trim();
-    if (!nameToCreate) return;
-    setPendingAction("create");
-
-    const assignments: Record<string, { provider: string; model: string; variant: string }> = {
-      [`sdd-orchestrator-${nameToCreate}`]: assignment ?? newAssignments["orchestrator"] ?? { provider: "", model: "", variant: "" },
-    };
-
-    try {
-      await createProfile({ name: nameToCreate, assignments });
-      setNewAssignments({});
-      await refresh();
-      onSuccess(t("profiles_createSuccess"));
-    } catch (cause) {
-      onError(t("profiles_createError"), cause instanceof Error ? cause.message : String(cause));
-    } finally {
-      setPendingAction(null);
-    }
-  }
-
   async function handleSwitch(name: string) {
     if (isAuditMode) return; // Deny writes in audit mode
     setPendingAction(`switch:${name}`);
@@ -244,30 +221,6 @@ export function ProfilesClient({
     setDeleteConfirmProfile(null);
   }
 
-  function handleRepairStart(name: string) {
-    if (isAuditMode) return; // Deny writes in audit mode
-    setRepairConfirmProfile(name);
-  }
-
-  async function handleRepairConfirm() {
-    if (!repairConfirmProfile) return;
-    setPendingAction(`repair:${repairConfirmProfile}`);
-    try {
-      await repairProfile(repairConfirmProfile);
-      await refresh();
-      onSuccess(t("profiles_repairSuccess"));
-    } catch (cause) {
-      onError(t("profiles_repairError"), cause instanceof Error ? cause.message : String(cause));
-    } finally {
-      setPendingAction(null);
-      setRepairConfirmProfile(null);
-    }
-  }
-
-  function handleRepairCancel() {
-    setRepairConfirmProfile(null);
-  }
-
   async function handleEditStart(name: string) {
     if (isAuditMode) return; // Deny writes in audit mode
     const requestId = ++detailRequestRef.current;
@@ -287,24 +240,11 @@ export function ProfilesClient({
     }
   }
 
-  async function handleEditSave() {
+  function handleEditSave(): void {
     if (isAuditMode) return; // Deny writes in audit mode
-    if (!editingProfile) return;
-    if (detailLoading || detailError) return; // never mutate while detail is missing
-    setPendingAction("edit");
-    try {
-      await updateProfile(editingProfile, editAssignments);
-      setEditingProfile(null);
-      setEditAssignments({});
-      setDetailError(null);
-      setDetailLoading(false);
-      await refresh();
-      onSuccess(t("profiles_updateSuccess"));
-    } catch (cause) {
-      onError(t("profiles_updateError"), cause instanceof Error ? cause.message : String(cause));
-    } finally {
-      setPendingAction(null);
-    }
+    // Saving from this screen is retired. Named profile edits depended on the gentle-ai
+    // flags that were removed, and the Base profile (empty name) was never saved from
+    // this handler. Nothing is written to opencode.json from here.
   }
 
   function handleEditCancel() {
@@ -329,16 +269,11 @@ export function ProfilesClient({
       onAssignmentChange={(key, assignment) =>
         setNewAssignments((prev) => ({ ...prev, [key]: assignment }))
       }
-      onCreate={handleCreate}
       onSwitch={handleSwitch}
       onDeleteStart={handleDeleteStart}
       onDeleteConfirm={handleDeleteConfirm}
       onDeleteCancel={handleDeleteCancel}
       deleteConfirmProfile={deleteConfirmProfile}
-      repairConfirmProfile={repairConfirmProfile}
-      onRepairStart={handleRepairStart}
-      onRepairConfirm={handleRepairConfirm}
-      onRepairCancel={handleRepairCancel}
       editingProfile={editingProfile}
       editAssignments={editAssignments}
       detailLoading={detailLoading}

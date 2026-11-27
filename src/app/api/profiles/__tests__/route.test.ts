@@ -18,14 +18,26 @@ vi.mock("@/services/modelCatalogService", async (importOriginal) => {
   };
 });
 
+vi.mock("@/adapters/opencode", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/adapters/opencode")>();
+  return {
+    ...actual,
+    readOpenCodeConfigSafe: vi.fn(actual.readOpenCodeConfigSafe),
+    createProfile: vi.fn(actual.createProfile),
+  };
+});
+
 vi.mock("@/services/processService", () => ({
   runGentleAiSync: vi.fn(),
 }));
 
 import { runGentleAiSync } from "@/services/processService";
+import { createProfile, readOpenCodeConfigSafe } from "@/adapters/opencode";
 
 const mockedLoadMerged = vi.mocked(loadMergedModelCatalogSafe);
 const mockedRunSync = vi.mocked(runGentleAiSync);
+const mockedReadConfig = vi.mocked(readOpenCodeConfigSafe);
+const mockedCreateProfile = vi.mocked(createProfile);
 
 // A generated-multi fixture: base orchestrator plus an existing generated
 // profile. Profile writes are only allowed under this strategy (the new
@@ -66,6 +78,9 @@ describe("/api/profiles", () => {
   beforeEach(async () => {
     clearServerModelCatalogCache();
     mockedRunSync.mockReset();
+    mockedReadConfig.mockClear();
+    mockedCreateProfile.mockClear();
+    mockedLoadMerged.mockReset();
     mockedRunSync.mockResolvedValue({
       ok: true,
       value: { exitCode: 0, stdout: "created", stderr: "" },
@@ -173,212 +188,57 @@ describe("/api/profiles", () => {
     await expect(readdir(join(tempDir, "backups"))).rejects.toThrow();
   });
 
-  it("creates a profile on POST by delegating to gentle-ai sync --profile", async () => {
+  it("answers 410 FEATURE_RETIRED on POST without reading config, loading the catalog, spawning gentle-ai or writing backups", async () => {
     await writeGeneratedMultiConfig(tempDir);
-
-    const request = createProfileRequest("http://localhost:3000");
-
-    const response = await POST(request);
-    expect(response.status).toBe(200);
-
-    expect(mockedRunSync).toHaveBeenCalledWith("gentle-ai", [
-      "--profile",
-      "custom:openai/gpt-4",
-    ]);
-    // PreSett must not write the generated orchestrator itself.
-    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
-    expect(written.agent["sdd-orchestrator-custom"]).toBeUndefined();
-  });
-
-  it("accepts an OpenCode Zen model assignment on POST", async () => {
-    await writeGeneratedMultiConfig(tempDir);
-    mockedLoadMerged.mockResolvedValue({
-      ok: true,
-      value: { opencode: { "qwen3-max": ["high", "max"] } },
-    });
-
-    const request = new Request("http://localhost/api/profiles", {
-      method: "POST",
-      body: JSON.stringify({
-        name: "zen",
-        assignments: {
-          "sdd-orchestrator-zen": {
-            provider: "opencode",
-            model: "qwen3-max",
-            variant: "high",
-          },
-        },
-      }),
-    });
-    request.headers.set("Origin", "http://localhost:3000");
-
-    const response = await POST(request);
-    expect(response.status).toBe(200);
-
-    // The canonical `opencode` provider is delegated verbatim as the CLI ref.
-    expect(mockedRunSync).toHaveBeenCalledWith("gentle-ai", [
-      "--profile",
-      "zen:opencode/qwen3-max",
-    ]);
-    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
-    expect(written.agent["sdd-orchestrator-zen"]).toBeUndefined();
-  });
-
-  it("preserves a real catalog error as HTTP 400 for an unknown model", async () => {
-    await writeGeneratedMultiConfig(tempDir);
-    mockedLoadMerged.mockResolvedValue({
-      ok: true,
-      value: { opencode: { "qwen3-max": ["high", "max"] } },
-    });
-
-    const request = new Request("http://localhost/api/profiles", {
-      method: "POST",
-      body: JSON.stringify({
-        name: "custom",
-        assignments: {
-          "sdd-orchestrator-custom": {
-            provider: "opencode",
-            model: "gpt-5",
-            variant: "high",
-          },
-        },
-      }),
-    });
-    request.headers.set("Origin", "http://localhost:3000");
-
-    const response = await POST(request);
-    expect(response.status).toBe(400);
-    const body = JSON.parse(await response.text());
-    expect(body.error.code).toBe("SCHEMA_INVALID");
-  });
-
-  it("preserves an unavailable catalog as HTTP 503", async () => {
-    await writeGeneratedMultiConfig(tempDir);
-    mockedLoadMerged.mockResolvedValue({
-      ok: false,
-      error: { code: "FILE_MISSING", message: "Model catalog unavailable" },
-    });
-
-    const request = new Request("http://localhost/api/profiles", {
-      method: "POST",
-      body: JSON.stringify({
-        name: "custom",
-        assignments: {
-          "sdd-orchestrator-custom": {
-            provider: "opencode",
-            model: "qwen3-max",
-            variant: "high",
-          },
-        },
-      }),
-    });
-    request.headers.set("Origin", "http://localhost:3000");
-
-    const response = await POST(request);
-    expect(response.status).toBe(503);
-  });
-
-  it("creates the first profile on a fresh base-only install (generated-multi)", async () => {
-    await writeFile(
-      join(tempDir, "opencode.json"),
-      JSON.stringify({
-        agent: { "gentle-orchestrator": { model: "openai/gpt-4", variant: "low" } },
-      }),
-    );
+    const configPath = join(tempDir, "opencode.json");
+    const before = await readFile(configPath, "utf-8");
 
     const response = await POST(createProfileRequest("http://localhost:3000"));
-    expect(response.status).toBe(200);
-
-    expect(mockedRunSync).toHaveBeenCalledWith("gentle-ai", [
-      "--profile",
-      "custom:openai/gpt-4",
-    ]);
-    // PreSett never writes the generated orchestrator; gentle-ai owns it.
-    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
-    expect(written.agent["sdd-orchestrator-custom"]).toBeUndefined();
-    expect(written.agent["gentle-orchestrator"]).toBeDefined();
-  });
-
-  it("rejects a profile name starting with the internal prefix with HTTP 400 and never delegates", async () => {
-    await writeGeneratedMultiConfig(tempDir);
-
-    const request = new Request("http://localhost/api/profiles", {
-      method: "POST",
-      body: JSON.stringify({
-        name: "sdd-orchestrator-free",
-        assignments: {
-          "sdd-orchestrator-sdd-orchestrator-free": {
-            provider: "openai",
-            model: "gpt-4",
-            variant: "low",
-          },
-        },
-      }),
-    });
-    request.headers.set("Origin", "http://localhost:3000");
-
-    const response = await POST(request);
     const body = JSON.parse(await response.text());
 
-    expect(response.status).toBe(400);
-    expect(body.error.code).toBe("SCHEMA_INVALID");
+    expect(response.status).toBe(410);
+    expect(body.error.code).toBe("FEATURE_RETIRED");
+    expect(typeof body.error.message).toBe("string");
     expect(mockedRunSync).not.toHaveBeenCalled();
-
-    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
-    expect(written.agent["sdd-orchestrator-sdd-orchestrator-free"]).toBeUndefined();
+    expect(mockedReadConfig).not.toHaveBeenCalled();
+    expect(mockedCreateProfile).not.toHaveBeenCalled();
+    expect(mockedLoadMerged).not.toHaveBeenCalled();
+    expect(await readFile(configPath, "utf-8")).toBe(before);
+    await expect(readdir(join(tempDir, "backups"))).rejects.toThrow();
   });
 
-  it("rejects profile creation with 403 STRATEGY_READONLY on external-single-active without touching disk", async () => {
-    await writeFile(
-      join(tempDir, "opencode.json"),
-      JSON.stringify({
-        agent: { "external-work": { mode: "primary", model: "openai/gpt-4" } },
-      }),
-    );
+  it("answers 410 on POST even when the config is missing or the strategy is read-only", async () => {
+    // No opencode.json at all: the retired answer must not depend on any read.
+    const missing = await POST(createProfileRequest("http://localhost:3000"));
+    expect(missing.status).toBe(410);
 
-    const response = await POST(createProfileRequest("http://localhost:3000"));
-    const body = JSON.parse(await response.text());
-
-    expect(response.status).toBe(403);
-    expect(body.error.code).toBe("STRATEGY_READONLY");
-
-    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
-    expect(written.agent["external-work"]).toBeDefined();
-    expect(written.agent["sdd-orchestrator-custom"]).toBeUndefined();
-  });
-
-  it("rejects profile creation with 403 STRATEGY_READONLY on unknown strategy", async () => {
     await writeFile(join(tempDir, "opencode.json"), JSON.stringify({ agent: {} }));
+    const unknownStrategy = await POST(createProfileRequest("http://localhost:3000"));
+    expect(unknownStrategy.status).toBe(410);
 
-    const response = await POST(createProfileRequest("http://localhost:3000"));
-    const body = JSON.parse(await response.text());
-
-    expect(response.status).toBe(403);
-    expect(body.error.code).toBe("STRATEGY_READONLY");
+    expect(mockedReadConfig).not.toHaveBeenCalled();
+    expect(mockedRunSync).not.toHaveBeenCalled();
   });
 
-  it("rejects missing Origin before parsing JSON or creating a profile", async () => {
-    await writeFile(join(tempDir, "opencode.json"), JSON.stringify({ agent: {} }));
+  it("rejects missing Origin with 403 before the retired answer", async () => {
     const request = new Request("http://localhost/api/profiles", {
       method: "POST",
       body: "not-json",
     });
 
     const response = await POST(request);
-    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
 
     expect(response.status).toBe(403);
-    expect(written.agent).toEqual({});
+    expect(mockedRunSync).not.toHaveBeenCalled();
+    expect(mockedReadConfig).not.toHaveBeenCalled();
   });
 
-  it("rejects non-loopback Origin before creating a profile", async () => {
-    await writeFile(join(tempDir, "opencode.json"), JSON.stringify({ agent: {} }));
-
+  it("rejects non-loopback Origin with 403 before the retired answer", async () => {
     const response = await POST(createProfileRequest("http://evil.test"));
-    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
 
     expect(response.status).toBe(403);
-    expect(written.agent).toEqual({});
+    expect(mockedRunSync).not.toHaveBeenCalled();
+    expect(mockedReadConfig).not.toHaveBeenCalled();
   });
 
   it("allows OPTIONS preflight without origin enforcement", async () => {

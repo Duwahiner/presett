@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { mkdtemp, writeFile, rm, readFile } from "node:fs/promises";
+import { mkdtemp, writeFile, rm, readFile, readdir } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { GET, OPTIONS, PUT, DELETE as DELETE_HANDLER } from "../route";
@@ -23,6 +23,8 @@ vi.mock("@/adapters/opencode", async (importOriginal) => {
   return {
     ...actual,
     deleteProfile: vi.fn(actual.deleteProfile),
+    updateProfile: vi.fn(actual.updateProfile),
+    readOpenCodeConfigSafe: vi.fn(actual.readOpenCodeConfigSafe),
   };
 });
 
@@ -31,9 +33,12 @@ vi.mock("@/services/processService", () => ({
 }));
 
 import { runGentleAiSync } from "@/services/processService";
+import { readOpenCodeConfigSafe, updateProfile } from "@/adapters/opencode";
 
 const mockedLoadMerged = vi.mocked(loadMergedModelCatalogSafe);
 const mockedRunSync = vi.mocked(runGentleAiSync);
+const mockedReadConfig = vi.mocked(readOpenCodeConfigSafe);
+const mockedUpdateProfile = vi.mocked(updateProfile);
 
 // Generated-multi fixtures include the base orchestrator so the write
 // guardrail (403 for `unknown`/`external-single-active`) lets the request pass.
@@ -74,6 +79,9 @@ describe("/api/profiles/[name]", () => {
   beforeEach(async () => {
     clearServerModelCatalogCache();
     mockedRunSync.mockReset();
+    mockedReadConfig.mockClear();
+    mockedUpdateProfile.mockClear();
+    mockedLoadMerged.mockReset();
     mockedRunSync.mockResolvedValue({
       ok: true,
       value: { exitCode: 0, stdout: "updated", stderr: "" },
@@ -109,9 +117,10 @@ describe("/api/profiles/[name]", () => {
     await rm(cacheDir, { recursive: true, force: true });
   });
 
-  it("edits a profile on PUT by delegating to gentle-ai sync --profile", async () => {
+  it("answers 410 FEATURE_RETIRED on PUT without reading config, loading the catalog, spawning gentle-ai or writing backups", async () => {
+    const configPath = join(tempDir, "opencode.json");
     await writeFile(
-      join(tempDir, "opencode.json"),
+      configPath,
       JSON.stringify({
         agent: {
           ...GENERATED_MULTI_EXTRA_AGENTS,
@@ -119,129 +128,44 @@ describe("/api/profiles/[name]", () => {
         },
       }),
     );
+    const before = await readFile(configPath, "utf-8");
 
-    const request = updateProfileRequest("http://127.0.0.1:3000");
-
-    const response = await PUT(request, { params: Promise.resolve({ name: "custom" }) });
-    expect(response.status).toBe(200);
-
-    expect(mockedRunSync).toHaveBeenCalledWith("gentle-ai", [
-      "--profile",
-      "custom:openai/gpt-4",
-    ]);
-    // PreSett must not rewrite the generated orchestrator agent directly.
-    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
-    expect(written.agent["sdd-orchestrator-custom"].model).toBe("x/y");
-    expect(written.agent["sdd-orchestrator-custom"].variant).toBe("low");
-  });
-
-  it("accepts an OpenCode Zen model assignment on PUT", async () => {
-    await writeFile(
-      join(tempDir, "opencode.json"),
-      JSON.stringify({
-        agent: {
-          ...GENERATED_MULTI_EXTRA_AGENTS,
-          "sdd-orchestrator-zen": { model: "x/y", variant: "low" },
-        },
-      }),
-    );
-    mockedLoadMerged.mockResolvedValue({
-      ok: true,
-      value: { opencode: { "qwen3-max": ["high", "max"] } },
+    const response = await PUT(updateProfileRequest("http://127.0.0.1:3000"), {
+      params: Promise.resolve({ name: "custom" }),
     });
-
-    const request = new Request("http://localhost/api/profiles/zen", {
-      method: "PUT",
-      body: JSON.stringify({
-        assignments: {
-          "sdd-orchestrator-zen": {
-            provider: "opencode",
-            model: "qwen3-max",
-            variant: "high",
-          },
-        },
-      }),
-    });
-    request.headers.set("Origin", "http://127.0.0.1:3000");
-
-    const response = await PUT(request, { params: Promise.resolve({ name: "zen" }) });
-    expect(response.status).toBe(200);
-
-    // The canonical `opencode` provider is delegated verbatim as the CLI ref.
-    expect(mockedRunSync).toHaveBeenCalledWith("gentle-ai", [
-      "--profile",
-      "zen:opencode/qwen3-max",
-    ]);
-    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
-    expect(written.agent["sdd-orchestrator-zen"].model).toBe("x/y");
-  });
-
-  it("preserves a real catalog error as HTTP 400 for an unknown model on PUT", async () => {
-    await writeFile(
-      join(tempDir, "opencode.json"),
-      JSON.stringify({
-        agent: {
-          ...GENERATED_MULTI_EXTRA_AGENTS,
-          "sdd-orchestrator-custom": { model: "x/y", variant: "low" },
-        },
-      }),
-    );
-    mockedLoadMerged.mockResolvedValue({
-      ok: true,
-      value: { opencode: { "qwen3-max": ["high", "max"] } },
-    });
-
-    const request = new Request("http://localhost/api/profiles/custom", {
-      method: "PUT",
-      body: JSON.stringify({
-        assignments: {
-          "sdd-orchestrator-custom": {
-            provider: "opencode",
-            model: "gpt-5",
-            variant: "high",
-          },
-        },
-      }),
-    });
-    request.headers.set("Origin", "http://127.0.0.1:3000");
-
-    const response = await PUT(request, { params: Promise.resolve({ name: "custom" }) });
-    expect(response.status).toBe(400);
     const body = JSON.parse(await response.text());
-    expect(body.error.code).toBe("SCHEMA_INVALID");
+
+    expect(response.status).toBe(410);
+    expect(body.error.code).toBe("FEATURE_RETIRED");
+    expect(typeof body.error.message).toBe("string");
+    expect(mockedRunSync).not.toHaveBeenCalled();
+    expect(mockedReadConfig).not.toHaveBeenCalled();
+    expect(mockedUpdateProfile).not.toHaveBeenCalled();
+    expect(mockedLoadMerged).not.toHaveBeenCalled();
+    expect(await readFile(configPath, "utf-8")).toBe(before);
+    await expect(readdir(join(tempDir, "backups"))).rejects.toThrow();
   });
 
-  it("preserves an unavailable catalog as HTTP 503 on PUT", async () => {
+  it("answers 410 on PUT regardless of config presence or strategy", async () => {
+    // No opencode.json: the retired answer must not depend on any read.
+    const missing = await PUT(updateProfileRequest("http://127.0.0.1:3000"), {
+      params: Promise.resolve({ name: "custom" }),
+    });
+    expect(missing.status).toBe(410);
+
     await writeFile(
       join(tempDir, "opencode.json"),
       JSON.stringify({
-        agent: {
-          ...GENERATED_MULTI_EXTRA_AGENTS,
-          "sdd-orchestrator-custom": { model: "x/y", variant: "low" },
-        },
+        agent: { "external-work": { mode: "primary", model: "openai/gpt-4" } },
       }),
     );
-    mockedLoadMerged.mockResolvedValue({
-      ok: false,
-      error: { code: "FILE_MISSING", message: "Model catalog unavailable" },
+    const readOnlyStrategy = await PUT(updateProfileRequest("http://localhost:3000"), {
+      params: Promise.resolve({ name: "custom" }),
     });
+    expect(readOnlyStrategy.status).toBe(410);
 
-    const request = new Request("http://localhost/api/profiles/custom", {
-      method: "PUT",
-      body: JSON.stringify({
-        assignments: {
-          "sdd-orchestrator-custom": {
-            provider: "opencode",
-            model: "qwen3-max",
-            variant: "high",
-          },
-        },
-      }),
-    });
-    request.headers.set("Origin", "http://127.0.0.1:3000");
-
-    const response = await PUT(request, { params: Promise.resolve({ name: "custom" }) });
-    expect(response.status).toBe(503);
+    expect(mockedReadConfig).not.toHaveBeenCalled();
+    expect(mockedRunSync).not.toHaveBeenCalled();
   });
 
   it("deletes a profile on DELETE", async () => {
@@ -287,27 +211,6 @@ describe("/api/profiles/[name]", () => {
     expect(deleteSpy).not.toHaveBeenCalled();
   });
 
-  it("rejects PUT with 403 STRATEGY_READONLY on external-single-active without touching disk", async () => {
-    await writeFile(
-      join(tempDir, "opencode.json"),
-      JSON.stringify({
-        agent: { "external-work": { mode: "primary", model: "openai/gpt-4" } },
-      }),
-    );
-
-    const response = await PUT(updateProfileRequest("http://localhost:3000"), {
-      params: Promise.resolve({ name: "custom" }),
-    });
-    const body = JSON.parse(await response.text());
-
-    expect(response.status).toBe(403);
-    expect(body.error.code).toBe("STRATEGY_READONLY");
-
-    const written = JSON.parse(await readFile(join(tempDir, "opencode.json"), "utf-8"));
-    expect(written.agent["external-work"]).toBeDefined();
-    expect(written.agent["sdd-orchestrator-custom"]).toBeUndefined();
-  });
-
   it("rejects DELETE with 403 STRATEGY_READONLY on unknown strategy without deleting the profile", async () => {
     await writeFile(
       join(tempDir, "opencode.json"),
@@ -328,7 +231,7 @@ describe("/api/profiles/[name]", () => {
     expect(written.agent["review-risk"]).toEqual({ mode: "subagent", model: "x/y" });
   });
 
-  it("rejects missing Origin before parsing JSON or editing a profile", async () => {
+  it("rejects missing Origin with 403 on PUT before the retired answer", async () => {
     await writeFile(
       join(tempDir, "opencode.json"),
       JSON.stringify({
@@ -345,6 +248,8 @@ describe("/api/profiles/[name]", () => {
 
     expect(response.status).toBe(403);
     expect(written.agent["sdd-orchestrator-custom"].variant).toBe("low");
+    expect(mockedReadConfig).not.toHaveBeenCalled();
+    expect(mockedRunSync).not.toHaveBeenCalled();
   });
 
   it("rejects non-loopback Origin before deleting a profile", async () => {

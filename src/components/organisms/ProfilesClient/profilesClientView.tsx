@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Pencil, Trash2, UserCircle, Sparkles, Check, Info, RotateCcw, ChevronDown, RefreshCw } from "lucide-react";
+import { Pencil, Trash2, UserCircle, Sparkles, Check, Info, RotateCcw, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/atoms/Button/button";
 import { Badge } from "@/components/atoms/Badge/badge";
@@ -208,10 +208,6 @@ export function ProfilesClientView({
   onDeleteConfirm,
   onDeleteCancel,
   deleteConfirmProfile,
-  repairConfirmProfile,
-  onRepairStart,
-  onRepairConfirm,
-  onRepairCancel,
   editingProfile,
   editAssignments,
   detailLoading,
@@ -259,7 +255,15 @@ const orchestratorAssignment = orchestratorKey
       orchestratorAssignment.model &&
       (orchestratorVariants.length === 0 || orchestratorAssignment.variant),
   );
-  const isEditSaveDisabled = detailLoading || Boolean(detailError) || !hasValidOrchestrator || pendingAction === "edit";
+  // Editing a named profile is retired (gentle-ai removed the profile flags);
+  // only the Base profile (empty name) can still be saved.
+  const isNamedProfileEdit = editingProfile !== null && editingProfile !== "";
+  const isEditSaveDisabled =
+    isNamedProfileEdit ||
+    detailLoading ||
+    Boolean(detailError) ||
+    !hasValidOrchestrator ||
+    pendingAction === "edit";
 
   if (loading) {
     return <PageSkeleton variant="profiles" label={t("profiles_loading")} />;
@@ -270,6 +274,14 @@ const orchestratorAssignment = orchestratorKey
   return (
     <div className="relative flex h-full min-h-0 flex-col">
       {catalogLoading && <LoadingIndicator label={t("loading_section")} />}
+
+      {/* Retired operations notice: create, named edit and repair are disabled */}
+      <p
+        role="status"
+        className="mb-3 border border-border bg-card px-4 py-3 text-sm text-muted-foreground light:border-black"
+      >
+        {t("profiles_retired")}
+      </p>
 
       {/* Read-only banner for non-writable strategies */}
       {strategy === "external-single-active" && (
@@ -299,22 +311,6 @@ const orchestratorAssignment = orchestratorKey
         />
       )}
 
-      {/* Repair Profile Confirmation Dialog (explicit confirmation) */}
-      {repairConfirmProfile && (
-        <ConfirmDialog
-          open={Boolean(repairConfirmProfile)}
-          onOpenChange={(open) => {
-            if (!open) onRepairCancel?.();
-          }}
-          title={t("profiles_repairConfirm", { name: repairConfirmProfile })}
-          description={t("profiles_repairConfirmDescription")}
-          confirmLabel={t("profiles_repairConfirmAction")}
-          cancelLabel={t("backups_cancel")}
-          variant="warning"
-          onConfirm={() => onRepairConfirm?.()}
-        />
-      )}
-
       {/* Scrollable Profile List */}
       <div className="flex-1 min-h-0 overflow-y-auto scrollbar-brutal">
         {/* Create Profile Panel */}
@@ -326,7 +322,7 @@ const orchestratorAssignment = orchestratorKey
           connectedProviders={connectedProviders}
           newAssignments={newAssignments}
           onAssignmentChange={onAssignmentChange}
-          onSubmit={(name) => onCreate(name)}
+          onSubmit={(name) => onCreate?.(name)}
           onCancel={() => activeSetShowForm(false)}
         />
 
@@ -334,6 +330,8 @@ const orchestratorAssignment = orchestratorKey
           <div className="flex flex-col items-center gap-4">
             <ListingEmptyState variant="no-data" entity="profiles" />
             <Button
+              disabled
+              title={t("profiles_retired")}
               onClick={() => activeSetShowForm(true)}
               aria-label={t("profiles_create_action")}
             >
@@ -449,9 +447,6 @@ const orchestratorAssignment = orchestratorKey
                           {t("profiles_active")}
                         </Badge>
                       )}
-                      {profile.incomplete && profile.strategy === "generated-multi" && (
-                        <Badge variant="warning">{t("profiles_incomplete")}</Badge>
-                      )}
                     </div>
                     <p className="text-sm text-muted-foreground">
                       {profile.modelCount}{" "}
@@ -463,22 +458,6 @@ const orchestratorAssignment = orchestratorKey
                 </div>
 
                 <div className="flex shrink-0 gap-2">
-                  {profile.incomplete && profile.strategy === "generated-multi" && (
-                    <button
-                      type="button"
-                      onClick={() => onRepairStart?.(profile.name)}
-                      aria-label={t("profiles_repair")}
-                      disabled={pendingAction === `repair:${profile.name}`}
-                        className="flex cursor-pointer items-center justify-center gap-2 border border-border bg-card px-3 py-2 font-mono text-xs font-bold uppercase tracking-wide text-card-foreground shadow-[4px_4px_0_0_var(--border)] transition-shadow hover:!shadow-none disabled:pointer-events-none disabled:opacity-50 light:border-black light:text-black"
-                      >
-                        {pendingAction === `repair:${profile.name}` ? (
-                          <Spinner data-icon="inline-start" aria-hidden="true" />
-                        ) : (
-                          <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
-                        )}
-                        {t("profiles_repair")}
-                      </button>
-                    )}
                   <button
                     type="button"
                     onClick={() => onEditStart(profile.name)}
