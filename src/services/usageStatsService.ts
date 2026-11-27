@@ -8,6 +8,11 @@ const CLI_BIN = "opencode";
 const CLI_TIMEOUT_MS = 10_000;
 const MAX_BUFFER = 2 * 1024 * 1024;
 const CACHE_TTL_MS = 30_000;
+const DAY_MS = 24 * 60 * 60 * 1000;
+/** Upper bound requested from `opencode session list -n` so the count is meaningful. */
+const SESSION_LIST_LIMIT = 1000;
+/** Number of sessions returned for display. */
+const RECENT_SESSIONS_DISPLAY = 5;
 
 export type DaysFilter = 7 | 30 | 0;
 
@@ -31,21 +36,24 @@ export interface ProviderUsage {
 
 export interface RecentSession {
   sessionId: string;
-  /** Canonical session title from the `session` table join (may be blank). */
   title: string | null;
   projectPath: string | null;
   lastUpdatedAt: string; // ISO
-  messageCount: number;
+  /**
+   * Per-session usage is not exposed by the opencode 2.x CLI, so these fields
+   * are null ("not available") instead of numbers. Never render null as 0.
+   */
+  messageCount: number | null;
   totalCostUsd: number | null;
-  totalInputTokens: number;
-  totalOutputTokens: number;
+  totalInputTokens: number | null;
+  totalOutputTokens: number | null;
   providers: string[];
 }
 
 export interface UsageStatsData {
   providers: ProviderUsage[];
   recentSessions: RecentSession[];
-  /** Total number of sessions matching the selected days/project filter. */
+  /** Total number of sessions matching the selected days filter. */
   totalSessions: number;
   rangeLabel: "7d" | "30d" | "all";
   generatedAt: string;
@@ -57,7 +65,7 @@ export interface UsageStatsOptions {
 }
 
 type ExecResult = { stdout: string; stderr: string };
-type ExecFileOptions = { maxBuffer: number; timeout: number; shell: boolean };
+type ExecFileOptions = { maxBuffer: number; timeout: number; shell: boolean; cwd?: string };
 type ExecFileLike = (
   file: string,
   args: string[],
@@ -68,83 +76,6 @@ let cache: { key: string; data: UsageStatsData; expiresAt: number } | null = nul
 
 export function clearUsageStatsCache(): void {
   cache = null;
-}
-
-/**
- * Escape a value for use as a SQL single-quoted string literal.
- * Doubles every single quote and rejects null bytes, so a user-supplied
- * project path cannot break out of the literal into arbitrary SQL.
- */
-export function escapeSqlLiteral(value: string): string {
-  if (value.includes("\u0000")) {
-    throw new Error("Project path contains a null byte");
-  }
-  return value.replace(/'/g, "''");
-}
-
-/**
- * Build the argv for the `opencode db` invocation. The SQL is passed as a single
- * argument element, never through a shell command line, so:
- * - no shell can expand `%VAR%`, chain `&`/`|`, or break out of a double quote;
- * - embedded newlines and JSON paths (`$.cost`) travel untouched on every OS;
- * - no shell-argument escaping is ever needed.
- */
-export function buildDbArgs(sql: string): string[] {
-  return ["db", sql, "--format", "json"];
-}
-
-function whereClauses(opts: UsageStatsOptions, timeCreated: string = "time_created"): string {
-  let clauses = "json_extract(data, '$.role') = 'assistant'";
-  if (opts.days > 0) {
-    clauses += ` AND ${timeCreated} >= strftime('%s','now','-${opts.days} days') * 1000`;
-  }
-  if (opts.project !== undefined) {
-    clauses += ` AND json_extract(data, '$.path.cwd') = '${escapeSqlLiteral(opts.project)}'`;
-  }
-  return clauses;
-}
-
-const PROVIDER_COLUMNS = `SELECT
-  json_extract(data, '$.providerID') AS provider,
-  json_extract(data, '$.modelID') AS model,
-  SUM(COALESCE(json_extract(data, '$.cost'), 0)) AS total_cost,
-  SUM(COALESCE(json_extract(data, '$.tokens.input'), 0)) AS input_tokens,
-  SUM(COALESCE(json_extract(data, '$.tokens.output'), 0)) AS output_tokens,
-  COUNT(*) AS messages
-FROM message
-WHERE `;
-
-export function buildProviderUsageSql(opts: UsageStatsOptions): string {
-  return `${PROVIDER_COLUMNS}${whereClauses(opts)}
-GROUP BY provider, model
-ORDER BY total_cost DESC`;
-}
-
-export function buildRecentSessionsSql(opts: UsageStatsOptions): string {
-  // The grouped subquery applies the days/project filters and joins the session
-  // table for the canonical title without corrupting aggregation (session.id is
-  // unique per group). The outer query computes COUNT(*) OVER () over the FULL
-  // grouped result — BEFORE LIMIT — so `total_sessions` reflects every matching
-  // session, not just the 5 rows returned, while the list stays capped at 5.
-  return `SELECT *, COUNT(*) OVER () AS total_sessions
-FROM (
-  SELECT
-    session.title AS title,
-    session_id,
-    json_extract(data, '$.path.cwd') AS project_path,
-    MAX(message.time_created) AS last_updated_at,
-    COUNT(*) AS message_count,
-    SUM(COALESCE(json_extract(data, '$.cost'), 0)) AS total_cost,
-    SUM(COALESCE(json_extract(data, '$.tokens.input'), 0)) AS input_tokens,
-    SUM(COALESCE(json_extract(data, '$.tokens.output'), 0)) AS output_tokens,
-    GROUP_CONCAT(DISTINCT json_extract(data, '$.providerID')) AS providers
-  FROM message
-  JOIN session ON session.id = message.session_id
-  WHERE ${whereClauses(opts, "message.time_created")}
-  GROUP BY session_id
-)
-ORDER BY last_updated_at DESC
-LIMIT 5`;
 }
 
 /**
@@ -164,15 +95,6 @@ function toNumber(value: unknown): number {
   return Number.isFinite(n) ? n : 0;
 }
 
-interface ProviderRow {
-  provider: string | null;
-  model: string | null;
-  total_cost: unknown;
-  input_tokens: unknown;
-  output_tokens: unknown;
-  messages: unknown;
-}
-
 export function computeShares(providers: ProviderUsage[]): void {
   const totalTokens = providers.reduce(
     (sum, provider) => sum + provider.totalInputTokens + provider.totalOutputTokens,
@@ -184,78 +106,100 @@ export function computeShares(providers: ProviderUsage[]): void {
   }
 }
 
-function aggregateProviders(rows: ProviderRow[]): ProviderUsage[] {
-  const modelsByProvider = new Map<string, ModelUsage[]>();
+/** One entry of the `models` array returned by `opencode stats --models --json`. */
+interface StatsModelEntry {
+  model?: { id?: string | null; providerID?: string | null; variant?: string | null };
+  steps?: unknown;
+  tokens?: { input?: unknown; output?: unknown };
+  cost?: unknown;
+}
 
-  for (const row of rows) {
-    const provider = row.provider ?? "unknown";
-    const model = row.model ?? "unknown";
-    const input = toNumber(row.input_tokens);
-    const output = toNumber(row.output_tokens);
-    const modelUsage: ModelUsage = {
-      model,
-      costUsd: resolveCost(toNumber(row.total_cost), input, output),
-      inputTokens: input,
-      outputTokens: output,
-      messages: toNumber(row.messages),
-    };
+interface StatsPayload {
+  models?: StatsModelEntry[];
+}
 
-    const models = modelsByProvider.get(provider) ?? [];
-    models.push(modelUsage);
-    modelsByProvider.set(provider, models);
+/** One entry of `opencode session list --format json`. */
+interface SessionListEntry {
+  id?: string;
+  title?: string | null;
+  updated?: unknown;
+  projectId?: string | null;
+  directory?: string | null;
+}
+
+interface RawModelTotals {
+  cost: number;
+  input: number;
+  output: number;
+  steps: number;
+}
+
+function aggregateProviders(entries: StatsModelEntry[]): ProviderUsage[] {
+  // provider -> model id -> totals. Variants of the same model are merged.
+  const byProvider = new Map<string, Map<string, RawModelTotals>>();
+
+  for (const entry of entries) {
+    const provider = entry.model?.providerID ?? "unknown";
+    const modelId = entry.model?.id ?? "unknown";
+    const models = byProvider.get(provider) ?? new Map<string, RawModelTotals>();
+    const totals = models.get(modelId) ?? { cost: 0, input: 0, output: 0, steps: 0 };
+    totals.cost += toNumber(entry.cost);
+    totals.input += toNumber(entry.tokens?.input);
+    totals.output += toNumber(entry.tokens?.output);
+    totals.steps += toNumber(entry.steps);
+    models.set(modelId, totals);
+    byProvider.set(provider, models);
   }
 
   const providers: ProviderUsage[] = [];
-  for (const [provider, models] of modelsByProvider) {
-    const totalInput = models.reduce((sum, m) => sum + m.inputTokens, 0);
-    const totalOutput = models.reduce((sum, m) => sum + m.outputTokens, 0);
-    const totalCost = models.reduce((sum, m) => sum + (m.costUsd ?? 0), 0);
+  for (const [provider, modelTotals] of byProvider) {
+    const rawModels = [...modelTotals.entries()].sort((a, b) => b[1].cost - a[1].cost);
+    const models: ModelUsage[] = rawModels.map(([model, totals]) => ({
+      model,
+      costUsd: resolveCost(totals.cost, totals.input, totals.output),
+      inputTokens: totals.input,
+      outputTokens: totals.output,
+      messages: totals.steps,
+    }));
+    const totalInput = rawModels.reduce((sum, [, t]) => sum + t.input, 0);
+    const totalOutput = rawModels.reduce((sum, [, t]) => sum + t.output, 0);
+    const totalCost = rawModels.reduce((sum, [, t]) => sum + t.cost, 0);
     providers.push({
       provider,
       totalCostUsd: resolveCost(totalCost, totalInput, totalOutput),
       totalInputTokens: totalInput,
       totalOutputTokens: totalOutput,
-      totalMessages: models.reduce((sum, m) => sum + m.messages, 0),
+      totalMessages: rawModels.reduce((sum, [, t]) => sum + t.steps, 0),
       sharePercent: 0,
       models,
     });
   }
 
+  // Keep the previous ordering: highest provider cost first (unavailable last).
+  providers.sort((a, b) => (b.totalCostUsd ?? 0) - (a.totalCostUsd ?? 0));
   computeShares(providers);
   return providers;
 }
 
-interface SessionRow {
-  title: string | null;
-  session_id: string;
-  project_path: string | null;
-  last_updated_at: unknown;
-  message_count: unknown;
-  total_cost: unknown;
-  input_tokens: unknown;
-  output_tokens: unknown;
-  providers: string | null;
-  total_sessions: unknown;
+function toRecentSession(entry: SessionListEntry): RecentSession {
+  return {
+    sessionId: entry.id ?? "unknown",
+    title: typeof entry.title === "string" && entry.title.length > 0 ? entry.title : null,
+    projectPath:
+      typeof entry.directory === "string" && entry.directory.length > 0 ? entry.directory : null,
+    lastUpdatedAt: new Date(toNumber(entry.updated)).toISOString(),
+    messageCount: null,
+    totalCostUsd: null,
+    totalInputTokens: null,
+    totalOutputTokens: null,
+    providers: [],
+  };
 }
 
-function parseSessions(rows: SessionRow[]): RecentSession[] {
-  return rows.map((row) => {
-    const input = toNumber(row.input_tokens);
-    const output = toNumber(row.output_tokens);
-    return {
-      sessionId: row.session_id ?? "unknown",
-      title:
-        typeof row.title === "string" && row.title.length > 0 ? row.title : null,
-      projectPath:
-        typeof row.project_path === "string" && row.project_path.length > 0 ? row.project_path : null,
-      lastUpdatedAt: new Date(toNumber(row.last_updated_at)).toISOString(),
-      messageCount: toNumber(row.message_count),
-      totalCostUsd: resolveCost(toNumber(row.total_cost), input, output),
-      totalInputTokens: input,
-      totalOutputTokens: output,
-      providers: (row.providers ?? "").split(",").filter((provider) => provider.length > 0),
-    };
-  });
+function filterSessionsByDays(sessions: SessionListEntry[], days: DaysFilter, now: number): SessionListEntry[] {
+  const filtered =
+    days > 0 ? sessions.filter((s) => toNumber(s.updated) >= now - days * DAY_MS) : [...sessions];
+  return filtered.sort((a, b) => toNumber(b.updated) - toNumber(a.updated));
 }
 
 function rangeLabelFor(days: DaysFilter): "7d" | "30d" | "all" {
@@ -264,56 +208,124 @@ function rangeLabelFor(days: DaysFilter): "7d" | "30d" | "all" {
   return "all";
 }
 
+function statsArgs(days: DaysFilter, projectId?: string): string[] {
+  // opencode treats `--days 0` as "today", so the app's days=0 ("all") must use --all.
+  const range = days === 0 ? ["--all"] : ["--days", String(days)];
+  const project = projectId === undefined ? [] : ["--project", projectId];
+  return ["stats", ...range, ...project, "--models", "--cost", "--json"];
+}
+
+const SESSION_LIST_ARGS = ["session", "list", "--format", "json", "-n", String(SESSION_LIST_LIMIT)];
+
+function execOptions(cwd?: string): ExecFileOptions {
+  return {
+    maxBuffer: MAX_BUFFER,
+    timeout: CLI_TIMEOUT_MS,
+    shell: false,
+    ...(cwd === undefined ? {} : { cwd }),
+  };
+}
+
+class ParseError extends Error {
+  constructor(message: string, readonly parseCause: unknown) {
+    super(message);
+  }
+}
+
+function parseJson(raw: string, label: string): unknown {
+  try {
+    return JSON.parse(raw);
+  } catch (cause) {
+    throw new ParseError(`OpenCode ${label} output is not valid JSON`, cause);
+  }
+}
+
+function parseSessionList(raw: string): SessionListEntry[] {
+  const parsed = parseJson(raw, "session list");
+  if (!Array.isArray(parsed)) {
+    throw new ParseError("OpenCode session list output is not an array", parsed);
+  }
+  return parsed as SessionListEntry[];
+}
+
+function parseStatsModels(raw: string): StatsModelEntry[] {
+  const parsed = parseJson(raw, "stats");
+  if (typeof parsed !== "object" || parsed === null || Array.isArray(parsed)) {
+    throw new ParseError("OpenCode stats output is not an object", parsed);
+  }
+  const { models } = parsed as StatsPayload;
+  return Array.isArray(models) ? models : [];
+}
+
 export async function collectUsageStats(
   opts: UsageStatsOptions,
   execFn: ExecFileLike = execFile,
 ): Promise<Result<UsageStatsData>> {
-  const cacheKey = `${opts.days}:${opts.project ?? ""}`;
+  const { project } = opts;
+  if (project !== undefined && (project.length === 0 || project.includes("\u0000"))) {
+    return err({
+      code: "SCHEMA_INVALID",
+      message: "Project path must be a non-empty string without null bytes",
+    });
+  }
+
+  const cacheKey = `${opts.days}:${project ?? ""}`;
   const now = Date.now();
   if (cache && cache.key === cacheKey && cache.expiresAt > now) {
     return ok(cache.data);
   }
 
   try {
-    const [providerOut, sessionsOut] = await Promise.all([
-      execFn(CLI_BIN, buildDbArgs(buildProviderUsageSql(opts)), {
-        maxBuffer: MAX_BUFFER,
-        timeout: CLI_TIMEOUT_MS,
-        shell: false,
-      }),
-      execFn(CLI_BIN, buildDbArgs(buildRecentSessionsSql(opts)), {
-        maxBuffer: MAX_BUFFER,
-        timeout: CLI_TIMEOUT_MS,
-        shell: false,
-      }),
-    ]);
+    let sessionEntries: SessionListEntry[];
+    let statsModels: StatsModelEntry[];
 
-    let providerRows: ProviderRow[];
-    let sessionRows: SessionRow[];
-    try {
-      providerRows = JSON.parse(providerOut.stdout) as ProviderRow[];
-      sessionRows = JSON.parse(sessionsOut.stdout) as SessionRow[];
-    } catch (cause) {
-      return err({
-        code: "PARSE_FAILED",
-        message: "OpenCode usage stats output is not valid JSON",
-        cause,
-      });
+    // Known limitation: `opencode session list` only lists the sessions of the
+    // project that contains the process cwd, so recent sessions (and the session
+    // count) are scoped to that project unless a `project` path is given.
+    if (project === undefined) {
+      const [statsOut, sessionsOut] = await Promise.all([
+        execFn(CLI_BIN, statsArgs(opts.days), execOptions()),
+        execFn(CLI_BIN, SESSION_LIST_ARGS, execOptions()),
+      ]);
+      statsModels = parseStatsModels(statsOut.stdout);
+      sessionEntries = parseSessionList(sessionsOut.stdout);
+    } else {
+      // `opencode stats --project` needs a project id, not a path. Resolve it
+      // from the sessions listed with the project path as the process cwd.
+      const sessionsOut = await execFn(CLI_BIN, SESSION_LIST_ARGS, execOptions(project));
+      sessionEntries = parseSessionList(sessionsOut.stdout);
+      const projectId = sessionEntries.find(
+        (s) => typeof s.projectId === "string" && s.projectId.length > 0,
+      )?.projectId;
+      if (typeof projectId !== "string") {
+        return err({
+          code: "NOT_FOUND",
+          message: "Could not resolve an OpenCode project for the given path",
+        });
+      }
+      const statsOut = await execFn(CLI_BIN, statsArgs(opts.days, projectId), execOptions());
+      statsModels = parseStatsModels(statsOut.stdout);
     }
 
+    const matching = filterSessionsByDays(sessionEntries, opts.days, now);
     const data: UsageStatsData = {
-      providers: aggregateProviders(providerRows),
-      recentSessions: parseSessions(sessionRows),
-      // The window count rides on every returned row; an empty match set means
-      // zero matching sessions.
-      totalSessions: sessionRows.length > 0 ? toNumber(sessionRows[0].total_sessions) : 0,
+      providers: aggregateProviders(statsModels),
+      recentSessions: matching.slice(0, RECENT_SESSIONS_DISPLAY).map(toRecentSession),
+      totalSessions: matching.length,
       rangeLabel: rangeLabelFor(opts.days),
-      generatedAt: new Date().toISOString(),
+      generatedAt: new Date(now).toISOString(),
     };
 
     cache = { key: cacheKey, data, expiresAt: now + CACHE_TTL_MS };
     return ok(data);
   } catch (cause) {
+    if (cause instanceof ParseError) {
+      return err({
+        code: "PARSE_FAILED",
+        message: cause.message,
+        cause: cause.parseCause,
+      });
+    }
     return err({
       code: "FILE_MISSING",
       message: "Failed to collect usage stats from OpenCode",

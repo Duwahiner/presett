@@ -351,6 +351,7 @@ export interface Resources {
   "usage_stats_session_providers": string;
   "usage_stats_session_expand_aria": string;
   "usage_stats_session_untitled": string;
+  "usage_stats_session_unavailable": string;
   "usage_stats_model": string;
   "usage_stats_provider": string;
 }
